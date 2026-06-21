@@ -1,9 +1,10 @@
 services:
   - type: web
     name: patanyumba
-    env: python
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate && python manage.py seed
-    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: python manage.py migrate --noinput && python manage.py seed && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2
     envVars:
       - key: DJANGO_SECRET_KEY
         generateValue: true
@@ -13,12 +14,3 @@ services:
         value: .onrender.com,localhost,127.0.0.1
       - key: DJANGO_CSRF_TRUSTED_ORIGINS
         value: https://*.onrender.com
-      - key: DATABASE_URL
-        fromService:
-          type: postgres
-          name: patanyumba-db
-          property: connectionString
-
-  - type: postgres
-    name: patanyumba-db
-    plan: free

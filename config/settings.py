@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -62,19 +63,17 @@ DATABASES = {
     }
 }
 
-if os.environ.get('DATABASE_URL'):
-    import re
-    db_url = os.environ['DATABASE_URL']
-    match = re.match(r'postgres://(.+):(.+)@(.+):(\d+)/(.+)', db_url)
-    if match:
-        DATABASES['default'] = {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': match.group(5),
-            'USER': match.group(1),
-            'PASSWORD': match.group(2),
-            'HOST': match.group(3),
-            'PORT': match.group(4),
-        }
+db_url = os.environ.get('DATABASE_URL')
+if db_url and db_url.startswith('postgres'):
+    parsed = urlparse(db_url)
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': parsed.path.lstrip('/'),
+        'USER': parsed.username,
+        'PASSWORD': parsed.password,
+        'HOST': parsed.hostname,
+        'PORT': parsed.port or 5432,
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -108,6 +107,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    CSRF_TRUSTED_ORIGINS = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+    origins = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '')
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in origins.split(',') if o.strip()]
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
