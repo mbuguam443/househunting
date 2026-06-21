@@ -1,0 +1,84 @@
+{% extends 'tenants/portal_base.html' %}
+{% block title %}My Portal - PataNyumba{% endblock %}
+{% block portal_title %}Tenant Portal{% endblock %}
+{% block portal_content %}
+{% if tenancy %}
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">KES {{ tenancy.monthly_rent }}</div>
+            <div class="db-stat-lbl">Monthly Rent</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="db-stat-card">
+            <div class="db-stat-val" style="color:#34d399">{{ tenancy.start_date|date:'M d, Y' }}</div>
+            <div class="db-stat-lbl">Tenancy Started</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="db-stat-card">
+            <div class="db-stat-val" style="color:#a78bfa">{{ tenancy.unit.property.name }}</div>
+            <div class="db-stat-lbl">{{ tenancy.unit.get_house_type_display }} — Unit {{ tenancy.unit.unit_number }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-regular fa-clock me-2"></i>Upcoming Payments</h5>
+            {% if upcoming_payments %}
+            <div class="table-responsive">
+                <table class="db-table">
+                    <thead><tr><th>Due Date</th><th>Amount</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for p in upcoming_payments %}
+                        <tr>
+                            <td>{{ p.due_date|date:'M d, Y' }}</td>
+                            <td>KES {{ p.amount }}</td>
+                            <td>
+                                {% if p.status == 'paid' %}<span class="badge-vacant">Paid</span>
+                                {% elif p.status == 'overdue' %}<span class="badge-occupied">Overdue</span>
+                                {% else %}<span class="ftag">Pending</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color:var(--tx3);text-align:center;padding:12px 0">No upcoming payments.</p>
+            {% endif %}
+            <div class="mt-3"><a href="{% url 'portal:pay' %}" class="bgrd btn px-4 py-2"><i class="fa-solid fa-money-bill-wave me-1"></i> Pay Rent</a></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-wrench me-2"></i>Recent Maintenance</h5>
+            {% if recent_maintenance %}
+            {% for m in recent_maintenance %}
+            <div class="d-flex justify-content-between align-items-center p-3" style="background:var(--bg3);border-radius:10px;margin-bottom:8px">
+                <div>
+                    <div style="font-weight:600;font-size:.85rem;color:var(--tx)">{{ m.title }}</div>
+                    <div style="font-size:.76rem;color:var(--tx3)">{{ m.created_at|date:'M d, Y' }} — {{ m.get_status_display }}</div>
+                </div>
+                <span class="{% if m.priority == 'urgent' %}badge-occupied{% elif m.priority == 'high' %}ftag-warning{% else %}ftag{% endif %}">{{ m.get_priority_display }}</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p style="color:var(--tx3);text-align:center;padding:12px 0">No maintenance requests.</p>
+            {% endif %}
+            <div class="mt-3"><a href="{% url 'portal:maintenance' %}" class="boc btn px-4 py-2"><i class="fa-solid fa-plus me-1"></i> Submit Request</a></div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="gc p-5 text-center">
+    <i class="fa-regular fa-building" style="font-size:3rem;color:var(--tx3);margin-bottom:16px"></i>
+    <h4 style="color:var(--tx2)">No Active Tenancy</h4>
+    <p style="color:var(--tx3)">You don't have an active rental lease. Browse available units or contact a landlord.</p>
+    <a href="{% url 'website:browse' %}" class="bgrd btn px-4 py-2">Browse Houses</a>
+</div>
+{% endif %}
+{% endblock %}

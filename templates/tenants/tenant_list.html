@@ -1,0 +1,51 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Tenants - PataNyumba{% endblock %}
+{% block db_title %}Tenants{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Tenants</h4>
+    <div class="d-flex gap-2">
+        <a href="{% url 'tenants:register' %}" class="boc btn px-3 py-2"><i class="fa-solid fa-user-plus me-1"></i> Register</a>
+        <a href="{% url 'tenants:create' %}" class="bgrd btn px-4 py-2"><i class="fa-solid fa-plus me-1"></i> Assign Tenant</a>
+    </div>
+</div>
+{% if tenancies %}
+<div class="row g-4">
+    {% for t in tenancies %}
+    <div class="col-md-6 col-lg-4">
+        <div class="gc p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="db-avatar" style="width:36px;height:36px">{{ t.tenant.username|first|upper }}</div>
+                    <div>
+                        <h5 class="fw-semibold mb-0" style="color:var(--tx)">{{ t.tenant.get_full_name|default:t.tenant.username }}</h5>
+                        <span style="font-size:.78rem;color:var(--tx3)">{{ t.tenant.email }}</span>
+                    </div>
+                </div>
+                <span class="{% if t.status == 'active' %}badge-vacant{% else %}badge-occupied{% endif %}">{{ t.get_status_display }}</span>
+            </div>
+            <p style="font-size:.82rem;color:var(--tx3);margin-bottom:4px"><i class="fa-solid fa-building me-1"></i>{{ t.unit.property.name }} — Unit {{ t.unit.unit_number }}</p>
+            <p style="font-size:.82rem;color:var(--tx3);margin-bottom:8px"><i class="fa-regular fa-calendar me-1"></i>{{ t.start_date|date:'M d, Y' }} {% if t.end_date %}— {{ t.end_date|date:'M d, Y' }}{% endif %}</p>
+            <div class="d-flex gap-2 mb-3">
+                <span class="ftag">KES {{ t.monthly_rent }}/mo</span>
+                <span class="ftag" style="background:rgba(59,130,246,0.12);color:#60a5fa;border-color:rgba(59,130,246,0.2)">Deposit KES {{ t.deposit_paid }}</span>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'tenants:detail' t.pk %}" class="boc btn py-1 px-3" style="font-size:.78rem;flex:1"><i class="fa-regular fa-eye me-1"></i>View</a>
+                {% if t.status == 'active' %}
+                <a href="{% url 'tenants:vacate' t.pk %}" class="boc btn py-1 px-3" style="font-size:.78rem;flex:1;color:#f87171"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Vacate</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="gc p-5 text-center">
+    <i class="fa-regular fa-user" style="font-size:3rem;color:var(--tx3);margin-bottom:16px"></i>
+    <h5 style="color:var(--tx2)">No tenants yet</h5>
+    <p style="color:var(--tx3)">Assign a tenant to a vacant unit to get started</p>
+    <a href="{% url 'tenants:create' %}" class="bgrd btn px-4 py-2">Assign Tenant</a>
+</div>
+{% endif %}
+{% endblock %}

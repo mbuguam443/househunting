@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Browse Houses - PataNyumba{% endblock %}
+{% block content %}
+<section style="padding-top:calc(var(--nav) + 40px);padding-bottom:60px;">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h1 class="stitle">Browse <span class="gt">Vacant Houses</span></h1>
+            <p class="ssub mx-auto">{{ units.count }} available unit{{ units.count|pluralize }} waiting for you</p>
+        </div>
+
+        <form method="GET" class="mb-5" data-aos="fade-up">
+            <div class="gc p-4">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="olbl"><i class="fa-solid fa-search me-1"></i>Search</label>
+                        <input type="text" name="q" class="oinp" value="{{ request.GET.q }}" placeholder="Location, estate, name...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="olbl"><i class="fa-regular fa-building me-1"></i>Type</label>
+                        <select name="house_type" class="oinp">
+                            <option value="">All Types</option>
+                            {% for k, v in house_types %}
+                            <option value="{{ k }}" {% if request.GET.house_type == k %}selected{% endif %}>{{ v }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="olbl"><i class="fa-regular fa-bed me-1"></i>Bedrooms</label>
+                        <select name="bedrooms" class="oinp">
+                            <option value="">Any</option>
+                            {% for i in "12345"|make_list %}
+                            <option value="{{ i }}" {% if request.GET.bedrooms == i %}selected{% endif %}>{{ i }}+</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="olbl"><i class="fa-solid fa-location-dot me-1"></i>County</label>
+                        <select name="county" class="oinp">
+                            <option value="">All Counties</option>
+                            {% for c in counties %}
+                            <option value="{{ c }}" {% if request.GET.county == c %}selected{% endif %}>{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="olbl"><i class="fa-solid fa-credit-card me-1"></i>Max Rent</label>
+                        <select name="max_rent" class="oinp">
+                            <option value="">Any</option>
+                            <option value="10000" {% if request.GET.max_rent == '10000' %}selected{% endif %}>KES 10K</option>
+                            <option value="15000" {% if request.GET.max_rent == '15000' %}selected{% endif %}>KES 15K</option>
+                            <option value="25000" {% if request.GET.max_rent == '25000' %}selected{% endif %}>KES 25K</option>
+                            <option value="35000" {% if request.GET.max_rent == '35000' %}selected{% endif %}>KES 35K</option>
+                            <option value="50000" {% if request.GET.max_rent == '50000' %}selected{% endif %}>KES 50K</option>
+                            <option value="100000" {% if request.GET.max_rent == '100000' %}selected{% endif %}>KES 100K</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="bgrd btn w-100 py-2"><i class="fa-solid fa-filter"></i></button>
+                    </div>
+                </div>
+                {% if request.GET.q or request.GET.house_type or request.GET.bedrooms or request.GET.county or request.GET.max_rent %}
+                <div class="mt-2">
+                    <a href="{% url 'website:browse' %}" class="boc btn px-3 py-1" style="font-size:.78rem"><i class="fa-solid fa-xmark me-1"></i>Clear filters</a>
+                </div>
+                {% endif %}
+            </div>
+        </form>
+
+        {% if units %}
+        <div class="row g-4">
+            {% for unit in units %}
+            <div class="col-md-6 col-lg-4" data-aos="fade-up">
+                <a href="{% url 'website:house_detail' unit.pk %}" style="text-decoration:none;color:inherit">
+                    <div class="gc h-100">
+                        {% if unit.image %}
+                        <img src="{{ unit.image.url }}" alt="{{ unit.unit_number }}" class="prop-card-img">
+                        {% else %}
+                        <div class="prop-card-img d-flex align-items-center justify-content-center" style="background:var(--bg3);"><i class="fa-solid fa-building" style="font-size:3rem;color:var(--tx3)"></i></div>
+                        {% endif %}
+                        <div class="p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h3 class="fs-5 fw-semibold mb-0" style="color:var(--tx)">{{ unit.property.name|truncatechars:22 }}</h3>
+                                <span class="ftag mt-0">KES {{ unit.monthly_rent|floatformat:0 }}</span>
+                            </div>
+                            <p style="font-size:.82rem;color:var(--tx3);margin-bottom:8px"><i class="fa-solid fa-location-dot me-1"></i>{{ unit.property.town }}, {{ unit.property.county }}</p>
+                            <div class="d-flex gap-3 flex-wrap" style="font-size:.8rem;color:var(--tx2)">
+                                <span><i class="fa-regular fa-building me-1"></i>{{ unit.get_house_type_display }}</span>
+                                <span><i class="fa-regular fa-bed me-1"></i>{{ unit.bedrooms }} Bed</span>
+                                <span><i class="fa-regular fa-shower me-1"></i>{{ unit.bathrooms }} Bath</span>
+                                {% if unit.deposit %}<span class="ftag mt-0" style="background:rgba(59,130,246,0.12);color:#60a5fa;border-color:rgba(59,130,246,0.2)">Deposit KES {{ unit.deposit|floatformat:0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="gc p-5 text-center" data-aos="fade-up">
+            <i class="fa-regular fa-face-frown" style="font-size:3rem;color:var(--tx3);margin-bottom:16px"></i>
+            <h4 style="color:var(--tx2)">No vacant units found</h4>
+            <p style="color:var(--tx3)">Try adjusting your search filters or check back later.</p>
+            <a href="{% url 'website:browse' %}" class="bgrd btn px-4 py-2">View All Listings</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

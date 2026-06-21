@@ -1,0 +1,16 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Vacate Tenant - PataNyumba{% endblock %}
+{% block db_title %}Vacate Tenant{% endblock %}
+{% block dashboard_content %}
+<div class="gc p-4 text-center" style="max-width:500px">
+    <i class="fa-solid fa-arrow-right-from-bracket" style="font-size:3rem;color:#f87171;margin-bottom:16px"></i>
+    <h4 class="fw-bold mb-2">Vacate {{ tenancy.tenant.username }}?</h4>
+    <p style="color:var(--tx2);margin-bottom:8px">This will end the tenancy for <strong>{{ tenancy.tenant.get_full_name|default:tenancy.tenant.username }}</strong> at <strong>{{ tenancy.unit.property.name }} — {{ tenancy.unit.unit_number }}</strong>.</p>
+    <p style="color:var(--tx3);font-size:.85rem;margin-bottom:20px">The unit will be marked as <strong>vacant</strong> and will appear on the public website.</p>
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="bgrd btn px-5 py-2" style="background:linear-gradient(135deg,#f87171,#ef4444)"><i class="fa-solid fa-check me-1"></i> Confirm Vacate</button>
+        <a href="{% url 'tenants:list' %}" class="boc btn px-4 py-2 ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

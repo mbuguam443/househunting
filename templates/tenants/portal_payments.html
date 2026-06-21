@@ -1,0 +1,53 @@
+{% extends 'tenants/portal_base.html' %}
+{% block title %}Payments - PataNyumba{% endblock %}
+{% block portal_title %}Payment History{% endblock %}
+{% block portal_content %}
+{% if tenancy %}
+<div class="row g-3 mb-4">
+    <div class="col-sm-6">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">KES {{ tenancy.monthly_rent }}</div>
+            <div class="db-stat-lbl">Monthly Rent</div>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="db-stat-card">
+            <div class="db-stat-val" style="color:#34d399">{{ tenancy.start_date|date:'M d, Y' }}</div>
+            <div class="db-stat-lbl">Tenancy Started</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="gc p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-semibold mb-0"><i class="fa-solid fa-receipt me-2"></i>Payments</h5>
+        <a href="{% url 'portal:pay' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem">+ Pay Now</a>
+    </div>
+    {% if payments %}
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Due Date</th><th>Amount</th><th>Paid Date</th><th>Reference</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for p in payments %}
+                <tr>
+                    <td>{{ p.due_date|date:'M d, Y' }}</td>
+                    <td>KES {{ p.amount }}</td>
+                    <td>{% if p.paid_date %}{{ p.paid_date|date:'M d, Y' }}{% else %}—{% endif %}</td>
+                    <td style="font-size:.8rem">{{ p.reference|default:'—' }}</td>
+                    <td>
+                        {% if p.status == 'paid' %}<span class="badge-vacant">Paid</span>
+                        {% elif p.status == 'overdue' %}<span class="badge-occupied">Overdue</span>
+                        {% elif p.status == 'late' %}<span class="ftag-warning">Late</span>
+                        {% else %}<span class="ftag">Pending</span>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--tx3);text-align:center;padding:20px 0">No payment records yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

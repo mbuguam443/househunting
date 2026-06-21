@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard - PataNyumba{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="db-sidebar" id="dbSidebar">
+        <div class="db-logo">
+            <div class="logo-i"><i class="fa-solid fa-compass"></i></div>
+            <span>PataNyumba</span>
+        </div>
+        <div class="db-nav">
+            <div class="db-nav-section">Main</div>
+            <a href="{% url 'dashboard:overview' %}" class="db-nl {% if active_tab == 'overview' %}active{% endif %}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+            <a href="{% url 'properties:list' %}" class="db-nl {% if active_tab == 'properties' %}active{% endif %}"><i class="fa-solid fa-building"></i> Properties</a>
+            <a href="{% url 'units:list' %}" class="db-nl {% if active_tab == 'units' %}active{% endif %}"><i class="fa-solid fa-door-open"></i> Units</a>
+            <a href="{% url 'units:vacancies' %}" class="db-nl {% if active_tab == 'vacancies' %}active{% endif %}"><i class="fa-regular fa-eye"></i> Vacancies</a>
+            <div class="db-nav-section">Tenants</div>
+            <a href="{% url 'tenants:list' %}" class="db-nl {% if active_tab == 'tenants' %}active{% endif %}"><i class="fa-regular fa-user"></i> Tenants</a>
+            <a href="{% url 'tenants:register' %}" class="db-nl"><i class="fa-solid fa-user-plus"></i> Register Tenant</a>
+            <a href="{% url 'tenants:rent_collection' %}" class="db-nl {% if active_tab == 'rent' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> Rent Collection</a>
+            <a href="{% url 'tenants:maintenance_list' %}" class="db-nl {% if active_tab == 'maintenance' %}active{% endif %}"><i class="fa-solid fa-wrench"></i> Maintenance</a>
+            <div class="db-nav-section">Management</div>
+            <a href="{% url 'dashboard:overview' %}" class="db-nl"><i class="fa-solid fa-chart-simple"></i> Analytics</a>
+            <a href="{% url 'accounts:profile' %}" class="db-nl {% if active_tab == 'profile' %}active{% endif %}"><i class="fa-regular fa-user"></i> Profile</a>
+            <a href="{% url 'accounts:change_password' %}" class="db-nl"><i class="fa-solid fa-lock"></i> Change Password</a>
+            <div class="db-nav-section">General</div>
+            <a href="{% url 'website:home' %}" class="db-nl"><i class="fa-solid fa-globe"></i> Public Site</a>
+            <a href="{% url 'accounts:logout' %}" class="db-nl"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+        </div>
+    </div>
+
+    <div class="db-top">
+        <button class="hamburger-db" id="dbMenuToggle"><i class="fa-solid fa-bars"></i></button>
+        <div style="font-weight:600">{% block db_title %}Dashboard{% endblock %}</div>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <div class="db-avatar">{{ user.username|first|upper }}</div>
+            <span style="font-size:.85rem;font-weight:500">{{ user.username }}</span>
+        </div>
+    </div>
+
+    <div class="db-main">
+        {% if messages %}
+        <div style="padding:16px 28px 0">
+            {% for message in messages %}
+            <div class="msg msg-success" style="animation:fadU .3s ease;background:{% if message.tags == 'error' %}rgba(248,113,113,.1){% else %}rgba(52,211,153,.1){% endif %};border:1px solid {% if message.tags == 'error' %}rgba(248,113,113,.2){% else %}rgba(52,211,153,.2){% endif %};color:{% if message.tags == 'error' %}#f87171{% else %}#34d399{% endif %}">
+                <i class="fa-solid fa-{% if message.tags == 'error' %}circle-exclamation{% else %}check-circle{% endif %} me-1"></i> {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="db-content">
+            {% block dashboard_content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="/static/js/jquery-3.7.1.min.js"></script>
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/chart.umd.min.js"></script>
+    <script>
+        document.getElementById('dbMenuToggle')?.addEventListener('click', function(){
+            document.getElementById('dbSidebar').classList.toggle('mob-open');
+        });
+        document.querySelectorAll('.db-nl').forEach(function(el){
+            el.addEventListener('click', function(){
+                document.getElementById('dbSidebar')?.classList.remove('mob-open');
+            });
+        });
+
+        setTimeout(function(){ $('.msg').fadeOut(400); }, 5000);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

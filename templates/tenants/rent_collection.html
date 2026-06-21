@@ -1,0 +1,83 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Rent Collection - PataNyumba{% endblock %}
+{% block db_title %}Rent Collection{% endblock %}
+{% block dashboard_content %}
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">KES {{ total_collected|floatformat:0 }}</div>
+            <div class="db-stat-lbl">Total Collected</div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">{{ pending_count }}</div>
+            <div class="db-stat-lbl">Pending Payments</div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="db-stat-card">
+            <div class="db-stat-val" style="color:#f87171">{{ overdue_count }}</div>
+            <div class="db-stat-lbl">Overdue</div>
+        </div>
+    </div>
+</div>
+
+<div class="gc p-4">
+    <h5 class="fw-semibold mb-3"><i class="fa-regular fa-clock me-2"></i>Active Tenancies</h5>
+    {% if tenancies %}
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Tenant</th><th>Unit</th><th>Rent</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for t in tenancies %}
+                <tr>
+                    <td style="font-weight:600;color:var(--tx)">{{ t.tenant.get_full_name|default:t.tenant.username }}</td>
+                    <td>{{ t.unit.property.name|truncatechars:15 }} — {{ t.unit.unit_number }}</td>
+                    <td>KES {{ t.monthly_rent }}</td>
+                    <td><span class="badge-vacant">Active</span></td>
+                    <td><a href="{% url 'tenants:detail' t.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--tx3);text-align:center;padding:20px 0">No active tenancies.</p>
+    {% endif %}
+</div>
+
+<div class="gc p-4 mt-4">
+    <h5 class="fw-semibold mb-3"><i class="fa-solid fa-receipt me-2"></i>All Payments</h5>
+    {% if payments %}
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Tenant</th><th>Amount</th><th>Due</th><th>Paid</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for p in payments %}
+                <tr>
+                    <td style="font-weight:600;color:var(--tx)">{{ p.tenancy.tenant.get_full_name|default:p.tenancy.tenant.username }}</td>
+                    <td>KES {{ p.amount }}</td>
+                    <td style="font-size:.82rem">{{ p.due_date|date:'M d, Y' }}</td>
+                    <td style="font-size:.82rem">{% if p.paid_date %}{{ p.paid_date|date:'M d, Y' }}{% else %}—{% endif %}</td>
+                    <td>
+                        {% if p.status == 'paid' %}<span class="badge-vacant">Paid</span>
+                        {% elif p.status == 'overdue' %}<span class="badge-occupied">Overdue</span>
+                        {% elif p.status == 'late' %}<span class="ftag-warning">Late</span>
+                        {% else %}<span class="ftag">Pending</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if p.status != 'paid' %}
+                        <a href="{% url 'tenants:mark_paid' p.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem">Mark Paid</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--tx3);text-align:center;padding:20px 0">No payment records.</p>
+    {% endif %}
+</div>
+{% endblock %}

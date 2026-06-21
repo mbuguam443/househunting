@@ -1,0 +1,48 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}{{ title }} - PataNyumba{% endblock %}
+{% block db_title %}{{ title }}{% endblock %}
+{% block dashboard_content %}
+<div class="gc p-4" style="max-width:800px">
+    <form method="POST">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="olbl">Property Name</label>
+                {{ form.name }}
+            </div>
+            <div class="col-12">
+                <label class="olbl">Description</label>
+                {{ form.description }}
+            </div>
+            <div class="col-md-6">
+                <label class="olbl">County</label>
+                {{ form.county }}
+            </div>
+            <div class="col-md-6">
+                <label class="olbl">Town</label>
+                {{ form.town }}
+            </div>
+            <div class="col-md-6">
+                <label class="olbl">Estate</label>
+                {{ form.estate }}
+            </div>
+            <div class="col-md-6">
+                <label class="olbl">Address</label>
+                {{ form.address }}
+            </div>
+            <div class="col-md-6">
+                <label class="olbl">Latitude</label>
+                {{ form.latitude }}
+            </div>
+            <div class="col-md-6">
+                <label class="olbl">Longitude</label>
+                {{ form.longitude }}
+            </div>
+        </div>
+        <button type="submit" class="bgrd btn px-5 py-2 mt-3">
+            {% if prop %}Update{% else %}Create{% endif %} Property <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i>
+        </button>
+        <a href="{% url 'properties:list' %}" class="boc btn px-4 py-2 mt-3 ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

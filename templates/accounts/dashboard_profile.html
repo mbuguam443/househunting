@@ -1,0 +1,49 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Profile - PataNyumba{% endblock %}
+{% block db_title %}Profile{% endblock %}
+{% block dashboard_content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="gc p-4 text-center">
+            <div class="db-avatar" style="width:60px;height:60px;font-size:1.3rem;margin:0 auto 12px">{{ user.username|first|upper }}</div>
+            <h4 class="fw-bold">{{ user.get_full_name|default:user.username }}</h4>
+            <p style="color:var(--tx3)">{{ user.email }}</p>
+            <span class="ftag mt-0">{{ user.profile.get_role_display }}</span>
+            <div class="mt-3">
+                <a href="{% url 'accounts:change_password' %}" class="boc btn w-100 py-2"><i class="fa-solid fa-lock me-1"></i> Change Password</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-4">Edit Profile</h5>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="olbl">First Name</label>
+                        {{ user_form.first_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="olbl">Last Name</label>
+                        {{ user_form.last_name }}
+                    </div>
+                    <div class="col-12">
+                        <label class="olbl">Email</label>
+                        {{ user_form.email }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="olbl">Phone</label>
+                        {{ profile_form.phone }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="olbl">Avatar</label>
+                        {{ profile_form.avatar }}
+                    </div>
+                </div>
+                <button type="submit" class="bgrd btn px-5 py-2 mt-3">Save Changes <i class="fa-solid fa-check ms-1"></i></button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

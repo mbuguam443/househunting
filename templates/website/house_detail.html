@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}{{ unit.property.name }} - Unit {{ unit.unit_number }} - PataNyumba{% endblock %}
+{% block content %}
+<section style="padding-top:calc(var(--nav) + 40px);padding-bottom:60px;">
+    <div class="container">
+        <a href="{% url 'website:browse' %}" class="boc btn px-3 py-2 mb-4" style="display:inline-flex;align-items:center;gap:6px"><i class="fa-solid fa-arrow-left fa-sm"></i> Back to listings</a>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="gc overflow-hidden" data-aos="fade-up">
+                    {% if unit.image %}
+                    <div id="unitGallery" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            <div class="carousel-item active"><img src="{{ unit.image.url }}" class="d-block w-100" style="max-height:450px;object-fit:cover" alt="{{ unit.unit_number }}"></div>
+                            {% if unit.image_2 %}<div class="carousel-item"><img src="{{ unit.image_2.url }}" class="d-block w-100" style="max-height:450px;object-fit:cover" alt="{{ unit.unit_number }}"></div>{% endif %}
+                            {% if unit.image_3 %}<div class="carousel-item"><img src="{{ unit.image_3.url }}" class="d-block w-100" style="max-height:450px;object-fit:cover" alt="{{ unit.unit_number }}"></div>{% endif %}
+                        </div>
+                        {% if unit.image_2 or unit.image_3 %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#unitGallery" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#unitGallery" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div style="width:100%;height:350px;background:var(--bg3);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-building" style="font-size:5rem;color:var(--tx3)"></i></div>
+                    {% endif %}
+
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+                            <div>
+                                <h1 class="fs-2 fw-bold mb-1" style="color:var(--tx)">{{ unit.property.name }} - Unit {{ unit.unit_number }}</h1>
+                                <p style="color:var(--tx3);margin-bottom:4px"><i class="fa-solid fa-location-dot me-1"></i>{{ unit.property.town }}, {{ unit.property.county }} — {{ unit.property.estate }}</p>
+                                {% if unit.property.address %}<p style="color:var(--tx3);font-size:.82rem">{{ unit.property.address }}</p>{% endif %}
+                            </div>
+                            <div class="text-end">
+                                <div style="font-size:1.8rem;font-weight:700;color:var(--pur)">KES {{ unit.monthly_rent|floatformat:0 }}</div>
+                                <span style="font-size:.82rem;color:var(--tx3)">per month</span>
+                            </div>
+                        </div>
+
+                        <hr style="border-color:var(--bd)">
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-4 col-sm-2 text-center">
+                                <div style="font-size:1.3rem;font-weight:700" class="gt">{{ unit.get_house_type_display|truncatechars:6 }}</div>
+                                <div style="font-size:.7rem;color:var(--tx3)">Type</div>
+                            </div>
+                            <div class="col-4 col-sm-2 text-center">
+                                <div style="font-size:1.3rem;font-weight:700" class="gt">{{ unit.bedrooms }}</div>
+                                <div style="font-size:.7rem;color:var(--tx3)">Bedrooms</div>
+                            </div>
+                            <div class="col-4 col-sm-2 text-center">
+                                <div style="font-size:1.3rem;font-weight:700" class="gt">{{ unit.bathrooms }}</div>
+                                <div style="font-size:.7rem;color:var(--tx3)">Bathrooms</div>
+                            </div>
+                            <div class="col-4 col-sm-2 text-center">
+                                <div style="font-size:1.3rem;font-weight:700" class="gt">{{ unit.floor }}</div>
+                                <div style="font-size:.7rem;color:var(--tx3)">Floor</div>
+                            </div>
+                            <div class="col-4 col-sm-2 text-center">
+                                <div style="font-size:1.3rem;font-weight:700" class="gt">{% if unit.deposit %}KES {{ unit.deposit|floatformat:0 }}{% else %}--{% endif %}</div>
+                                <div style="font-size:.7rem;color:var(--tx3)">Deposit</div>
+                            </div>
+                            <div class="col-4 col-sm-2 text-center">
+                                <div style="font-size:1rem;font-weight:700;color:#34d399">Vacant</div>
+                                <div style="font-size:.7rem;color:var(--tx3)">Status</div>
+                            </div>
+                        </div>
+
+                        {% if unit.get_amenities_list %}
+                        <h5 class="fw-semibold mb-2">Amenities</h5>
+                        <div class="d-flex gap-2 flex-wrap mb-4">
+                            {% for a in unit.get_amenities_list %}
+                            <span class="ftag mt-0" style="background:rgba(52,211,153,0.12);color:#34d399;border-color:rgba(52,211,153,0.2)"><i class="fa-solid fa-check me-1"></i>{{ a }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <h5 class="fw-semibold mb-2">Description</h5>
+                        <p style="color:var(--tx2);line-height:1.7">{{ unit.description|linebreaksbr|default:'No description provided.' }}</p>
+
+                        {% if unit.available_from %}
+                        <p style="font-size:.85rem;color:var(--tx3);margin-top:10px"><i class="fa-regular fa-calendar me-1"></i>Available from: <strong>{{ unit.available_from }}</strong></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="gc p-4" data-aos="fade-up" data-aos-delay="100">
+                    <h5 class="fw-semibold mb-3"><i class="fa-regular fa-paper-plane me-2"></i>Inquire Now</h5>
+                    <form method="POST">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <label class="olbl">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<p style="color:#f87171;font-size:.78rem">{{ field.errors.0 }}</p>{% endif %}
+                        {% endfor %}
+                        <button type="submit" class="bgrd btn w-100 py-2">Send Inquiry <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
+                    </form>
+                </div>
+
+                <div class="gc p-4 mt-3" data-aos="fade-up" data-aos-delay="150">
+                    <h5 class="fw-semibold mb-3"><i class="fa-regular fa-building me-2"></i>Property Details</h5>
+                    <div style="font-size:.85rem;color:var(--tx2)">
+                        <p class="mb-2"><strong style="color:var(--tx)">Name:</strong> {{ unit.property.name }}</p>
+                        <p class="mb-2"><strong style="color:var(--tx)">Location:</strong> {{ unit.property.town }}, {{ unit.property.county }}</p>
+                        <p class="mb-2"><strong style="color:var(--tx)">Estate:</strong> {{ unit.property.estate|default:'N/A' }}</p>
+                        <p class="mb-2"><strong style="color:var(--tx)">Unit No:</strong> {{ unit.unit_number }}</p>
+                        <p class="mb-0"><strong style="color:var(--tx)">Floor:</strong> {{ unit.floor }}</p>
+                    </div>
+                </div>
+
+                <div class="gc p-4 mt-3" data-aos="fade-up" data-aos-delay="200">
+                    <h5 class="fw-semibold mb-3"><i class="fa-regular fa-user me-2"></i>Listed by</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="db-avatar">{{ unit.property.owner.username|first|upper }}</div>
+                        <div>
+                            <div style="font-weight:600">{{ unit.property.owner.get_full_name|default:unit.property.owner.username }}</div>
+                            <div style="font-size:.78rem;color:var(--tx3)">Property Owner</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if related %}
+        <hr style="border-color:var(--bd);margin:50px 0 30px">
+        <h3 class="fw-bold mb-4">More units in <span class="gt">{{ unit.property.name }}</span></h3>
+        <div class="row g-4">
+            {% for u in related %}
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'website:house_detail' u.pk %}" style="text-decoration:none;color:inherit">
+                    <div class="gc h-100">
+                        {% if u.image %}<img src="{{ u.image.url }}" class="prop-card-img" style="height:160px" alt="{{ u.unit_number }}">{% else %}<div style="height:160px;background:var(--bg3);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-building" style="font-size:2rem;color:var(--tx3)"></i></div>{% endif %}
+                        <div class="p-3">
+                            <h6 class="fw-semibold mb-1" style="color:var(--tx)">Unit {{ u.unit_number }}</h6>
+                            <div class="d-flex justify-content-between">
+                                <span style="font-size:.82rem;color:var(--tx3)">{{ u.get_house_type_display }}</span>
+                                <span style="font-size:.82rem;font-weight:600;color:var(--pur)">KES {{ u.monthly_rent|floatformat:0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

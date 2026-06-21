@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}PataNyumba - Find Your Next Home with Confidence{% endblock %}
+{% block content %}
+
+<section id="hero">
+    <div class="aur aur-a" style="top:-120px;left:-80px"></div>
+    <div class="aur aur-b" style="top:200px;right:-200px"></div>
+    <div class="container position-relative" style="z-index:2">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <div class="afu" style="animation-delay:.05s">
+                    <span class="hbadge"><span class="bdot"></span> {{ total_vacant }} homes available right now</span>
+                </div>
+                <h1 class="h1 afu" style="animation-delay:.12s">Find Your <span class="gt">Next Home</span><br>with Confidence</h1>
+                <p class="afu" style="font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:32px;max-width:500px;animation-delay:.2s">Browse verified rental properties across Kenya. No agents, no hassle — just homes waiting for you.</p>
+                <form action="{% url 'website:browse' %}" method="GET" class="afu" style="animation-delay:.28s">
+                    <div class="d-flex align-items-center gap-2 flex-wrap" style="max-width:520px">
+                        <div style="position:relative;flex:1;min-width:200px">
+                            <i class="fa-solid fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:.85rem"></i>
+                            <input type="text" name="q" placeholder="Search by location, estate..." class="oinp" style="padding-left:38px;margin:0;">
+                        </div>
+                        <button type="submit" class="bgrd btn px-4 py-2 fs-6"><i class="fa-solid fa-search me-2"></i>Search</button>
+                    </div>
+                </form>
+                <div class="d-flex align-items-center gap-2 flex-wrap mt-4 afu" style="animation-delay:.32s">
+                    <a href="{% url 'website:browse' %}?house_type=bedsitter" class="boc btn px-3 py-2" style="font-size:.85rem">Bedsitters</a>
+                    <a href="{% url 'website:browse' %}?house_type=one_bedroom" class="boc btn px-3 py-2" style="font-size:.85rem">1 Bedroom</a>
+                    <a href="{% url 'website:browse' %}?house_type=two_bedroom" class="boc btn px-3 py-2" style="font-size:.85rem">2 Bedroom</a>
+                    <a href="{% url 'website:browse' %}?house_type=three_bedroom" class="boc btn px-3 py-2" style="font-size:.85rem">3 Bedroom</a>
+                    <a href="{% url 'website:browse' %}?house_type=studio" class="boc btn px-3 py-2" style="font-size:.85rem">Studios</a>
+                </div>
+            </div>
+            <div class="col-lg-6 afu" style="animation-delay:.35s">
+                <div class="dwrap">
+                    <div class="dtbar">
+                        <div class="dd" style="background:#f87171"></div>
+                        <div class="dd" style="background:#fbbf24"></div>
+                        <div class="dd" style="background:#34d399"></div>
+                        <span style="font-size:.72rem;color:var(--tx3);margin-left:10px">Dashboard Preview</span>
+                    </div>
+                    <div class="dgrid">
+                        <div class="dside">
+                            <div class="dsi on"><i class="fa-solid fa-gauge-high"></i> Overview</div>
+                            <div class="dsi"><i class="fa-solid fa-building"></i> Properties</div>
+                            <div class="dsi"><i class="fa-solid fa-door-open"></i> Units</div>
+                            <div class="dsi"><i class="fa-solid fa-chart-simple"></i> Analytics</div>
+                            <div class="dsi"><i class="fa-regular fa-user"></i> Profile</div>
+                        </div>
+                        <div style="padding:16px">
+                            <div class="d-flex gap-3 mb-3">
+                                <div class="stpill flex-fill">
+                                    <div style="font-size:.6rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em">Vacant</div>
+                                    <div style="font-size:1.3rem;font-weight:700;color:#34d399">{{ total_vacant }}</div>
+                                </div>
+                                <div class="stpill flex-fill">
+                                    <div style="font-size:.6rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em">Occupied</div>
+                                    <div style="font-size:1.3rem;font-weight:700;color:#f87171">{{ total_occupied }}</div>
+                                </div>
+                                <div class="stpill flex-fill">
+                                    <div style="font-size:.6rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em">Properties</div>
+                                    <div style="font-size:1.3rem;font-weight:700;color:var(--tx)">{{ total_properties }}</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:flex-end;gap:6px;height:62px;margin-bottom:14px">
+                                <div class="bbar" style="height:70%"></div>
+                                <div class="bbar" style="height:45%"></div>
+                                <div class="bbar" style="height:85%"></div>
+                                <div class="bbar" style="height:55%"></div>
+                                <div class="bbar" style="height:90%"></div>
+                                <div class="bbar" style="height:60%"></div>
+                                <div class="bbar" style="height:75%"></div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:8px">
+                                <div class="cbbl cbai d-flex align-items-center gap-2"><i class="fa-regular fa-building"></i> 3 new units listed today</div>
+                                <div class="cbbl cbus d-flex align-items-center gap-2">2 inquiries received <span class="tdot"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if vacant_units %}
+<section class="sp" style="background:var(--bg2)">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-5" data-aos="fade-up">
+            <div>
+                <span class="slbl">Featured</span>
+                <h2 class="stitle mb-0">Latest <span class="gt">Vacancies</span></h2>
+                <p class="ssub mx-auto mb-0" style="max-width:none">Recently listed vacant units ready for you</p>
+            </div>
+            <a href="{% url 'website:browse' %}" class="bgrd btn px-4 py-2 d-none d-sm-flex">View All <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></a>
+        </div>
+        <div class="row g-4">
+            {% for unit in vacant_units %}
+            <div class="col-md-6 col-lg-4" data-aos="fade-up">
+                <a href="{% url 'website:house_detail' unit.pk %}" style="text-decoration:none;color:inherit">
+                    <div class="gc h-100">
+                        {% if unit.image %}
+                        <img src="{{ unit.image.url }}" alt="{{ unit.unit_number }}" style="height:220px;object-fit:cover;border-radius:18px 18px 0 0;width:100%">
+                        {% else %}
+                        <div style="height:220px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border-radius:18px 18px 0 0"><i class="fa-solid fa-building" style="font-size:3rem;color:var(--tx3)"></i></div>
+                        {% endif %}
+                        <div class="p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h3 class="fs-5 fw-semibold mb-0" style="color:var(--tx)">{{ unit.property.name|truncatechars:24 }}</h3>
+                                <span class="ftag">KES {{ unit.monthly_rent|floatformat:0 }}</span>
+                            </div>
+                            <p style="font-size:.82rem;color:var(--tx3);margin-bottom:8px"><i class="fa-solid fa-location-dot me-1"></i>{{ unit.property.town }}, {{ unit.property.county }}</p>
+                            <div class="d-flex gap-3 flex-wrap" style="font-size:.8rem;color:var(--tx2)">
+                                <span><i class="fa-regular fa-bed me-1"></i>{{ unit.bedrooms }} Bed</span>
+                                <span><i class="fa-regular fa-shower me-1"></i>{{ unit.bathrooms }} Bath</span>
+                                <span><i class="fa-regular fa-building me-1"></i>Floor {{ unit.floor }}</span>
+                                <span class="ftag" style="background:rgba(52,211,153,0.12);color:#34d399;border-color:rgba(52,211,153,0.2)">{{ unit.get_house_type_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4 d-sm-none" data-aos="fade-up">
+            <a href="{% url 'website:browse' %}" class="bgrd btn px-4 py-2">View All Houses <i class="fa-solid fa-arrow-right ms-1"></i></a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="sp" data-aos="fade-up">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <span class="slbl">How It Works</span>
+                <h2 class="stitle">Find a home in <span class="gt">3 simple steps</span></h2>
+                <p class="ssub mx-auto mb-0">PataNyumba makes it easy to find your next rental home.</p>
+            </div>
+            <div class="col-lg-8">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="gc p-4 h-100 text-center">
+                            <div class="hnum">1</div>
+                            <h3 class="fs-5 fw-semibold mb-2">Search</h3>
+                            <p style="font-size:.875rem;color:var(--tx2)">Browse thousands of vacant units across Kenya. Filter by location, house type, and rent range.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="gc p-4 h-100 text-center">
+                            <div class="hnum">2</div>
+                            <h3 class="fs-5 fw-semibold mb-2">Compare</h3>
+                            <p style="font-size:.875rem;color:var(--tx2)">View detailed information including photos, amenities, and rent to make an informed decision.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="gc p-4 h-100 text-center">
+                            <div class="hnum">3</div>
+                            <h3 class="fs-5 fw-semibold mb-2">Connect</h3>
+                            <p style="font-size:.875rem;color:var(--tx2)">Send an inquiry directly to the landlord. No middlemen, no fake listings — just real homes.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="proof">
+    <div class="container">
+        <div class="row g-4 justify-content-center text-center">
+            <div class="col-6 col-md-3">
+                <div class="pnum">{{ total_units }}+</div>
+                <div class="plbl">Units Listed</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="pnum">{{ total_vacant }}</div>
+                <div class="plbl">Currently Vacant</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="pnum">{{ total_landlords }}+</div>
+                <div class="plbl">Landlords</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="pnum">100%</div>
+                <div class="plbl">Free to Browse</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="sp" style="background:var(--bg2)" data-aos="fade-up">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="slbl">Why PataNyumba</span>
+            <h2 class="stitle">Built for <span class="gt">Kenya</span></h2>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="gc p-4 h-100">
+                    <div class="ftico"><i class="fa-solid fa-bolt"></i></div>
+                    <h3 class="fs-5 fw-semibold mb-2">Real-Time Vacancies</h3>
+                    <p style="font-size:.875rem;color:var(--tx2)">Units appear the moment landlords mark them vacant. No outdated listings.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="gc p-4 h-100">
+                    <div class="ftico"><i class="fa-solid fa-shield-halved"></i></div>
+                    <h3 class="fs-5 fw-semibold mb-2">Verified Landlords</h3>
+                    <p style="font-size:.875rem;color:var(--tx2)">Every landlord is verified. Connect directly with property owners.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="gc p-4 h-100">
+                    <div class="ftico"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                    <h3 class="fs-5 fw-semibold mb-2">Simple & Fast</h3>
+                    <p style="font-size:.875rem;color:var(--tx2)">No complicated forms. No accounts needed to browse.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="gc p-4 h-100">
+                    <div class="ftico"><i class="fa-solid fa-arrows-rotate"></i></div>
+                    <h3 class="fs-5 fw-semibold mb-2">Auto-Publishing</h3>
+                    <p style="font-size:.875rem;color:var(--tx2)">Vacant units publish automatically. Occupied units disappear instantly.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="gc p-4 h-100">
+                    <div class="ftico"><i class="fa-solid fa-chart-simple"></i></div>
+                    <h3 class="fs-5 fw-semibold mb-2">Landlord Dashboard</h3>
+                    <p style="font-size:.875rem;color:var(--tx2)">Track occupancy, manage units, handle inquiries — all in one dashboard.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="gc p-4 h-100">
+                    <div class="ftico"><i class="fa-solid fa-location-dot"></i></div>
+                    <h3 class="fs-5 fw-semibold mb-2">Made for Kenya</h3>
+                    <p style="font-size:.875rem;color:var(--tx2)">Counties, towns, estates, and house types that reflect the Kenyan market.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if testimonials %}
+<section class="sp" data-aos="fade-up">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="slbl">Testimonials</span>
+            <h2 class="stitle">What our users <span class="gt">say</span></h2>
+        </div>
+        <div class="row g-4">
+            {% for t in testimonials %}
+            <div class="col-md-4">
+                <div class="gc p-4 h-100">
+                    <div class="d-flex gap-1 mb-3"><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i></div>
+                    <p style="font-size:.875rem;color:var(--tx2);line-height:1.65;font-style:italic;margin-bottom:18px">"{{ t.content }}"</p>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if t.avatar %}<img src="{{ t.avatar.url }}" class="tav" alt="{{ t.name }}">{% else %}<div class="tav d-flex align-items-center justify-content-center" style="background:var(--grad);color:#fff;font-weight:700">{{ t.name|first|upper }}</div>{% endif %}
+                        <div>
+                            <div style="font-size:.88rem;font-weight:600">{{ t.name }}</div>
+                            <div style="font-size:.76rem;color:var(--tx3)">{{ t.role }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if faqs %}
+<section class="sp" style="background:var(--bg2)" data-aos="fade-up">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="slbl">FAQ</span>
+            <h2 class="stitle">Common <span class="gt">questions</span></h2>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion acco" id="faqAcc">
+                    {% for faq in faqs %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#faq{{ forloop.counter }}">
+                                {{ faq.question }}
+                            </button>
+                        </h2>
+                        <div id="faq{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#faqAcc">
+                            <div class="accordion-body">{{ faq.answer }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section id="cta" data-aos="fade-up">
+    <div class="aur aur-a" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+    <div class="container position-relative" style="z-index:2">
+        <span class="hbadge mb-4 d-inline-flex"><span class="bdot"></span>Free for landlords — no hidden fees</span>
+        <h2 style="font-size:clamp(2rem,5vw,3.8rem);font-weight:700;letter-spacing:-.025em;line-height:1.1;margin-bottom:18px">Are you a <span class="gt">landlord</span>?</h2>
+        <p style="font-size:1.05rem;color:var(--tx2);max-width:500px;margin:0 auto 36px">List your vacant units, manage properties, and connect with tenants — all from one dashboard.</p>
+        <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'accounts:register' %}" class="bgrd btn px-4 py-3 fs-6">Get Started Free <i class="fa-solid fa-arrow-right ms-1"></i></a>
+            <a href="{% url 'website:about' %}" class="boc btn px-4 py-3 fs-6"><i class="fa-regular fa-circle-question me-2"></i>Learn More</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

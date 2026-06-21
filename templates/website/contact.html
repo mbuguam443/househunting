@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Contact - PataNyumba{% endblock %}
+{% block content %}
+<section style="padding-top:calc(var(--nav) + 40px);padding-bottom:60px;">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-6" data-aos="fade-up">
+                <span class="slbl">Contact</span>
+                <h1 class="stitle">Get in <span class="gt">touch</span></h1>
+                <p style="color:var(--tx2);line-height:1.7">Have a question, feedback, or need help? We would love to hear from you.</p>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <label class="olbl">Your Name</label>
+                    <input class="oinp" type="text" name="name" placeholder="John Kamau" required>
+                    <label class="olbl">Email</label>
+                    <input class="oinp" type="email" name="email" placeholder="john@email.com" required>
+                    <label class="olbl">Message</label>
+                    <textarea class="oinp" rows="5" name="message" placeholder="How can we help you?" required></textarea>
+                    <button type="submit" class="bgrd btn px-5 py-2">Send Message <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
+                </form>
+            </div>
+            <div class="col-lg-5 offset-lg-1" data-aos="fade-up" data-aos-delay="100">
+                <div class="gc p-4 mb-3">
+                    <h5 class="fw-semibold mb-3"><i class="fa-regular fa-envelope me-2"></i>Email</h5>
+                    <p style="color:var(--tx2)"><a href="mailto:hello@patanyumba.co.ke" style="color:var(--pur)">hello@patanyumba.co.ke</a></p>
+                </div>
+                <div class="gc p-4 mb-3">
+                    <h5 class="fw-semibold mb-3"><i class="fa-solid fa-phone me-2"></i>Phone</h5>
+                    <p style="color:var(--tx2)"><a href="tel:+254700000000" style="color:var(--pur)">+254 700 000 000</a></p>
+                </div>
+                <div class="gc p-4">
+                    <h5 class="fw-semibold mb-3"><i class="fa-solid fa-location-dot me-2"></i>Location</h5>
+                    <p style="color:var(--tx2)">Nairobi, Kenya</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

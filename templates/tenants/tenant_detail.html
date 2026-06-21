@@ -1,0 +1,60 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}{{ tenancy.tenant.username }} - PataNyumba{% endblock %}
+{% block db_title %}Tenant Detail{% endblock %}
+{% block dashboard_content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="gc p-4 text-center">
+            <div class="db-avatar" style="width:56px;height:56px;font-size:1.2rem;margin:0 auto 12px">{{ tenancy.tenant.username|first|upper }}</div>
+            <h4 class="fw-bold mb-1">{{ tenancy.tenant.get_full_name|default:tenancy.tenant.username }}</h4>
+            <p style="color:var(--tx3);font-size:.85rem">{{ tenancy.tenant.email }}</p>
+            <span class="{% if tenancy.status == 'active' %}badge-vacant{% else %}badge-occupied{% endif %}">{{ tenancy.get_status_display }}</span>
+            <hr style="border-color:var(--bd);margin:16px 0">
+            <div style="text-align:left;font-size:.85rem;color:var(--tx2)">
+                <p class="mb-2"><strong style="color:var(--tx)">Property:</strong> {{ tenancy.unit.property.name }}</p>
+                <p class="mb-2"><strong style="color:var(--tx)">Unit:</strong> {{ tenancy.unit.unit_number }} ({{ tenancy.unit.get_house_type_display }})</p>
+                <p class="mb-2"><strong style="color:var(--tx)">Rent:</strong> KES {{ tenancy.monthly_rent }}/mo</p>
+                <p class="mb-2"><strong style="color:var(--tx)">Deposit:</strong> KES {{ tenancy.deposit_paid }}</p>
+                <p class="mb-2"><strong style="color:var(--tx)">Started:</strong> {{ tenancy.start_date|date:'M d, Y' }}</p>
+                {% if tenancy.end_date %}<p class="mb-0"><strong style="color:var(--tx)">Ended:</strong> {{ tenancy.end_date|date:'M d, Y' }}</p>{% endif %}
+            </div>
+            {% if tenancy.status == 'active' %}
+            <a href="{% url 'tenants:vacate' tenancy.pk %}" class="boc btn w-100 py-2 mt-3" style="color:#f87171"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Vacate Tenant</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-credit-card me-2"></i>Payment History</h5>
+            {% if payments %}
+            <div class="table-responsive">
+                <table class="db-table">
+                    <thead><tr><th>Due Date</th><th>Amount</th><th>Paid Date</th><th>Reference</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for p in payments %}
+                        <tr>
+                            <td>{{ p.due_date|date:'M d, Y' }}</td>
+                            <td>KES {{ p.amount }}</td>
+                            <td>{% if p.paid_date %}{{ p.paid_date|date:'M d, Y' }}{% else %}—{% endif %}</td>
+                            <td style="font-size:.8rem">{{ p.reference|default:'—' }}</td>
+                            <td>
+                                {% if p.status == 'paid' %}<span class="badge-vacant">Paid</span>
+                                {% elif p.status == 'overdue' %}<span class="badge-occupied">Overdue</span>
+                                {% elif p.status == 'late' %}<span class="ftag-warning">Late</span>
+                                {% else %}<span class="ftag">Pending</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color:var(--tx3);text-align:center;padding:20px 0">No payment records yet.</p>
+            {% endif %}
+            <div class="mt-3">
+                <a href="{% url 'tenants:rent_collection' %}" class="boc btn px-3 py-1" style="font-size:.82rem"><i class="fa-solid fa-credit-card me-1"></i> Rent Collection</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

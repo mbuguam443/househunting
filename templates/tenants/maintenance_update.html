@@ -1,0 +1,35 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Update Maintenance - PataNyumba{% endblock %}
+{% block db_title %}Update Maintenance Request{% endblock %}
+{% block dashboard_content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3">{{ req.title }}</h5>
+            <p style="font-size:.85rem;color:var(--tx2);line-height:1.6">{{ req.description }}</p>
+            <hr style="border-color:var(--bd)">
+            <div style="font-size:.85rem;color:var(--tx2)">
+                <p class="mb-1"><strong style="color:var(--tx)">Tenant:</strong> {{ req.tenant.get_full_name|default:req.tenant.username }}</p>
+                <p class="mb-1"><strong style="color:var(--tx)">Unit:</strong> {{ req.unit.property.name }} — {{ req.unit.unit_number }}</p>
+                <p class="mb-1"><strong style="color:var(--tx)">Priority:</strong> <span class="{% if req.priority == 'urgent' %}badge-occupied{% elif req.priority == 'high' %}ftag-warning{% else %}ftag{% endif %}">{{ req.get_priority_display }}</span></p>
+                <p class="mb-1"><strong style="color:var(--tx)">Submitted:</strong> {{ req.created_at|date:'M d, Y H:i' }}</p>
+                {% if req.resolved_at %}<p class="mb-0"><strong style="color:var(--tx)">Resolved:</strong> {{ req.resolved_at|date:'M d, Y H:i' }}</p>{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3">Update Status</h5>
+            <form method="POST">
+                {% csrf_token %}
+                <label class="olbl">Status</label>
+                {{ form.status }}
+                <label class="olbl">Landlord Notes (visible to tenant)</label>
+                {{ form.landlord_notes }}
+                <button type="submit" class="bgrd btn px-5 py-2 mt-2"><i class="fa-solid fa-check me-1"></i> Update</button>
+                <a href="{% url 'tenants:maintenance_list' %}" class="boc btn px-4 py-2 mt-2 ms-2">Back</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

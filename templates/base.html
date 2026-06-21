@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PataNyumba - Find Your Next Home with Confidence{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}PataNyumba helps you find houses for rent in Kenya. Browse vacant units, connect with landlords, and manage rental properties.{% endblock %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/aos.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav id="nbar">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <a href="{% url 'website:home' %}" class="d-flex align-items-center gap-2" style="font-size:1.2rem;font-weight:700;color:var(--tx)">
+                    <div class="logo-i"><i class="fa-solid fa-compass"></i></div>
+                    <span>PataNyumba</span>
+                </a>
+                <div class="d-none d-lg-flex align-items-center gap-1 mx-auto">
+                    <a href="{% url 'website:home' %}" class="nav-link">Home</a>
+                    <a href="{% url 'website:browse' %}" class="nav-link">Browse Houses</a>
+                    <a href="{% url 'website:about' %}" class="nav-link">About</a>
+                    <a href="{% url 'website:contact' %}" class="nav-link">Contact</a>
+                    {% if user.is_authenticated and user.profile.role == 'landlord' %}
+                    <a href="{% url 'dashboard:overview' %}" class="nav-link">Dashboard</a>
+                    {% endif %}
+                </div>
+                <div class="d-flex align-items-center gap-2">
+
+                    {% if user.is_authenticated %}
+                    <div class="dropdown d-none d-sm-block">
+                        <button class="boc d-flex align-items-center gap-2 px-3 py-2" data-bs-toggle="dropdown">
+                            <div class="db-avatar" style="width:26px;height:26px;font-size:.7rem">{{ user.username|first|upper }}</div>
+                            <span style="font-size:.85rem">{{ user.username }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" style="background:var(--bg2);border:1px solid var(--bd2);box-shadow:0 20px 60px rgba(0,0,0,.45);border-radius:14px;padding:8px;min-width:200px">
+                            {% if user.profile.role == 'landlord' %}
+                            <li><a class="dropdown-item" href="{% url 'dashboard:overview' %}" style="color:var(--tx2);border-radius:8px;padding:8px 12px"><i class="fa-solid fa-gauge-high me-2"></i>Dashboard</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}" style="color:var(--tx2);border-radius:8px;padding:8px 12px"><i class="fa-regular fa-user me-2"></i>Profile</a></li>
+                            <li><hr class="dropdown-divider" style="border-color:var(--bd)"></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}" style="color:#f87171;border-radius:8px;padding:8px 12px"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'accounts:logout' %}" class="boc px-2 py-2 d-sm-none" style="font-size:.82rem"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+                    {% else %}
+                    <a href="{% url 'accounts:login' %}" class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1"><i class="fa-regular fa-user fa-sm"></i> Log in</a>
+                    <a href="{% url 'accounts:register' %}" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1">Get Started <i class="fa-solid fa-arrow-right fa-sm"></i></a>
+                    {% endif %}
+                    <button class="boc d-lg-none px-2 py-2" id="mbtog" style="border-radius:10px">
+                        <i class="fa-solid fa-bars" id="barIcon"></i>
+                        <i class="fa-solid fa-xmark" id="xIcon" style="display:none"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="mbmenu">
+        <a href="{% url 'website:home' %}" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Home</a>
+        <a href="{% url 'website:browse' %}" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Browse Houses</a>
+        <a href="{% url 'website:about' %}" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">About</a>
+        <a href="{% url 'website:contact' %}" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Contact</a>
+        {% if user.is_authenticated and user.profile.role == 'landlord' %}
+        <a href="{% url 'dashboard:overview' %}" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Dashboard</a>
+        {% endif %}
+        <div class="d-flex gap-2 mt-3">
+            {% if user.is_authenticated %}
+            <a href="{% url 'accounts:profile' %}" class="boc flex-fill py-2 btn">Profile</a>
+            <a href="{% url 'accounts:logout' %}" class="boc flex-fill py-2 btn">Logout</a>
+            {% else %}
+            <a href="{% url 'accounts:login' %}" class="boc flex-fill py-2 btn">Log in</a>
+            <a href="{% url 'accounts:register' %}" class="bgrd flex-fill py-2 btn">Get Started</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+    <div style="padding-top:calc(var(--nav) + 16px);padding-left:16px;padding-right:16px;max-width:600px;margin:0 auto;position:fixed;top:0;left:0;right:0;z-index:1060">
+        {% for message in messages %}
+        <div class="msg msg-{% if message.tags == 'error' %}error{% else %}success{% endif %}" style="animation:fadU .4s ease">
+            <i class="fa-solid fa-{% if message.tags == 'error' %}circle-exclamation{% else %}check-circle{% endif %} me-1"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+    <footer id="foot">
+        <div class="container">
+            <div class="row g-5 mb-5">
+                <div class="col-lg-4">
+                    <a class="d-flex align-items-center gap-2 mb-3" href="{% url 'website:home' %}" style="font-size:1.15rem;font-weight:700;color:var(--tx)">
+                        <div class="logo-i"><i class="fa-solid fa-compass"></i></div> PataNyumba
+                    </a>
+                    <p style="font-size:.875rem;color:var(--tx3);line-height:1.65;max-width:280px">Find your next home with confidence. Kenya's simplest platform for finding and managing rental properties.</p>
+                </div>
+                <div class="col-6 col-md-2 fcol">
+                    <h5>Quick Links</h5>
+                    <a href="{% url 'website:home' %}">Home</a>
+                    <a href="{% url 'website:browse' %}">Browse Houses</a>
+                    <a href="{% url 'website:about' %}">About Us</a>
+                    <a href="{% url 'website:contact' %}">Contact</a>
+                </div>
+                <div class="col-6 col-md-2 fcol">
+                    <h5>For Landlords</h5>
+                    <a href="{% url 'accounts:register' %}">List a Property</a>
+                    <a href="{% url 'accounts:login' %}">Landlord Login</a>
+                    <a href="{% url 'dashboard:overview' %}">Dashboard</a>
+                </div>
+                <div class="col-6 col-md-2 fcol">
+                    <h5>Browse</h5>
+                    <a href="{% url 'website:browse' %}?house_type=bedsitter">Bedsitters</a>
+                    <a href="{% url 'website:browse' %}?house_type=one_bedroom">One Bedroom</a>
+                    <a href="{% url 'website:browse' %}?house_type=two_bedroom">Two Bedroom</a>
+                    <a href="{% url 'website:browse' %}?house_type=three_bedroom">Three Bedroom</a>
+                </div>
+                <div class="col-6 col-md-2 fcol">
+                    <h5>Contact</h5>
+                    <a href="mailto:hello@patanyumba.co.ke">hello@patanyumba.co.ke</a>
+                    <a href="tel:+254700000000">+254 700 000 000</a>
+                    <a href="#">Nairobi, Kenya</a>
+                </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pt-4" style="border-top:1px solid var(--bd)">
+                <p style="font-size:.8rem;color:var(--tx3);margin:0">&copy; {% now "Y" %} PataNyumba. All rights reserved.</p>
+                <div class="d-flex gap-2">
+                    <a href="#" class="sico"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" class="sico"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="sico"><i class="fa-brands fa-tiktok"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/jquery-3.7.1.min.js"></script>
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/aos.js"></script>
+    <script>
+        AOS.init({ duration: 650, once: true, easing: 'ease-out' });
+        $('#mbtog').click(function(){ $('#mbmenu').toggleClass('open'); $('#barIcon,#xIcon').toggle(); });
+        $(window).scroll(function(){ $('#nbar').toggleClass('scr', $(this).scrollTop() > 40); });
+        setTimeout(function(){ $('.msg').fadeOut(400); }, 5000);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

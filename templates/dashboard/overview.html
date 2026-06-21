@@ -1,0 +1,409 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Dashboard - PataNyumba{% endblock %}
+{% block db_title %}Dashboard{% endblock %}
+{% block dashboard_content %}
+{% if access_denied %}
+<div class="gc p-5 text-center">
+    <i class="fa-solid fa-lock" style="font-size:3rem;color:var(--tx3);margin-bottom:16px"></i>
+    <h4 style="color:var(--tx2)">Landlord Access Only</h4>
+    <p style="color:var(--tx3)">This dashboard is for landlords. <a href="{% url 'website:home' %}" style="color:var(--pur)">Go home</a></p>
+</div>
+{% else %}
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">{{ properties_count }}</div>
+            <div class="db-stat-lbl">Properties</div>
+            <div class="db-stat-delta delta-up"><i class="fa-solid fa-building me-1"></i>Total buildings</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">{{ total_units }}</div>
+            <div class="db-stat-lbl">Total Units</div>
+            <div class="db-stat-delta delta-up"><i class="fa-solid fa-door-open me-1"></i>All units</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">{{ vacant_units }}</div>
+            <div class="db-stat-lbl">Vacant Units</div>
+            <div class="db-stat-delta delta-up" style="color:#34d399"><i class="fa-regular fa-eye me-1"></i>Visible on website</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">{{ occupied_units }}</div>
+            <div class="db-stat-lbl">Occupied Units</div>
+            <div class="db-stat-delta delta-dn"><i class="fa-solid fa-check me-1"></i>Hidden from public</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">{{ active_tenancies }}</div>
+            <div class="db-stat-lbl">Active Tenancies</div>
+            <div class="db-stat-delta delta-up"><i class="fa-regular fa-user me-1"></i>Currently renting</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">{{ urgent_maintenance }}</div>
+            <div class="db-stat-lbl">Urgent Issues</div>
+            <div class="db-stat-delta avg"{% if urgent_maintenance > 0 %} style="color:#f87171"{% endif %}><i class="fa-solid fa-wrench me-1"></i>Need attention</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-4">
+        <div class="gc p-4 d-flex align-items-center gap-3">
+            <div style="flex:1">
+                <div style="font-size:.78rem;color:var(--tx3);margin-bottom:4px">Occupancy Rate</div>
+                <div style="font-size:2.2rem;font-weight:700" class="gt">{{ occupancy_rate }}%</div>
+            </div>
+            <div style="width:80px;height:80px;position:relative">
+                <svg viewBox="0 0 36 36" style="width:80px;height:80px;transform:rotate(-90deg)">
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--bd2)" stroke-width="3"/>
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="url(#grad)" stroke-width="3" stroke-dasharray="{{ occupancy_rate }}, 100" stroke-linecap="round"/>
+                </svg>
+                <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="gc p-4 d-flex align-items-center gap-3">
+            <i class="fa-regular fa-message" style="font-size:2rem;color:var(--pur)"></i>
+            <div>
+                <div style="font-size:.78rem;color:var(--tx3);margin-bottom:4px">Unread Inquiries</div>
+                <div style="font-size:2.2rem;font-weight:700" class="gt">{{ unread_inquiries }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="gc p-4 d-flex align-items-center gap-3">
+            <i class="fa-regular fa-building" style="font-size:2rem;color:var(--tx3)"></i>
+            <div>
+                <div style="font-size:.78rem;color:var(--tx3);margin-bottom:4px">Quick Actions</div>
+                <div class="d-flex gap-2 mt-2 flex-wrap">
+                    <a href="{% url 'properties:create' %}" class="boc btn px-3 py-1" style="font-size:.78rem">+ Property</a>
+                    <a href="{% url 'units:create' %}" class="boc btn px-3 py-1" style="font-size:.78rem">+ Unit</a>
+                    <a href="{% url 'tenants:register' %}" class="boc btn px-3 py-1" style="font-size:.78rem">+ Tenant</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-4">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-chart-pie me-2"></i>Unit Types</h5>
+            <canvas id="typeChart" height="220"></canvas>
+        </div>
+    </div>
+    <div class="col-xl-8">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-chart-column me-2"></i>Property Occupancy</h5>
+            <canvas id="occupancyChart" height="220"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-6">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-chart-line me-2"></i>Inquiries (7 Days)</h5>
+            <canvas id="inquiryChart" height="200"></canvas>
+        </div>
+    </div>
+    <div class="col-xl-6">
+        <div class="gc p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-semibold mb-0"><i class="fa-regular fa-message me-2"></i>Recent Inquiries</h5>
+                <a href="{% url 'dashboard:overview' %}" class="boc btn px-3 py-1" style="font-size:.82rem">View All</a>
+            </div>
+            {% if recent_inquiries %}
+            <div class="table-responsive">
+                <table class="db-table">
+                    <thead><tr><th>Name</th><th>Unit</th><th>Date</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for inq in recent_inquiries %}
+                        <tr>
+                            <td style="font-weight:600;color:var(--tx)">{{ inq.name }}</td>
+                            <td>{{ inq.unit.unit_number }}</td>
+                            <td style="font-size:.8rem">{{ inq.created_at|date:'M d, Y' }}</td>
+                            <td>{% if inq.is_read %}<span class="ftag">Read</span>{% else %}<span class="ftag-success">New</span>{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color:var(--tx3);text-align:center;padding:20px 0">No inquiries yet</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-6">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i>Recent Activity</h5>
+            {% if recent_activity %}
+            <div style="display:flex;flex-direction:column;gap:10px">
+                {% for item in recent_activity %}
+                <div class="d-flex align-items-center gap-3" style="padding:10px 12px;background:var(--bg3);border-radius:12px;font-size:.85rem">
+                    <div style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:{% if item.type == 'inquiry' %}rgba(248,113,113,.15){% elif item.type == 'tenant' %}rgba(52,211,153,.15){% else %}rgba(139,92,246,.15){% endif %};color:{% if item.type == 'inquiry' %}#f87171{% elif item.type == 'tenant' %}#34d399{% else %}#8b5cf6{% endif %};flex-shrink:0">
+                        <i class="fa-solid fa-{% if item.type == 'inquiry' %}message{% elif item.type == 'tenant' %}user{% else %}door-open{% endif %} fa-xs"></i>
+                    </div>
+                    <div style="flex:1;color:var(--tx2)">{{ item.text }}</div>
+                    <div style="font-size:.72rem;color:var(--tx3);flex-shrink:0">{{ item.time|timesince }} ago</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color:var(--tx3);text-align:center;padding:20px 0">No recent activity</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-xl-12">
+        <div class="gc p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-semibold mb-0"><i class="fa-solid fa-building me-2"></i>Your Properties</h5>
+                <a href="{% url 'properties:create' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem">+ Add</a>
+            </div>
+            {% if properties %}
+            <div class="table-responsive">
+                <table class="db-table">
+                    <thead><tr><th>Name</th><th>Location</th><th>Units</th><th>Vacant</th><th></th></tr></thead>
+                    <tbody>
+                        {% for p in properties %}
+                        <tr>
+                            <td style="font-weight:600;color:var(--tx)">{{ p.name|truncatechars:20 }}</td>
+                            <td>{{ p.town|truncatechars:15 }}</td>
+                            <td>{{ p.unit_count }}</td>
+                            <td><span class="badge-vacant">{{ p.vacant_count }}</span></td>
+                            <td><a href="{% url 'properties:update' p.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem">Edit</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color:var(--tx3);text-align:center;padding:20px 0">No properties yet. <a href="{% url 'properties:create' %}" style="color:var(--pur)">Add your first property</a></p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var typeLabels = {{ type_labels|safe }};
+    var typeCounts = {{ type_counts|safe }};
+    var typeColors = {{ type_colors|safe }};
+    var propLabels = {{ chart_prop_labels|safe }};
+    var propVacant = {{ chart_prop_vacant|safe }};
+    var propOccupied = {{ chart_prop_occupied|safe }};
+    var inqDates = {{ inquiry_dates|safe }};
+    var inqCounts = {{ inquiry_counts|safe }};
+
+    var typeChartInst = null;
+    var occChartInst = null;
+    var inqChartInst = null;
+
+    function chartColors() {
+        var isDark = !document.getElementById('htmlRoot').classList.contains('lm');
+        return {
+            grid: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)',
+            ticks: isDark ? '#6b6b8a' : '#7878a0',
+            text: isDark ? '#a8a8c8' : '#3d3d5c',
+        };
+    }
+
+    function initTypeChart() {
+        var ctx = document.getElementById('typeChart');
+        if (!ctx || typeLabels.length === 0) return;
+        if (typeChartInst) { typeChartInst.destroy(); typeChartInst = null; }
+        var c = chartColors();
+        try {
+            typeChartInst = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: typeLabels,
+                    datasets: [{
+                        data: typeCounts,
+                        backgroundColor: typeColors,
+                        borderColor: 'transparent',
+                        hoverOffset: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '68%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: c.text,
+                                font: { family: 'Space Grotesk', size: 11 },
+                                padding: 12,
+                                boxWidth: 12,
+                                borderRadius: 4,
+                            }
+                        }
+                    }
+                }
+            });
+        } catch(e) { console.error('typeChart:', e); }
+    }
+
+    function initOccChart() {
+        var ctx = document.getElementById('occupancyChart');
+        if (!ctx || propLabels.length === 0) return;
+        if (occChartInst) { occChartInst.destroy(); occChartInst = null; }
+        var c = chartColors();
+        try {
+            occChartInst = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: propLabels,
+                    datasets: [
+                        {
+                            label: 'Vacant',
+                            data: propVacant,
+                            backgroundColor: '#34d399',
+                            borderRadius: 4,
+                            borderSkipped: false,
+                        },
+                        {
+                            label: 'Occupied',
+                            data: propOccupied,
+                            backgroundColor: '#f87171',
+                            borderRadius: 4,
+                            borderSkipped: false,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: c.text,
+                                font: { family: 'Space Grotesk', size: 11 },
+                                boxWidth: 12,
+                                borderRadius: 4,
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { color: c.grid },
+                            ticks: { color: c.ticks, font: { family: 'Space Grotesk', size: 11 } }
+                        },
+                        y: {
+                            stacked: true,
+                            grid: { color: c.grid },
+                            ticks: {
+                                color: c.ticks,
+                                font: { family: 'Space Grotesk', size: 11 },
+                                stepSize: 1,
+                            }
+                        }
+                    }
+                }
+            });
+        } catch(e) { console.error('occChart:', e); }
+    }
+
+    function initInqChart() {
+        var ctx = document.getElementById('inquiryChart');
+        if (!ctx) return;
+        if (inqChartInst) { inqChartInst.destroy(); inqChartInst = null; }
+        var c = chartColors();
+        try {
+            var canvas = ctx.getContext('2d');
+            var g = canvas.createLinearGradient(0, 0, 0, 180);
+            g.addColorStop(0, 'rgba(139,92,246,0.35)');
+            g.addColorStop(1, 'rgba(59,130,246,0.02)');
+            inqChartInst = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: inqDates,
+                    datasets: [{
+                        label: 'Inquiries',
+                        data: inqCounts,
+                        fill: true,
+                        backgroundColor: g,
+                        borderColor: '#8b5cf6',
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#8b5cf6',
+                        tension: .35,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: c.grid },
+                            ticks: { color: c.ticks, font: { family: 'Space Grotesk', size: 11 } }
+                        },
+                        y: {
+                            grid: { color: c.grid },
+                            ticks: {
+                                color: c.ticks,
+                                font: { family: 'Space Grotesk', size: 11 },
+                                stepSize: 1,
+                            }
+                        }
+                    }
+                }
+            });
+        } catch(e) { console.error('inqChart:', e); }
+    }
+
+    function updateChartColors() {
+        [typeChartInst, occChartInst, inqChartInst].forEach(function(ch) {
+            if (!ch) return;
+            var c = chartColors();
+            if (ch.options.scales && ch.options.scales.x) {
+                ch.options.scales.x.grid.color = c.grid;
+                ch.options.scales.x.ticks.color = c.ticks;
+            }
+            if (ch.options.scales && ch.options.scales.y) {
+                ch.options.scales.y.grid.color = c.grid;
+                ch.options.scales.y.ticks.color = c.ticks;
+            }
+            if (ch.options.plugins && ch.options.plugins.legend && ch.options.plugins.legend.labels) {
+                ch.options.plugins.legend.labels.color = c.text;
+            }
+            ch.update();
+        });
+    }
+
+    function initCharts() {
+        if (typeof Chart === 'undefined') {
+            setTimeout(initCharts, 200);
+            return;
+        }
+        initTypeChart();
+        initOccChart();
+        initInqChart();
+    }
+
+    initCharts();
+})();
+</script>
+{% endblock %}

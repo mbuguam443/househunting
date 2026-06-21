@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My Portal - PataNyumba{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="db-sidebar" id="dbSidebar">
+        <div class="db-logo">
+            <div class="logo-i"><i class="fa-solid fa-compass"></i></div>
+            <span>PataNyumba</span>
+        </div>
+        <div class="db-nav">
+            <div class="db-nav-section">Tenant Portal</div>
+            <a href="{% url 'portal:home' %}" class="db-nl {% if active_tab == 'home' %}active{% endif %}"><i class="fa-solid fa-house"></i> Overview</a>
+            <a href="{% url 'portal:payments' %}" class="db-nl {% if active_tab == 'payments' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> Payments</a>
+            <a href="{% url 'portal:pay' %}" class="db-nl {% if active_tab == 'pay' %}active{% endif %}"><i class="fa-solid fa-money-bill-wave"></i> Pay Rent</a>
+            <a href="{% url 'portal:maintenance' %}" class="db-nl {% if active_tab == 'maintenance' %}active{% endif %}"><i class="fa-solid fa-wrench"></i> Maintenance</a>
+            <div class="db-nav-section">General</div>
+            <a href="{% url 'accounts:profile' %}" class="db-nl"><i class="fa-regular fa-user"></i> Profile</a>
+            <a href="{% url 'website:home' %}" class="db-nl"><i class="fa-solid fa-globe"></i> Public Site</a>
+            <a href="{% url 'accounts:logout' %}" class="db-nl"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+        </div>
+    </div>
+
+    <div class="db-top">
+        <button class="hamburger-db" id="dbMenuToggle"><i class="fa-solid fa-bars"></i></button>
+        <div style="font-weight:600">{% block portal_title %}Tenant Portal{% endblock %}</div>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <div class="db-avatar">{{ user.username|first|upper }}</div>
+            <span style="font-size:.85rem;font-weight:500">{{ user.username }}</span>
+        </div>
+    </div>
+
+    <div class="db-main">
+        {% if messages %}
+        <div style="padding:16px 28px 0">
+            {% for message in messages %}
+            <div class="msg msg-success" style="animation:fadU .3s ease;background:{% if message.tags == 'error' %}rgba(248,113,113,.1){% else %}rgba(52,211,153,.1){% endif %};border:1px solid {% if message.tags == 'error' %}rgba(248,113,113,.2){% else %}rgba(52,211,153,.2){% endif %};color:{% if message.tags == 'error' %}#f87171{% else %}#34d399{% endif %}">
+                <i class="fa-solid fa-{% if message.tags == 'error' %}circle-exclamation{% else %}check-circle{% endif %} me-1"></i> {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="db-content">
+            {% block portal_content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="/static/js/jquery-3.7.1.min.js"></script>
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('dbMenuToggle')?.addEventListener('click', function(){
+            document.getElementById('dbSidebar').classList.toggle('mob-open');
+        });
+        document.querySelectorAll('.db-nl').forEach(function(el){
+            el.addEventListener('click', function(){
+                document.getElementById('dbSidebar')?.classList.remove('mob-open');
+            });
+        });
+
+        setTimeout(function(){ $('.msg').fadeOut(400); }, 5000);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

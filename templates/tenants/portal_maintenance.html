@@ -1,0 +1,49 @@
+{% extends 'tenants/portal_base.html' %}
+{% block title %}Maintenance - PataNyumba{% endblock %}
+{% block portal_title %}Maintenance Requests{% endblock %}
+{% block portal_content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-plus me-2"></i>Submit Request</h5>
+            <form method="POST">
+                {% csrf_token %}
+                <label class="olbl">Title</label>
+                {{ form.title }}
+                <label class="olbl">Description</label>
+                {{ form.description }}
+                <label class="olbl">Priority</label>
+                {{ form.priority }}
+                <button type="submit" class="bgrd btn px-5 py-2 mt-2"><i class="fa-solid fa-paper-plane me-1"></i> Submit</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-list me-2"></i>My Requests</h5>
+            {% if requests %}
+            {% for r in requests %}
+            <div class="p-3" style="background:var(--bg3);border-radius:12px;margin-bottom:10px">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="fw-semibold mb-0" style="color:var(--tx)">{{ r.title }}</h6>
+                    <span class="{% if r.priority == 'urgent' %}badge-occupied{% elif r.priority == 'high' %}ftag-warning{% else %}ftag{% endif %}">{{ r.get_priority_display }}</span>
+                </div>
+                <p style="font-size:.82rem;color:var(--tx2);margin-bottom:6px">{{ r.description|truncatechars:120 }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-size:.76rem;color:var(--tx3)">{{ r.created_at|date:'M d, Y' }}</span>
+                    <span class="ftag mt-0" style="{% if r.status == 'submitted' %}background:rgba(59,130,246,0.12);color:#60a5fa;border-color:rgba(59,130,246,0.2){% elif r.status == 'in_progress' %}background:rgba(245,158,11,0.12);color:#fbbf24;border-color:rgba(245,158,11,0.2){% elif r.status == 'resolved' %}background:rgba(52,211,153,0.12);color:#34d399;border-color:rgba(52,211,153,0.2){% endif %}">{{ r.get_status_display }}</span>
+                </div>
+                {% if r.landlord_notes %}
+                <div class="mt-2 p-2" style="background:var(--sf);border-radius:8px;font-size:.78rem;color:var(--tx2)">
+                    <strong style="color:var(--tx)">Landlord:</strong> {{ r.landlord_notes }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <p style="color:var(--tx3);text-align:center;padding:20px 0">No maintenance requests submitted.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

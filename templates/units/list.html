@@ -1,0 +1,67 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Units - PataNyumba{% endblock %}
+{% block db_title %}Units{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Units</h4>
+    <a href="{% url 'units:create' %}" class="bgrd btn px-4 py-2"><i class="fa-solid fa-plus me-1"></i> Add Unit</a>
+</div>
+{% if units %}
+<div class="gc p-4">
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th>Unit</th>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>Bedrooms</th>
+                    <th>Rent (KES)</th>
+                    <th>Status</th>
+                    <th>Published</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for unit in units %}
+                <tr>
+                    <td style="font-weight:600;color:var(--tx)">{{ unit.unit_number }}</td>
+                    <td>{{ unit.property.name|truncatechars:18 }}</td>
+                    <td>{{ unit.get_house_type_display }}</td>
+                    <td>{{ unit.bedrooms }}</td>
+                    <td>{{ unit.monthly_rent|floatformat:0 }}</td>
+                    <td>
+                        {% if unit.status == 'vacant' %}
+                        <span class="badge-vacant">Vacant</span>
+                        {% else %}
+                        <span class="badge-occupied">Occupied</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if unit.status == 'vacant' %}
+                        <span style="color:#34d399;font-size:.8rem"><i class="fa-regular fa-eye me-1"></i>Live</span>
+                        {% else %}
+                        <span style="color:var(--tx3);font-size:.8rem"><i class="fa-regular fa-eye-slash me-1"></i>Hidden</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'units:update' unit.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem"><i class="fa-regular fa-pen-to-square"></i></a>
+                            <a href="{% url 'units:delete' unit.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem;color:#f87171" onclick="return confirm('Delete this unit?')"><i class="fa-regular fa-trash-can"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="gc p-5 text-center">
+    <i class="fa-solid fa-door-open" style="font-size:3rem;color:var(--tx3);margin-bottom:16px"></i>
+    <h5 style="color:var(--tx2)">No units yet</h5>
+    <p style="color:var(--tx3)">Add a unit to start listing vacancies. Vacant units appear automatically on the public website.</p>
+    <a href="{% url 'units:create' %}" class="bgrd btn px-4 py-2">Add Unit</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}{{ title }} - PataNyumba{% endblock %}
+{% block db_title %}{{ title }}{% endblock %}
+{% block dashboard_content %}
+<div class="gc p-4" style="max-width:900px">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="olbl">Property</label>
+                {{ form.property }}
+            </div>
+            <div class="col-md-3">
+                <label class="olbl">Unit Number</label>
+                {{ form.unit_number }}
+            </div>
+            <div class="col-md-3">
+                <label class="olbl">Floor</label>
+                {{ form.floor }}
+            </div>
+            <div class="col-md-4">
+                <label class="olbl">House Type</label>
+                {{ form.house_type }}
+            </div>
+            <div class="col-md-2">
+                <label class="olbl">Bedrooms</label>
+                {{ form.bedrooms }}
+            </div>
+            <div class="col-md-2">
+                <label class="olbl">Bathrooms</label>
+                {{ form.bathrooms }}
+            </div>
+            <div class="col-md-4">
+                <label class="olbl">Status</label>
+                {{ form.status }}
+            </div>
+            <div class="col-md-4">
+                <label class="olbl">Monthly Rent (KES)</label>
+                {{ form.monthly_rent }}
+            </div>
+            <div class="col-md-4">
+                <label class="olbl">Deposit (KES)</label>
+                {{ form.deposit }}
+            </div>
+            <div class="col-md-4">
+                <label class="olbl">Available From</label>
+                {{ form.available_from }}
+            </div>
+            <div class="col-12">
+                <label class="olbl">Description</label>
+                {{ form.description }}
+            </div>
+            <div class="col-md-4">
+                <label class="olbl">Main Photo</label>
+                {{ form.image }}
+            </div>
+            <div class="col-md-4">
+                <label class="olbl">Photo 2</label>
+                {{ form.image_2 }}
+            </div>
+            <div class="col-md-4">
+                <label class="olbl">Photo 3</label>
+                {{ form.image_3 }}
+            </div>
+        </div>
+
+        {% if amenity_form %}
+        <hr style="border-color:var(--bd);margin:24px 0">
+        <h5 class="fw-semibold mb-3"><i class="fa-solid fa-list-check me-2"></i>Amenities</h5>
+        <div class="row g-3">
+            {% for field in amenity_form %}
+            <div class="col-md-4">
+                <div class="d-flex align-items-center gap-2">
+                    {{ field }}
+                    <label for="{{ field.id_for_label }}" style="color:var(--tx2);font-size:.875rem;cursor:pointer">{{ field.label }}</label>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div style="margin-top:24px">
+            {% if unit and unit.status == 'vacant' %}
+            <p style="font-size:.85rem;color:#34d399;margin-bottom:12px"><i class="fa-regular fa-eye me-1"></i> This unit is VACANT — it will appear on the public website.</p>
+            {% elif unit and unit.status == 'occupied' %}
+            <p style="font-size:.85rem;color:#f87171;margin-bottom:12px"><i class="fa-regular fa-eye-slash me-1"></i> This unit is OCCUPIED — it is hidden from the public website.</p>
+            {% endif %}
+            <button type="submit" class="bgrd btn px-5 py-2">
+                {% if unit %}Update{% else %}Create{% endif %} Unit <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i>
+            </button>
+            <a href="{% url 'units:list' %}" class="boc btn px-4 py-2 ms-2">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

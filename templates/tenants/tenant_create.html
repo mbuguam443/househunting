@@ -1,0 +1,23 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Assign Tenant - PataNyumba{% endblock %}
+{% block db_title %}Assign Tenant to Unit{% endblock %}
+{% block dashboard_content %}
+<div class="gc p-4" style="max-width:650px">
+    <p style="color:var(--tx2);font-size:.88rem;margin-bottom:20px">Select a tenant and an available (vacant) unit. The unit will be marked as occupied.</p>
+    <form method="POST">
+        {% csrf_token %}
+        <label class="olbl">Tenant</label>
+        {{ form.tenant }}
+        <label class="olbl">Unit</label>
+        {{ form.unit }}
+        <label class="olbl">Start Date</label>
+        {{ form.start_date }}
+        <label class="olbl">Monthly Rent (KES)</label>
+        {{ form.monthly_rent }}
+        <label class="olbl">Deposit Paid (KES)</label>
+        {{ form.deposit_paid }}
+        <button type="submit" class="bgrd btn px-5 py-2 mt-2"><i class="fa-solid fa-check me-1"></i> Assign Tenant</button>
+        <a href="{% url 'tenants:list' %}" class="boc btn px-4 py-2 mt-2 ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

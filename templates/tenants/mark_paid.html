@@ -1,0 +1,23 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Mark Paid - PataNyumba{% endblock %}
+{% block db_title %}Mark Payment as Paid{% endblock %}
+{% block dashboard_content %}
+<div class="gc p-4" style="max-width:500px">
+    <div class="mb-4">
+        <p style="color:var(--tx2);margin-bottom:4px"><strong>Tenant:</strong> {{ payment.tenancy.tenant.get_full_name|default:payment.tenancy.tenant.username }}</p>
+        <p style="color:var(--tx2);margin-bottom:4px"><strong>Amount:</strong> KES {{ payment.amount }}</p>
+        <p style="color:var(--tx2);margin-bottom:4px"><strong>Due:</strong> {{ payment.due_date|date:'M d, Y' }}</p>
+    </div>
+    <form method="POST">
+        {% csrf_token %}
+        <label class="olbl">Date Paid</label>
+        {{ form.paid_date }}
+        <label class="olbl">Reference (M-Pesa)</label>
+        {{ form.reference }}
+        <label class="olbl">Notes</label>
+        {{ form.notes }}
+        <button type="submit" class="bgrd btn px-5 py-2 mt-2"><i class="fa-solid fa-check me-1"></i> Confirm Payment</button>
+        <a href="{% url 'tenants:rent_collection' %}" class="boc btn px-4 py-2 mt-2 ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

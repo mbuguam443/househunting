@@ -1,0 +1,39 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Maintenance - PataNyumba{% endblock %}
+{% block db_title %}Maintenance Requests{% endblock %}
+{% block dashboard_content %}
+{% if urgent_count > 0 %}
+<div class="msg" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;margin-bottom:16px">
+    <i class="fa-solid fa-triangle-exclamation me-1"></i> {{ urgent_count }} urgent request{{ urgent_count|pluralize }} need attention
+</div>
+{% endif %}
+{% if requests %}
+<div class="row g-4">
+    {% for r in requests %}
+    <div class="col-md-6 col-lg-4">
+        <div class="gc p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="fw-semibold mb-0" style="color:var(--tx)">{{ r.title|truncatechars:28 }}</h5>
+                <span class="{% if r.priority == 'urgent' %}badge-occupied{% elif r.priority == 'high' %}ftag-warning{% else %}ftag{% endif %}">{{ r.get_priority_display }}</span>
+            </div>
+            <p style="font-size:.82rem;color:var(--tx3);margin-bottom:4px">
+                <i class="fa-regular fa-user me-1"></i>{{ r.tenant.get_full_name|default:r.tenant.username }}
+                — {{ r.unit.property.name|truncatechars:12 }} {{ r.unit.unit_number }}
+            </p>
+            <p style="font-size:.82rem;color:var(--tx2);margin-bottom:8px">{{ r.description|truncatechars:100 }}</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="ftag mt-0" style="{% if r.status == 'submitted' %}background:rgba(59,130,246,0.12);color:#60a5fa;border-color:rgba(59,130,246,0.2){% elif r.status == 'in_progress' %}background:rgba(245,158,11,0.12);color:#fbbf24;border-color:rgba(245,158,11,0.2){% elif r.status == 'resolved' %}background:rgba(52,211,153,0.12);color:#34d399;border-color:rgba(52,211,153,0.2){% endif %}">{{ r.get_status_display }}</span>
+                <a href="{% url 'tenants:maintenance_update' r.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem">Update</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="gc p-5 text-center">
+    <i class="fa-solid fa-wrench" style="font-size:3rem;color:var(--tx3);margin-bottom:16px"></i>
+    <h5 style="color:var(--tx2)">No maintenance requests</h5>
+    <p style="color:var(--tx3)">When tenants submit maintenance issues, they will appear here.</p>
+</div>
+{% endif %}
+{% endblock %}

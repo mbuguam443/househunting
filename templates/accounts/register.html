@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Create Account - PataNyumba{% endblock %}
+{% block content %}
+<section style="min-height:100vh;padding-top:var(--nav);display:flex;align-items:center;">
+    <div class="aur aur-b" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+    <div class="container position-relative" style="z-index:1">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="gc p-4" data-aos="fade-up">
+                    <div class="text-center mb-4">
+                        <div class="logo-i" style="width:40px;height:40px;font-size:1rem;margin:0 auto 12px"><i class="fa-solid fa-compass"></i></div>
+                        <h3 class="fw-bold">Create Your Account</h3>
+                        <p style="color:var(--tx3);font-size:.875rem">Join PataNyumba today</p>
+                    </div>
+                    <form method="POST">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <label class="olbl">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text and field.name == 'password1' %}
+                        <p style="color:var(--tx3);font-size:.72rem;margin-top:-10px;margin-bottom:10px">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% if field.errors %}
+                        {% for error in field.errors %}
+                        <p style="color:#f87171;font-size:.78rem;margin-top:-10px;margin-bottom:10px">{{ error }}</p>
+                        {% endfor %}
+                        {% endif %}
+                        {% endfor %}
+                        <label class="olbl">I am a</label>
+                        <select name="role" class="oinp" required>
+                            <option value="landlord">Landlord — I have properties to list</option>
+                            <option value="tenant">Tenant — I am looking for a home</option>
+                        </select>
+                        <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6">Create Account <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
+                    </form>
+                    <div class="odiv">or</div>
+                    <p class="text-center" style="font-size:.82rem;color:var(--tx3)">Already have an account? <a href="{% url 'accounts:login' %}" style="color:var(--pur)">Log in</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
