@@ -31,3 +31,4 @@ Thumbs.db
 # Project specific
 nexusai-1.0.0.zip
 static/img/
+staticfiles/
