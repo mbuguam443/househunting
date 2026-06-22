@@ -9,16 +9,17 @@ MANIFEST = {
     "description": "Find your next home in Kenya. Browse rental properties, apartments, and houses across the country.",
     "start_url": "/",
     "display": "standalone",
+    "display_override": ["standalone", "fullscreen"],
     "orientation": "portrait-primary",
     "theme_color": "#6a4cdb",
     "background_color": "#121212",
     "categories": ["real estate", "rental", "housing"],
     "lang": "en-KE",
     "icons": [
-        {"src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
-        {"src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+        {"src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+        {"src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+        {"src": "/static/icons/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any"},
     ],
-    "screenshots": [],
 }
 
 

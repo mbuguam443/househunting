@@ -7,6 +7,7 @@ const STATIC = [
   '/static/js/jquery-3.7.1.min.js',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
+  '/static/icons/icon-1024.png',
 ];
 
 self.addEventListener('install', (e) => {
