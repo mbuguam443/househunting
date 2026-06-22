@@ -5,8 +5,8 @@ const STATIC = [
   '/static/css/all.min.css',
   '/static/js/bootstrap.bundle.min.js',
   '/static/js/jquery-3.7.1.min.js',
-  '/static/img/icon-192.png',
-  '/static/img/icon-512.png',
+  '/static/icons/icon-192.png',
+  '/static/icons/icon-512.png',
 ];
 
 self.addEventListener('install', (e) => {
