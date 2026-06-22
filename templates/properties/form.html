@@ -3,7 +3,7 @@
 {% block db_title %}{{ title }}{% endblock %}
 {% block dashboard_content %}
 <div class="gc p-4" style="max-width:800px">
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="row g-3">
             <div class="col-12">
@@ -37,6 +37,10 @@
             <div class="col-md-6">
                 <label class="olbl">Longitude</label>
                 {{ form.longitude }}
+            </div>
+            <div class="col-12">
+                <label class="olbl">Photo</label>
+                {{ form.image }}
             </div>
         </div>
         <button type="submit" class="bgrd btn px-5 py-2 mt-3">
