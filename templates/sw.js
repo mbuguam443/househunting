@@ -1,4 +1,4 @@
-const CACHE = 'pata-v1';
+const CACHE = 'pata-v2';
 const STATIC = [
   '/static/css/style.css',
   '/static/css/bootstrap.min.css',

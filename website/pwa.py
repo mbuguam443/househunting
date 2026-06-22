@@ -8,6 +8,7 @@ MANIFEST = {
     "short_name": "PataNyumba",
     "description": "Find your next home in Kenya. Browse rental properties, apartments, and houses across the country.",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "display_override": ["standalone", "fullscreen"],
     "orientation": "portrait-primary",
