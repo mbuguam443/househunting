@@ -11,6 +11,9 @@
     <link href="/static/css/all.min.css" rel="stylesheet">
     <link href="/static/css/aos.css" rel="stylesheet">
     <link href="/static/css/style.css" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6a4cdb">
+    <link rel="icon" href="/static/img/icon-192.png" sizes="192x192">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -148,6 +151,9 @@
         $('#mbtog').click(function(){ $('#mbmenu').toggleClass('open'); $('#barIcon,#xIcon').toggle(); });
         $(window).scroll(function(){ $('#nbar').toggleClass('scr', $(this).scrollTop() > 40); });
         setTimeout(function(){ $('.msg').fadeOut(400); }, 5000);
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
     </script>
     {% block scripts %}{% endblock %}
 </body>
