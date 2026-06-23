@@ -247,6 +247,24 @@ def mpesa_callback(request):
 
 
 @login_required
+def check_payment_status(request):
+    payment_id = request.GET.get('payment_id')
+    if not payment_id:
+        return JsonResponse({'error': 'payment_id required'}, status=400)
+    try:
+        pmt = RentPayment.objects.get(pk=payment_id, tenancy__tenant=request.user)
+    except RentPayment.DoesNotExist:
+        return JsonResponse({'error': 'Payment not found'}, status=404)
+    tx = MpesaTransaction.objects.filter(payment=pmt).first()
+    return JsonResponse({
+        'payment_id': pmt.id,
+        'payment_status': pmt.status,
+        'mpesa_status': tx.status if tx else None,
+        'receipt': pmt.reference,
+        'amount': str(pmt.amount),
+    })
+
+@login_required
 def stk_push_view(request):
     if request.user.profile.role != 'tenant':
         return JsonResponse({'error': 'Tenant access required'}, status=403)
@@ -282,5 +300,6 @@ def stk_push_view(request):
     return JsonResponse({
         'success': True,
         'message': 'STK push sent. Check your phone and enter your M-Pesa PIN.',
+        'payment_id': payment.id,
         'checkout_id': tx.checkout_request_id,
     })

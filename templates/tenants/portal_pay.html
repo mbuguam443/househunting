@@ -126,8 +126,26 @@ function payMpesa() {
     })
     .then(function(data){
         document.getElementById('mpesaMsg').textContent = data.error ? 'Error: ' + data.error : (data.message || 'STK push sent!');
-        document.getElementById('mpesaStatus').innerHTML = data.error ? '' : 'Waiting for confirmation...<br><small style=color:var(--tx3)><a href=https://developer.safaricom.co.ke target=_blank style=color:var(--pur)>Open Safaricom Simulator</a> to complete the payment.</small>';
-        if (!data.error) setTimeout(function(){ location.reload(); }, 30000);
+        document.getElementById('mpesaStatus').innerHTML = data.error ? '' : 'Waiting for confirmation...<br><small style=color:var(--tx3)><a href=https://developer.safaricom.co.ke target=_blank style=color:var(--pur)>Open Simulator</a> to approve in sandbox</small>';
+        if (data.error) return;
+        var pid = data.payment_id;
+        var poll = setInterval(function(){
+            fetch('/mpesa/check-status/?payment_id=' + pid)
+            .then(function(r){ return r.json(); })
+            .then(function(s){
+                if (s.mpesa_status === 'completed') {
+                    document.getElementById('mpesaMsg').textContent = '✓ Payment of KES ' + s.amount + ' confirmed!' + (s.receipt ? ' (' + s.receipt + ')' : '');
+                    document.getElementById('mpesaStatus').innerHTML = '<span style=color:#34d399>Payment successful</span>';
+                    clearInterval(poll);
+                    setTimeout(function(){ location.reload(); }, 3000);
+                } else if (s.mpesa_status === 'failed') {
+                    document.getElementById('mpesaMsg').textContent = 'Payment failed. Try again.';
+                    document.getElementById('mpesaStatus').innerHTML = '<a href="' + window.location + '" style=color:var(--pur)>Refresh page</a>';
+                    clearInterval(poll);
+                }
+            }).catch(function(){});
+        }, 3000);
+        setTimeout(function(){ clearInterval(poll); location.reload(); }, 60000);
     })
     .catch(function(err){
         document.getElementById('mpesaMsg').textContent = 'Network error. Check console.';
