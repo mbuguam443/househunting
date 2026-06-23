@@ -108,7 +108,7 @@ MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET', 'k5MCkJz8DEo7WZH
 MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY', 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919')
 MPESA_SHORTCODE = os.environ.get('MPESA_SHORTCODE', '174379')
 MPESA_ENV = os.environ.get('MPESA_ENV', 'sandbox')
-MPESA_CALLBACK_URL = os.environ.get('MPESA_CALLBACK_URL', 'https://patanyumba.onrender.com/mpesa/callback/')
+MPESA_CALLBACK_URL = os.environ.get('MPESA_CALLBACK_URL', 'https://24a6-102-205-50-218.ngrok-free.app/mpesa/callback/')
 
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'

@@ -12,7 +12,8 @@
                 <p class="mb-2"><strong style="color:var(--tx)">Unit:</strong> {{ tenancy.unit.unit_number }}</p>
                 <p class="mb-2"><strong style="color:var(--tx)">Monthly Rent:</strong> KES {{ tenancy.monthly_rent }}</p>
                 <p class="mb-2"><strong style="color:var(--tx)">Deposit:</strong> KES {{ tenancy.deposit_paid }}</p>
-                <p class="mb-0"><strong style="color:var(--tx)">Started:</strong> {{ tenancy.start_date|date:'M d, Y' }}</p>
+                <p class="mb-2"><strong style="color:var(--tx)">Started:</strong> {{ tenancy.start_date|date:'M d, Y' }}</p>
+                <p class="mb-0"><strong style="color:var(--tx)">Outstanding:</strong> <span style="color:{% if total_balance > 0 %}#f87171{% else %}#34d399{% endif %}">KES {{ total_balance }}</span></p>
             </div>
             <hr style="border-color:var(--bd)">
             <p style="font-size:.82rem;color:var(--tx3)">Your phone on file: <strong style="color:var(--tx)">{{ user.profile.phone|default:'Not set' }}</strong></p>

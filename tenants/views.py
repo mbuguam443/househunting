@@ -197,7 +197,8 @@ def portal_pay(request):
     if not tenancy:
         messages.error(request, 'You do not have an active tenancy.')
         return redirect('tenants:portal_home')
-    pending_payments = RentPayment.objects.filter(tenancy=tenancy).exclude(status='paid').order_by('due_date')
+    pending_payments = RentPayment.objects.filter(tenancy=tenancy).exclude(status='paid').exclude(notes='stk_intermediary').order_by('due_date')
+    total_balance = RentPayment.objects.filter(tenancy=tenancy).exclude(status='paid').exclude(notes='stk_intermediary').aggregate(s=Sum('amount'))['s'] or 0
     paid_payments = RentPayment.objects.filter(tenancy=tenancy, status='paid').order_by('-paid_date')[:5]
     mpesa_txs = MpesaTransaction.objects.filter(payment__tenancy=tenancy)[:5]
     return render(request, 'tenants/portal_pay.html', {
@@ -205,6 +206,7 @@ def portal_pay(request):
         'pending_payments': pending_payments,
         'paid_payments': paid_payments,
         'mpesa_txs': mpesa_txs,
+        'total_balance': total_balance,
     })
 
 @login_required
@@ -290,7 +292,7 @@ def stk_push_view(request):
         return JsonResponse({'error': 'No phone number. Update your profile first.'}, status=400)
 
     payment = RentPayment.objects.create(
-        tenancy=tenancy, amount=amount, due_date=timezone.now().date(), status='pending'
+        tenancy=tenancy, amount=amount, due_date=timezone.now().date(), status='pending', notes='stk_intermediary'
     )
 
     tx, error = stk_push(payment, phone)

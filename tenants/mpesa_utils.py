@@ -2,9 +2,10 @@ import json
 import base64
 import requests
 from datetime import datetime
+from decimal import Decimal
 from django.conf import settings
 from django.utils import timezone
-from .models import MpesaTransaction
+from .models import MpesaTransaction, RentPayment
 
 
 def _get_access_token():
@@ -115,5 +116,26 @@ def process_callback(data):
     pmt.paid_date = timezone.now().date()
     pmt.reference = receipt
     pmt.save()
+
+    paid_amount = pmt.amount
+    tenancy = pmt.tenancy
+
+    invoices = RentPayment.objects.filter(tenancy=tenancy).exclude(status='paid').order_by('due_date', 'id')
+    remaining = paid_amount
+    for inv in invoices:
+        if inv.id == pmt.id:
+            continue
+        if remaining <= 0:
+            break
+        if inv.amount <= remaining:
+            inv.status = 'paid'
+            inv.paid_date = timezone.now().date()
+            inv.reference = receipt
+            inv.save()
+            remaining -= inv.amount
+        else:
+            inv.amount -= remaining
+            inv.save()
+            remaining = Decimal('0')
 
     return True, receipt
