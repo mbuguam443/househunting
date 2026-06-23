@@ -34,8 +34,6 @@ class RentPayment(models.Model):
     ]
     METHOD_CHOICES = [
         ('mpesa', 'M-Pesa'),
-        ('cash', 'Cash'),
-        ('bank', 'Bank Transfer'),
     ]
     tenancy = models.ForeignKey(Tenancy, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2)

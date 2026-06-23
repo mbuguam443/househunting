@@ -49,14 +49,14 @@ class RentPaymentForm(forms.ModelForm):
             'paid_date': forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}),
             'amount': forms.NumberInput(attrs={'class': 'oinp'}),
             'payment_method': forms.Select(attrs={'class': 'oinp'}),
-            'reference': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Transaction ref (M-Pesa code or receipt)'}),
+            'reference': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'M-Pesa confirmation code'}),
             'notes': forms.Textarea(attrs={'class': 'oinp', 'rows': 3}),
         }
 
 class MarkPaidForm(forms.Form):
     paid_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}))
     payment_method = forms.ChoiceField(choices=RentPayment.METHOD_CHOICES, widget=forms.Select(attrs={'class': 'oinp'}))
-    reference = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'M-Pesa code, receipt no., or leave blank for cash'}))
+    reference = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'M-Pesa confirmation code'}))
     notes = forms.CharField(max_length=500, required=False, widget=forms.Textarea(attrs={'class': 'oinp', 'rows': 2}))
 
 class MaintenanceForm(forms.ModelForm):
