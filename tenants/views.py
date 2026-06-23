@@ -8,7 +8,7 @@ from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from datetime import timedelta
-from .models import Tenancy, RentPayment, MaintenanceRequest
+from .models import Tenancy, RentPayment, MaintenanceRequest, MpesaTransaction
 from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm
 from .rent_utils import generate_rent_payments, mark_overdue_payments
 from .mpesa_utils import stk_push, process_callback
