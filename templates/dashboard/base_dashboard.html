@@ -43,7 +43,7 @@
         <div style="font-weight:600">{% block db_title %}Dashboard{% endblock %}</div>
         <div class="ms-auto d-flex align-items-center gap-3">
             <div style="position:relative;display:inline-block">
-                <button onclick="document.getElementById('notifDrop').classList.toggle('show')" style="background:none;border:none;color:var(--tx2);font-size:1.15rem;cursor:pointer;padding:6px;display:flex;align-items:center;border-radius:50px;transition:background .2s" onmouseenter="this.style.background='var(--bd)'" onmouseleave="this.style.background='transparent'">
+                <button onclick="toggleDrop('notifDrop')" style="background:none;border:none;color:var(--tx2);font-size:1.15rem;cursor:pointer;padding:6px;display:flex;align-items:center;border-radius:50px;transition:background .2s" onmouseenter="this.style.background='var(--bd)'" onmouseleave="this.style.background='transparent'">
                     <i class="fa-regular fa-bell"></i>
                     <span style="position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;background:#ef4444;color:#fff;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--bg2);line-height:1">{{ unread_count }}</span>
                 </button>
@@ -65,8 +65,17 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="db-avatar">{{ user.username|first|upper }}</div>
-            <span style="font-size:.85rem;font-weight:500">{{ user.username }}</span>
+            <div style="position:relative;display:inline-block">
+                <button onclick="toggleDrop('userDrop')" style="background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:8px">
+                    <div class="db-avatar">{{ user.username|first|upper }}</div>
+                    <span style="font-size:.85rem;font-weight:500;color:var(--tx);cursor:pointer">{{ user.username }}</span>
+                </button>
+                <div id="userDrop" style="position:absolute;top:calc(100% + 8px);right:0;width:200px;background:var(--bg2);border:1px solid var(--bd);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:999;display:none;overflow:hidden">
+                    <a href="{% url 'accounts:profile' %}" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-decoration:none;font-size:.85rem;color:var(--tx2);border-bottom:1px solid var(--bd);transition:background .15s" onmouseenter="this.style.background='var(--bd)'" onmouseleave="this.style.background='transparent'"><i class="fa-regular fa-user" style="width:16px"></i> Profile</a>
+                    <a href="{% url 'accounts:change_password' %}" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-decoration:none;font-size:.85rem;color:var(--tx2);border-bottom:1px solid var(--bd);transition:background .15s" onmouseenter="this.style.background='var(--bd)'" onmouseleave="this.style.background='transparent'"><i class="fa-solid fa-lock" style="width:16px"></i> Change Password</a>
+                    <a href="{% url 'accounts:logout' %}" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-decoration:none;font-size:.85rem;color:#f87171;transition:background .15s" onmouseenter="this.style.background='var(--bd)'" onmouseleave="this.style.background='transparent'"><i class="fa-solid fa-arrow-right-from-bracket" style="width:16px"></i> Logout</a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -99,11 +108,21 @@
             });
         });
 
-        setTimeout(function(){ $('.msg').fadeOut(400); }, 5000);
+        function toggleDrop(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        }
         document.addEventListener('click', function(e){
-            var w = document.getElementById('notifDrop');
-            if (w && !e.target.closest('.notif-wrap')) w.classList.remove('show');
+            var btns = ['notifDrop','userDrop'];
+            for (var i=0;i<btns.length;i++) {
+                var el=document.getElementById(btns[i]);
+                if (!el) continue;
+                var p=e.target.closest('button');
+                if (!p||p.getAttribute('onclick')&&p.getAttribute('onclick').indexOf(btns[i])===-1||!p.getAttribute('onclick')) el.style.display='none';
+            }
         });
+        setTimeout(function(){ document.querySelectorAll('.msg').forEach(function(m){ m.style.display='none'; }); }, 5000);
     </script>
     {% block scripts %}{% endblock %}
 </body>
