@@ -196,25 +196,10 @@ def portal_pay(request):
     if not tenancy:
         messages.error(request, 'You do not have an active tenancy.')
         return redirect('tenants:portal_home')
-    if request.method == 'POST':
-        form = RentPaymentForm(request.POST)
-        if form.is_valid():
-            payment = form.save(commit=False)
-            payment.tenancy = tenancy
-            payment.status = 'paid' if payment.paid_date else 'pending'
-            payment.save()
-            messages.success(request, 'Payment recorded successfully.')
-            return redirect('tenants:portal_payments')
-    else:
-        form = RentPaymentForm(initial={
-            'amount': tenancy.monthly_rent,
-            'due_date': timezone.now().date(),
-            'paid_date': timezone.now().date(),
-        })
     pending_payments = RentPayment.objects.filter(tenancy=tenancy, status='pending').order_by('due_date')
     mpesa_txs = MpesaTransaction.objects.filter(payment__tenancy=tenancy)[:5]
     return render(request, 'tenants/portal_pay.html', {
-        'form': form, 'tenancy': tenancy,
+        'tenancy': tenancy,
         'pending_payments': pending_payments,
         'mpesa_txs': mpesa_txs,
     })
