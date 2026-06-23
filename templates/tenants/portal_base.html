@@ -39,6 +39,8 @@
     </div>
 
     <div class="db-main">
+        {% load tenant_extras %}
+        {% rent_reminder %}
         {% if messages %}
         <div style="padding:16px 28px 0">
             {% for message in messages %}

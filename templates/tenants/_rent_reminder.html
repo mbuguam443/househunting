@@ -1,0 +1,17 @@
+{% if show %}
+<div style="padding:16px 28px 0">
+    <div style="background:{% if overdue_count > 0 %}rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171{% else %}rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);color:#fbbf24{% endif %};border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <i class="fa-solid fa-{% if overdue_count > 0 %}exclamation-triangle{% else %}bell{% endif %}" style="font-size:1.2rem"></i>
+        <div style="flex:1;font-size:.88rem">
+            {% if overdue_count > 0 %}
+                You have <strong>{{ overdue_count }} overdue</strong> payment{{ overdue_count|pluralize }}
+                {% if pending_count > 0 %} and <strong>{{ pending_count }} pending</strong>{% endif %}
+                — total <strong>KES {{ total_balance }}</strong> outstanding.
+            {% else %}
+                You have <strong>{{ pending_count }} pending</strong> payment{{ pending_count|pluralize }} — total <strong>KES {{ total_balance }}</strong> due.
+            {% endif %}
+        </div>
+        <a href="{% url 'portal:pay' %}" class="btn px-3 py-1" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:.82rem;white-space:nowrap;text-decoration:none">Pay Now</a>
+    </div>
+</div>
+{% endif %}
