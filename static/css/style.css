@@ -1128,6 +1128,56 @@ a {
   font-weight: 700;
   flex-shrink: 0;
 }
+/* NOTIFICATIONS */
+.notif-wrap { position:relative; }
+.notif-btn {
+  background:none;border:none;color:var(--tx2);font-size:1.2rem;
+  cursor:pointer;position:relative;padding:6px;
+  display:flex;align-items:center;border-radius:50%;
+  transition:background .2s;
+}
+.notif-btn:hover { background:var(--bd); }
+.notif-dot {
+  position:absolute;top:0;right:0;width:18px;height:18px;
+  background:#ef4444;border-radius:50%;font-size:.6rem;
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-weight:700;border:2px solid var(--bg2);
+}
+.notif-drop {
+  position:absolute;top:calc(100% + 8px);right:0;width:340px;
+  background:var(--bg2);border:1px solid var(--bd);border-radius:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:999;
+  display:none;overflow:hidden;
+}
+.notif-drop.show { display:block; }
+.notif-h {
+  padding:12px 16px;font-weight:600;font-size:.85rem;
+  border-bottom:1px solid var(--bd);color:var(--tx);
+}
+.notif-item {
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 16px;text-decoration:none;transition:background .15s;
+  border-bottom:1px solid var(--bd);cursor:pointer;
+}
+.notif-item:hover { background:var(--bd); }
+.notif-icon {
+  width:32px;height:32px;border-radius:50%;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:.75rem;flex-shrink:0;
+}
+.notif-txt { font-size:.8rem;color:var(--tx);line-height:1.3; }
+.notif-time { font-size:.7rem;color:var(--tx3);margin-top:2px; }
+.notif-all {
+  display:block;padding:10px 16px;text-align:center;
+  font-size:.8rem;color:#6a4cdb;text-decoration:none;font-weight:500;
+}
+.notif-all:hover { background:var(--bd); }
+.notif-empty { padding:24px 16px;text-align:center;font-size:.82rem;color:var(--tx3); }
+.notif-badge {
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;border-radius:9px;background:#ef4444;
+  color:#fff;font-size:.65rem;font-weight:700;padding:0 5px;margin-left:6px;
+}
 /* DB SIDEBAR */
 .db-sidebar {
   position: fixed;

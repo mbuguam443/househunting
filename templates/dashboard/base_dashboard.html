@@ -28,7 +28,7 @@
             <a href="{% url 'tenants:rent_collection' %}" class="db-nl {% if active_tab == 'rent' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> Rent Collection</a>
             <a href="{% url 'tenants:maintenance_list' %}" class="db-nl {% if active_tab == 'maintenance' %}active{% endif %}"><i class="fa-solid fa-wrench"></i> Maintenance</a>
             <div class="db-nav-section">Management</div>
-            <a href="{% url 'dashboard:inquiries' %}" class="db-nl {% if active_tab == 'inquiries' %}active{% endif %}"><i class="fa-regular fa-message"></i> Inquiries</a>
+            <a href="{% url 'dashboard:inquiries' %}" class="db-nl {% if active_tab == 'inquiries' %}active{% endif %}"><i class="fa-regular fa-message"></i> Inquiries {% if unread_count > 0 %}<span class="notif-badge">{{ unread_count }}</span>{% endif %}</a>
             <a href="{% url 'dashboard:overview' %}" class="db-nl"><i class="fa-solid fa-chart-simple"></i> Analytics</a>
             <a href="{% url 'accounts:profile' %}" class="db-nl {% if active_tab == 'profile' %}active{% endif %}"><i class="fa-regular fa-user"></i> Profile</a>
             <a href="{% url 'accounts:change_password' %}" class="db-nl"><i class="fa-solid fa-lock"></i> Change Password</a>
@@ -41,7 +41,30 @@
     <div class="db-top">
         <button class="hamburger-db" id="dbMenuToggle"><i class="fa-solid fa-bars"></i></button>
         <div style="font-weight:600">{% block db_title %}Dashboard{% endblock %}</div>
-        <div class="ms-auto d-flex align-items-center gap-2">
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <div class="notif-wrap">
+                <button class="notif-btn" onclick="document.getElementById('notifDrop').classList.toggle('show')">
+                    <i class="fa-regular fa-bell"></i>
+                    {% if unread_count > 0 %}<span class="notif-dot">{{ unread_count }}</span>{% endif %}
+                </button>
+                <div class="notif-drop" id="notifDrop">
+                    <div class="notif-h">Notifications</div>
+                    {% if recent_inquiries %}
+                    {% for i in recent_inquiries %}
+                    <a href="{% url 'dashboard:inquiries' %}?mark_read={{ i.pk }}" class="notif-item">
+                        <div class="notif-icon"><i class="fa-regular fa-message"></i></div>
+                        <div>
+                            <div class="notif-txt">{{ i.name }} inquired about <strong>{{ i.unit.unit_number }}</strong></div>
+                            <div class="notif-time">{{ i.created_at|timesince }} ago</div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                    <a href="{% url 'dashboard:inquiries' %}" class="notif-all">View all inquiries</a>
+                    {% else %}
+                    <div class="notif-empty">No new notifications</div>
+                    {% endif %}
+                </div>
+            </div>
             <div class="db-avatar">{{ user.username|first|upper }}</div>
             <span style="font-size:.85rem;font-weight:500">{{ user.username }}</span>
         </div>
@@ -77,6 +100,10 @@
         });
 
         setTimeout(function(){ $('.msg').fadeOut(400); }, 5000);
+        document.addEventListener('click', function(e){
+            var w = document.getElementById('notifDrop');
+            if (w && !e.target.closest('.notif-wrap')) w.classList.remove('show');
+        });
     </script>
     {% block scripts %}{% endblock %}
 </body>
