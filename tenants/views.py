@@ -1,13 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from datetime import timedelta
 from .models import Tenancy, RentPayment, MaintenanceRequest
-from .forms import TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm
+from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm
 from units.models import Unit
 
 # ==================== LANDLORD VIEWS ====================
@@ -18,7 +16,7 @@ def register_tenant(request):
         messages.error(request, 'Landlord access required.')
         return redirect('website:home')
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = TenantRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
             user.profile.role = 'tenant'
@@ -26,7 +24,7 @@ def register_tenant(request):
             messages.success(request, f'Tenant "{user.username}" registered. Now assign them to a unit.')
             return redirect('tenants:create')
     else:
-        form = UserCreationForm()
+        form = TenantRegistrationForm()
     return render(request, 'tenants/register_tenant.html', {'form': form, 'active_tab': 'tenants'})
 
 @login_required

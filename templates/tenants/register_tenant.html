@@ -2,24 +2,26 @@
 {% block title %}Register Tenant - PataNyumba{% endblock %}
 {% block db_title %}Register Tenant{% endblock %}
 {% block dashboard_content %}
-<div class="gc p-4" style="max-width:600px">
-    <p style="color:var(--tx3);margin-bottom:20px">Create a tenant account so they can access the tenant portal at <code>/portal/</code>.</p>
+<div class="gc p-4" style="max-width:560px">
+    <p style="color:var(--tx3);margin-bottom:24px">Create a tenant account. They'll use these credentials to log into the tenant portal at <code style="font-size:.82rem">/portal/</code>.</p>
     <form method="POST">
         {% csrf_token %}
         {% for field in form %}
-        <label class="olbl">{{ field.label }}</label>
-        {{ field }}
-        {% if field.help_text %}
-        <p style="color:var(--tx3);font-size:.78rem;margin-top:-8px;margin-bottom:12px">{{ field.help_text }}</p>
-        {% endif %}
-        {% if field.errors %}
-        {% for error in field.errors %}
-        <p style="color:#f87171;font-size:.82rem;margin-top:-8px;margin-bottom:12px">{{ error }}</p>
+        <div style="margin-bottom:16px">
+            <label class="olbl">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+            <p style="color:var(--tx3);font-size:.78rem;margin-top:4px;margin-bottom:0">{{ field.help_text }}</p>
+            {% endif %}
+            {% for error in field.errors %}
+            <p style="color:#f87171;font-size:.82rem;margin-top:4px;margin-bottom:0">{{ error }}</p>
+            {% endfor %}
+        </div>
         {% endfor %}
-        {% endif %}
-        {% endfor %}
-        <button type="submit" class="bgrd btn px-5 py-2 mt-2">Register Tenant <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
-        <a href="{% url 'tenants:list' %}" class="boc btn px-4 py-2 mt-2 ms-2">Cancel</a>
+        <div class="d-flex align-items-center gap-3 mt-3">
+            <button type="submit" class="bgrd btn px-5 py-2">Register Tenant <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
+            <a href="{% url 'tenants:list' %}" class="boc btn px-4 py-2">Cancel</a>
+        </div>
     </form>
 </div>
 {% endblock %}

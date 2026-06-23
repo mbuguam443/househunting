@@ -1,6 +1,24 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 from .models import Tenancy, RentPayment, MaintenanceRequest
 from units.models import Unit
+
+
+class TenantRegistrationForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.setdefault('class', 'oinp')
+        self.fields['email'].required = True
+        self.fields['email'].widget.attrs['placeholder'] = 'e.g. tenant@example.com'
+        self.fields['username'].widget.attrs['placeholder'] = 'Username for tenant portal login'
+        self.fields['password1'].widget.attrs['placeholder'] = 'At least 8 characters'
+        self.fields['password2'].widget.attrs['placeholder'] = 'Repeat the password'
 
 class TenancyForm(forms.ModelForm):
     class Meta:
