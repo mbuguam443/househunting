@@ -6,6 +6,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Tenancy, RentPayment, MaintenanceRequest
 from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm
+from .rent_utils import generate_rent_payments, mark_overdue_payments
 from units.models import Unit
 
 # ==================== LANDLORD VIEWS ====================
@@ -46,6 +47,7 @@ def tenant_create(request):
             tenancy = form.save()
             tenancy.unit.status = 'occupied'
             tenancy.unit.save()
+            generate_rent_payments(landlord=request.user)
             messages.success(request, f'{tenancy.tenant.username} assigned to {tenancy.unit}.')
             return redirect('tenants:list')
     else:
@@ -82,6 +84,8 @@ def rent_collection(request):
     if request.user.profile.role != 'landlord':
         messages.error(request, 'Landlord access required.')
         return redirect('website:home')
+    generate_rent_payments(landlord=request.user)
+    mark_overdue_payments(landlord=request.user)
     tenancies = Tenancy.objects.filter(
         unit__property__owner=request.user, status='active'
     ).select_related('tenant', 'unit')

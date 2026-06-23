@@ -4,6 +4,7 @@ from accounts.models import Profile
 from properties.models import Property
 from units.models import Unit, UnitAmenity
 from website.models import Testimonial, Faq
+from tenants.rent_utils import generate_rent_payments
 
 class Command(BaseCommand):
     help = 'Seed database with initial data'
@@ -70,6 +71,17 @@ class Command(BaseCommand):
         # Mark some units as occupied
         for unit_no in ['A1', 'B1', '1A', '2B', 'MV2']:
             Unit.objects.filter(unit_number=unit_no).update(status='occupied')
+
+        # Create tenancy for johndoe demo tenant
+        from tenants.models import Tenancy
+        from datetime import date
+        tenant_user = User.objects.get(username='johndoe')
+        demo_unit = Unit.objects.get(unit_number='A1')
+        Tenancy.objects.get_or_create(
+            tenant=tenant_user, unit=demo_unit,
+            defaults=dict(start_date=date(2026, 1, 1), monthly_rent=demo_unit.monthly_rent, deposit_paid=25000, status='active'),
+        )
+        generate_rent_payments()
 
         Testimonial.objects.create(
             name='Grace Wambui', role='Tenant, Nairobi',
