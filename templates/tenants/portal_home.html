@@ -4,30 +4,38 @@
 {% block portal_content %}
 {% if tenancy %}
 <div class="row g-4 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="db-stat-card">
             <div class="db-stat-val gt">KES {{ tenancy.monthly_rent }}</div>
             <div class="db-stat-lbl">Monthly Rent</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="db-stat-card">
             <div class="db-stat-val" style="color:#34d399">{{ tenancy.start_date|date:'M d, Y' }}</div>
             <div class="db-stat-lbl">Tenancy Started</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="db-stat-card">
-            <div class="db-stat-val" style="color:#a78bfa">{{ tenancy.unit.property.name }}</div>
+            <div class="db-stat-val" style="color:#a78bfa">{{ tenancy.unit.property.name|truncatechars:15 }}</div>
             <div class="db-stat-lbl">{{ tenancy.unit.get_house_type_display }} — Unit {{ tenancy.unit.unit_number }}</div>
         </div>
+    </div>
+    <div class="col-md-3">
+        <a href="{% url 'portal:pay' %}" style="text-decoration:none;display:block">
+            <div class="db-stat-card" style="background:var(--grad);border-color:transparent;cursor:pointer;transition:transform .2s" onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform='scale(1)'">
+                <div class="db-stat-val" style="color:#fff;font-size:1rem"><i class="fa-solid fa-money-bill-wave me-2"></i> Pay Rent</div>
+                <div class="db-stat-lbl" style="color:rgba(255,255,255,.7)">Click to record payment</div>
+            </div>
+        </a>
     </div>
 </div>
 
 <div class="row g-4">
     <div class="col-lg-6">
         <div class="gc p-4">
-            <h5 class="fw-semibold mb-3"><i class="fa-regular fa-clock me-2"></i>Upcoming Payments</h5>
+            <h5 class="fw-semibold mb-3"><i class="fa-regular fa-clock me-2"></i>Upcoming Payments <a href="{% url 'portal:pay' %}" class="bgrd btn py-1 px-3 ms-2" style="font-size:.78rem">Pay Now <i class="fa-solid fa-arrow-right fa-xs ms-1"></i></a></h5>
             {% if upcoming_payments %}
             <div class="table-responsive">
                 <table class="db-table">
