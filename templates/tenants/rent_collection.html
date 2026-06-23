@@ -2,6 +2,19 @@
 {% block title %}Rent Collection - PataNyumba{% endblock %}
 {% block db_title %}Rent Collection{% endblock %}
 {% block dashboard_content %}
+<script>
+function requestPayment(name, amount, due, ref) {
+    var msg = '*PataNyumba Rent Reminder*\n\nHi ' + name + ', your rent of KES ' + amount + ' (due ' + due + ') is pending.\n\nPlease pay via M-Pesa and share the confirmation code so I can update the system.\n\nRef: ' + ref;
+    navigator.clipboard.writeText(msg).then(function(){
+        var btn = event.target;
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        btn.style.borderColor = '#34d399';
+        btn.style.color = '#34d399';
+        setTimeout(function(){ btn.innerHTML = orig; btn.style.borderColor = ''; btn.style.color = ''; }, 2000);
+    });
+}
+</script>
 <div class="row g-3 mb-4">
     <div class="col-sm-4">
         <div class="db-stat-card">
@@ -68,7 +81,10 @@
                     </td>
                     <td>
                         {% if p.status != 'paid' %}
-                        <a href="{% url 'tenants:mark_paid' p.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem">Mark Paid</a>
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'tenants:mark_paid' p.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem">Mark Paid</a>
+                            <button class="boc btn py-1 px-2" style="font-size:.72rem" onclick="requestPayment('{{ p.tenancy.tenant.get_full_name|default:p.tenancy.tenant.username|addslashes }}', '{{ p.amount|floatformat:0 }}', '{{ p.due_date|date:'M d, Y' }}', '{{ p.tenancy.tenant.username|upper }}-{{ p.due_date|date:'mY' }}')"><i class="fa-brands fa-whatsapp me-1"></i>Remind</button>
+                        </div>
                         {% endif %}
                     </td>
                 </tr>
