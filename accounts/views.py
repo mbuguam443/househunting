@@ -17,6 +17,8 @@ def register(request):
             messages.success(request, f'Welcome to PataNyumba, {user.username}!')
             if profile.role == 'landlord':
                 return redirect('dashboard:overview')
+            if profile.role == 'tenant':
+                return redirect('portal:home')
             return redirect('website:home')
     else:
         form = RegistrationForm()
@@ -32,8 +34,11 @@ def login_view(request):
             next_url = request.GET.get('next')
             if next_url:
                 return redirect(next_url)
-            if hasattr(user, 'profile') and user.profile.role == 'landlord':
-                return redirect('dashboard:overview')
+            if hasattr(user, 'profile'):
+                if user.profile.role == 'landlord':
+                    return redirect('dashboard:overview')
+                if user.profile.role == 'tenant':
+                    return redirect('portal:home')
             return redirect('website:home')
         messages.error(request, 'Invalid username or password.')
     return render(request, 'accounts/login.html')
