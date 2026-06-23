@@ -22,9 +22,23 @@
             </div>
         </div>
 
+        {% if paid_payments %}
+        <div class="gc p-4 mt-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-circle-check me-2"></i>Payment History</h5>
+            {% for p in paid_payments %}
+            <div class="d-flex justify-content-between align-items-center p-3" style="background:var(--bg3);border-radius:10px;margin-bottom:6px">
+                <div>
+                    <div style="font-weight:600;font-size:.82rem;color:var(--tx)">KES {{ p.amount }}</div>
+                    <div style="font-size:.72rem;color:var(--tx3)">{{ p.paid_date|date:'M d, Y' }}{% if p.reference %} — {{ p.reference }}{% endif %}</div>
+                </div>
+                <span style="font-size:.75rem;padding:2px 10px;border-radius:20px;font-weight:500;background:rgba(52,211,153,.12);color:#34d399">Paid</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% if mpesa_txs %}
         <div class="gc p-4 mt-4">
-            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i>Recent M-Pesa Transactions</h5>
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i>M-Pesa Transaction Log</h5>
             {% for tx in mpesa_txs %}
             <div class="d-flex justify-content-between align-items-center p-3" style="background:var(--bg3);border-radius:10px;margin-bottom:6px">
                 <div>
@@ -42,23 +56,35 @@
     </div>
 
     <div class="col-lg-7">
-        {% if pending_payments %}
         <div class="gc p-4 mb-4">
-            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-hourglass-half me-2"></i>Pending Payments</h5>
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-mobile-screen-button me-2"></i>Pay Rent via M-Pesa</h5>
+            <div class="mb-3">
+                <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Amount (KES)</label>
+                <input id="mpesaAmount" type="number" min="1" value="{{ tenancy.monthly_rent }}" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:1rem">
+            </div>
+            <div class="mb-3">
+                <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Phone Number</label>
+                <input id="mpesaPhone" type="tel" value="{{ user.profile.phone }}" placeholder="e.g. 0712345678" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:1rem">
+            </div>
+            <button class="bgrd btn px-4 py-2 w-100" onclick="payMpesa()">
+                <i class="fa-solid fa-mobile-screen-button me-1"></i> Pay via M-Pesa
+            </button>
+        </div>
+
+        {% if pending_payments %}
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-hourglass-half me-2"></i>Pending Invoices</h5>
             {% for p in pending_payments %}
-            <div class="d-flex justify-content-between align-items-center p-3" style="background:var(--bg3);border-radius:10px;margin-bottom:8px">
+            <div class="d-flex justify-content-between align-items-center p-3" style="background:var(--bg3);border-radius:10px;margin-bottom:6px">
                 <div>
                     <div style="font-weight:600;color:var(--tx)">KES {{ p.amount }}</div>
                     <div style="font-size:.78rem;color:var(--tx3)">Due {{ p.due_date|date:'M d, Y' }}</div>
                 </div>
-                <button class="bgrd btn px-3 py-2" style="font-size:.82rem" onclick="payMpesa({{ p.id }}, {{ p.amount }})">
-                    <i class="fa-solid fa-mobile-screen-button me-1"></i> Pay via M-Pesa
-                </button>
+                <span class="badge" style="background:rgba(251,191,36,.12);color:#fbbf24;padding:4px 12px;border-radius:20px">{{ p.get_status_display }}</span>
             </div>
             {% endfor %}
         </div>
         {% endif %}
-
     </div>
 </div>
 
@@ -73,20 +99,23 @@
 </div>
 
 <script>
-function payMpesa(paymentId, amount) {
-    var phone = prompt('Enter M-Pesa phone number (e.g. 0712345678 or +254712345678):', '{{ user.profile.phone }}');
-    if (!phone) return;
+function payMpesa() {
+    var amount = document.getElementById('mpesaAmount').value;
+    var phone = document.getElementById('mpesaPhone').value.trim();
+    if (!amount || parseFloat(amount) <= 0) { alert('Enter a valid amount.'); return; }
+    if (!phone) { alert('Enter your M-Pesa phone number.'); return; }
 
     var overlay = document.getElementById('mpesaOverlay');
     overlay.style.display = 'flex';
-    document.getElementById('mpesaMsg').textContent = 'Sending STK push to ' + phone + '...';
+    document.getElementById('mpesaMsg').textContent = 'Sending STK push for KES ' + amount + ' to ' + phone + '...';
     document.getElementById('mpesaStatus').textContent = 'Please wait...';
 
     var formData = new FormData();
+    formData.append('amount', amount);
     formData.append('phone', phone);
     formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-    fetch('/mpesa/stk-push/' + paymentId + '/', {
+    fetch('/mpesa/stk-push/', {
         method: 'POST',
         body: formData,
     })

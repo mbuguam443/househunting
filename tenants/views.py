@@ -8,6 +8,7 @@ from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from datetime import timedelta
+from decimal import Decimal
 from .models import Tenancy, RentPayment, MaintenanceRequest, MpesaTransaction
 from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm
 from .rent_utils import generate_rent_payments, mark_overdue_payments
@@ -196,11 +197,13 @@ def portal_pay(request):
     if not tenancy:
         messages.error(request, 'You do not have an active tenancy.')
         return redirect('tenants:portal_home')
-    pending_payments = RentPayment.objects.filter(tenancy=tenancy, status='pending').order_by('due_date')
+    pending_payments = RentPayment.objects.filter(tenancy=tenancy).exclude(status='paid').order_by('due_date')
+    paid_payments = RentPayment.objects.filter(tenancy=tenancy, status='paid').order_by('-paid_date')[:5]
     mpesa_txs = MpesaTransaction.objects.filter(payment__tenancy=tenancy)[:5]
     return render(request, 'tenants/portal_pay.html', {
         'tenancy': tenancy,
         'pending_payments': pending_payments,
+        'paid_payments': paid_payments,
         'mpesa_txs': mpesa_txs,
     })
 
@@ -244,18 +247,37 @@ def mpesa_callback(request):
 
 
 @login_required
-def stk_push_view(request, payment_id):
+def stk_push_view(request):
     if request.user.profile.role != 'tenant':
         return JsonResponse({'error': 'Tenant access required'}, status=403)
 
-    payment = get_object_or_404(RentPayment, pk=payment_id, tenancy__tenant=request.user, status='pending')
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    tenancy = Tenancy.objects.filter(tenant=request.user, status='active').first()
+    if not tenancy:
+        return JsonResponse({'error': 'No active tenancy'}, status=400)
+
+    try:
+        amount = Decimal(request.POST.get('amount', '0'))
+    except Exception:
+        return JsonResponse({'error': 'Invalid amount'}, status=400)
+
+    if amount <= 0:
+        return JsonResponse({'error': 'Amount must be greater than 0'}, status=400)
+
     phone = request.POST.get('phone') or request.user.profile.phone
 
     if not phone:
         return JsonResponse({'error': 'No phone number. Update your profile first.'}, status=400)
 
+    payment = RentPayment.objects.create(
+        tenancy=tenancy, amount=amount, due_date=timezone.now().date(), status='pending'
+    )
+
     tx, error = stk_push(payment, phone)
     if error:
+        payment.delete()
         return JsonResponse({'error': error}, status=400)
     return JsonResponse({
         'success': True,
