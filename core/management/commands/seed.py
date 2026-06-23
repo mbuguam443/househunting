@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from accounts.models import Profile, SubscriptionPlan, LandlordSubscription
+from accounts.models import Profile, SubscriptionPlan, PlatformConfig
 from properties.models import Property
 from units.models import Unit, UnitAmenity
 from website.models import Testimonial, Faq
@@ -24,6 +24,8 @@ class Command(BaseCommand):
         admin.profile.role = 'admin'
         admin.profile.phone = '+254 700 000 000'
         admin.profile.save()
+
+        PlatformConfig.objects.get_or_create(pk=1, defaults={'fee_per_unit': 50.00})
 
         for plan_name, amt, days, desc in [
             ('Monthly', 500, 30, '30 days of platform access'),

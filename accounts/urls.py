@@ -17,4 +17,5 @@ urlpatterns = [
     path('admin/plans/', views.admin_subscription_plans, name='admin_plans'),
     path('admin/plans/create/', views.admin_plan_create, name='admin_plan_create'),
     path('admin/plans/<int:pk>/toggle/', views.admin_plan_toggle, name='admin_plan_toggle'),
+    path('admin/update-fee/', views.admin_update_fee, name='admin_update_fee'),
 ]

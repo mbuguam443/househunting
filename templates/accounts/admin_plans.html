@@ -1,11 +1,26 @@
 {% extends 'accounts/admin_base.html' %}
-{% block title %}Subscription Plans - PataNyumba Admin{% endblock %}
-{% block admin_title %}Subscription Plans{% endblock %}
+{% block title %}Subscription - PataNyumba Admin{% endblock %}
+{% block admin_title %}Subscription Settings{% endblock %}
 {% block admin_content %}
+<div class="gc p-4 mb-4" style="max-width:500px">
+    <h5 class="fw-semibold mb-3"><i class="fa-solid fa-gear me-2"></i>Fee per Unit</h5>
+    <form method="post" action="{% url 'accounts:admin_update_fee' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Monthly platform fee per unit (KES)</label>
+            <div class="d-flex gap-2">
+                <input name="fee_per_unit" type="number" step="0.01" min="0" value="{{ config.fee_per_unit }}" class="oinp" style="flex:1">
+                <button class="bgrd btn px-3 py-2">Update</button>
+            </div>
+            <div style="font-size:.78rem;color:var(--tx3);margin-top:4px">A landlord with N units pays N × KES {{ config.fee_per_unit }} per month</div>
+        </div>
+    </form>
+</div>
+
 <div class="gc p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-semibold mb-0"><i class="fa-solid fa-credit-card me-2"></i>Plans</h5>
-        <a href="{% url 'accounts:admin_plan_create' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem">+ Add Plan</a>
+        <h5 class="fw-semibold mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>Legacy Plans</h5>
+        <a href="{% url 'accounts:admin_plan_create' %}" class="boc btn px-3 py-1" style="font-size:.82rem">+ Add Legacy Plan</a>
     </div>
     {% if plans %}
     <div class="table-responsive">
@@ -24,8 +39,6 @@
             </tbody>
         </table>
     </div>
-    {% else %}
-    <p style="color:var(--tx3);text-align:center;padding:20px 0">No plans yet.</p>
     {% endif %}
 </div>
 {% endblock %}

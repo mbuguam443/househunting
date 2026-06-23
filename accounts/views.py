@@ -7,7 +7,7 @@ from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import date, timedelta
 from .forms import RegistrationForm, ProfileForm, UserForm
-from .models import Profile, SubscriptionPlan, LandlordSubscription
+from .models import Profile, SubscriptionPlan, LandlordSubscription, PlatformConfig, get_fee_per_unit
 from properties.models import Property
 from units.models import Unit
 from tenants.models import Tenancy, RentPayment
@@ -113,12 +113,13 @@ def admin_dashboard(request):
     unit_count = Unit.objects.count()
     active_subs = LandlordSubscription.objects.filter(status='active').count()
     expired_subs = LandlordSubscription.objects.filter(status='expired').count()
-    sub_revenue = LandlordSubscription.objects.filter(status='active').aggregate(s=Sum('plan__amount'))['s'] or 0
+    sub_revenue = LandlordSubscription.objects.filter(status='active').aggregate(s=Sum('amount'))['s'] or 0
+    fee = get_fee_per_unit()
     return render(request, 'accounts/admin_dashboard.html', {
         'landlord_count': landlord_count, 'tenant_count': tenant_count,
         'prop_count': prop_count, 'unit_count': unit_count,
         'active_subs': active_subs, 'expired_subs': expired_subs,
-        'sub_revenue': sub_revenue,
+        'sub_revenue': sub_revenue, 'fee_per_unit': fee,
     })
 
 
@@ -128,7 +129,11 @@ def admin_landlords(request):
         messages.error(request, 'Admin access required.')
         return redirect('website:home')
     landlords = Profile.objects.filter(role='landlord').select_related('user').prefetch_related('user__subscriptions')
-    return render(request, 'accounts/admin_landlords.html', {'landlords': landlords})
+    fee = get_fee_per_unit()
+    for p in landlords:
+        p.unit_count = Unit.objects.filter(property__owner=p.user).count()
+        p.monthly_fee = p.unit_count * fee
+    return render(request, 'accounts/admin_landlords.html', {'landlords': landlords, 'fee_per_unit': fee})
 
 
 @login_required
@@ -155,8 +160,9 @@ def admin_subscription_plans(request):
     if request.user.profile.role != 'admin':
         messages.error(request, 'Admin access required.')
         return redirect('website:home')
+    config, _ = PlatformConfig.objects.get_or_create(pk=1, defaults={'fee_per_unit': 50.00})
     plans = SubscriptionPlan.objects.all()
-    return render(request, 'accounts/admin_plans.html', {'plans': plans})
+    return render(request, 'accounts/admin_plans.html', {'config': config, 'plans': plans})
 
 
 @login_required
@@ -189,22 +195,42 @@ def admin_plan_toggle(request, pk):
 
 
 @login_required
+def admin_update_fee(request):
+    if request.user.profile.role != 'admin':
+        return redirect('website:home')
+    if request.method == 'POST':
+        fee = request.POST.get('fee_per_unit')
+        if fee:
+            config, _ = PlatformConfig.objects.get_or_create(pk=1)
+            config.fee_per_unit = fee
+            config.save()
+            messages.success(request, f'Fee updated to KES {fee}/unit/month.')
+    return redirect('accounts:admin_plans')
+
+
+@login_required
 def admin_assign_subscription(request, landlord_id):
     if request.user.profile.role != 'admin':
         messages.error(request, 'Admin access required.')
         return redirect('website:home')
     landlord = get_object_or_404(User, pk=landlord_id, profile__role='landlord')
-    plans = SubscriptionPlan.objects.filter(is_active=True)
+    fee = get_fee_per_unit()
+    unit_count = Unit.objects.filter(property__owner=landlord).count()
+    monthly_fee = unit_count * fee
     if request.method == 'POST':
-        plan_id = request.POST.get('plan_id')
+        months = int(request.POST.get('months', 1))
         ref = request.POST.get('payment_reference', '')
-        plan = get_object_or_404(SubscriptionPlan, pk=plan_id)
+        total = monthly_fee * months
         LandlordSubscription.objects.create(
-            landlord=landlord, plan=plan,
+            landlord=landlord, unit_count=unit_count, amount=total,
             start_date=date.today(),
-            end_date=date.today() + timedelta(days=plan.duration_days),
+            end_date=date.today() + timedelta(days=30 * months),
             status='active', payment_reference=ref,
+            notes=f'{unit_count} units × KES {fee}/unit × {months} month(s)',
         )
-        messages.success(request, f'Subscription assigned to {landlord.username}.')
+        messages.success(request, f'{months}-month subscription for KES {total} assigned to {landlord.username}.')
         return redirect('accounts:admin_landlords')
-    return render(request, 'accounts/admin_assign_sub.html', {'landlord': landlord, 'plans': plans})
+    return render(request, 'accounts/admin_assign_sub.html', {
+        'landlord': landlord, 'fee_per_unit': fee,
+        'unit_count': unit_count, 'monthly_fee': monthly_fee,
+    })

@@ -10,19 +10,20 @@
     {% if landlords %}
     <div class="table-responsive">
         <table class="db-table">
-            <thead><tr><th>Username</th><th>Name</th><th>Phone</th><th>Properties</th><th>Subscription</th><th></th></tr></thead>
+            <thead><tr><th>Username</th><th>Name</th><th>Phone</th><th>Units</th><th>Monthly Fee</th><th>Subscription</th><th></th></tr></thead>
             <tbody>
                 {% for p in landlords %}
+                {% with sub=p.user.subscriptions.first %}
                 <tr>
                     <td style="font-weight:600;color:var(--tx)">{{ p.user.username }}</td>
                     <td>{{ p.user.get_full_name|default:'—' }}</td>
                     <td>{{ p.phone|default:'—' }}</td>
-                    <td>{{ p.user.properties.count }}</td>
-                    {% with sub=p.user.subscriptions.first %}
+                    <td>{{ p.unit_count }}</td>
+                    <td>KES {{ p.monthly_fee }}</td>
                     <td>{% if sub %}{% if sub.status == 'active' %}<span class="badge-vacant">Active</span> till {{ sub.end_date|date:'M d, Y' }}{% else %}<span class="badge-occupied">{{ sub.get_status_display }}</span>{% endif %}{% else %}<span class="ftag">None</span>{% endif %}</td>
-                    {% endwith %}
-                    <td><a href="{% url 'accounts:admin_assign_sub' p.user.id %}" class="boc btn py-1 px-2" style="font-size:.72rem">Assign Plan</a></td>
+                    <td><a href="{% url 'accounts:admin_assign_sub' p.user.id %}" class="boc btn py-1 px-2" style="font-size:.72rem">Assign</a></td>
                 </tr>
+                {% endwith %}
                 {% endfor %}
             </tbody>
         </table>

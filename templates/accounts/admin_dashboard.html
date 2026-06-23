@@ -24,7 +24,10 @@
         <div class="db-stat-card"><div class="db-stat-val" style="color:#f87171">{{ expired_subs }}</div><div class="db-stat-lbl">Expired</div></div>
     </div>
     <div class="col">
-        <div class="db-stat-card"><div class="db-stat-val gt">KES {{ sub_revenue|floatformat:0 }}</div><div class="db-stat-lbl">Monthly Revenue</div></div>
+        <div class="db-stat-card"><div class="db-stat-val gt">KES {{ sub_revenue|floatformat:0 }}</div><div class="db-stat-lbl">Active Subscription Revenue</div></div>
+    </div>
+    <div class="col">
+        <div class="db-stat-card"><div class="db-stat-val gt">KES {{ fee_per_unit|floatformat:0 }}</div><div class="db-stat-lbl">Fee per Unit (monthly)</div></div>
     </div>
 </div>
 <div class="row g-3">

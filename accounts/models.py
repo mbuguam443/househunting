@@ -2,6 +2,19 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import date
 
+
+class PlatformConfig(models.Model):
+    fee_per_unit = models.DecimalField(max_digits=8, decimal_places=2, default=50.00,
+        help_text='Monthly platform fee per unit (KES)')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Platform Configuration'
+
+    def __str__(self):
+        return f'KES {self.fee_per_unit}/unit'
+
+
 class Profile(models.Model):
     ROLE_CHOICES = (
         ('admin', 'Admin'),
@@ -40,7 +53,10 @@ class LandlordSubscription(models.Model):
         ('cancelled', 'Cancelled'),
     )
     landlord = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
-    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, related_name='subscriptions')
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name='subscriptions')
+    unit_count = models.PositiveIntegerField(default=0)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+        help_text='Total fee = unit_count × fee_per_unit at time of creation')
     start_date = models.DateField()
     end_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
@@ -52,7 +68,12 @@ class LandlordSubscription(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'{self.landlord.username} — {self.plan} ({self.get_status_display()})'
+        return f'{self.landlord.username} — KES {self.amount} ({self.get_status_display()})'
+
+
+def get_fee_per_unit():
+    cfg, _ = PlatformConfig.objects.get_or_create(pk=1, defaults={'fee_per_unit': 50.00})
+    return cfg.fee_per_unit
 
 
 def landlord_subscription_status(user):
