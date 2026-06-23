@@ -113,6 +113,7 @@ def mark_paid(request, pk):
         if form.is_valid():
             payment.status = 'paid'
             payment.paid_date = form.cleaned_data['paid_date']
+            payment.payment_method = form.cleaned_data['payment_method']
             payment.reference = form.cleaned_data['reference']
             payment.notes = form.cleaned_data['notes']
             payment.save()

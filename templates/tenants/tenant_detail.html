@@ -29,13 +29,14 @@
             {% if payments %}
             <div class="table-responsive">
                 <table class="db-table">
-                    <thead><tr><th>Due Date</th><th>Amount</th><th>Paid Date</th><th>Reference</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Due Date</th><th>Amount</th><th>Paid Date</th><th>Method</th><th>Reference</th><th>Status</th></tr></thead>
                     <tbody>
                         {% for p in payments %}
                         <tr>
                             <td>{{ p.due_date|date:'M d, Y' }}</td>
                             <td>KES {{ p.amount }}</td>
                             <td>{% if p.paid_date %}{{ p.paid_date|date:'M d, Y' }}{% else %}—{% endif %}</td>
+                            <td style="font-size:.78rem">{% if p.payment_method %}{{ p.get_payment_method_display }}{% else %}—{% endif %}</td>
                             <td style="font-size:.8rem">{{ p.reference|default:'—' }}</td>
                             <td>
                                 {% if p.status == 'paid' %}<span class="badge-vacant">Paid</span>

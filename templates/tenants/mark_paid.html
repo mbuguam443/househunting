@@ -12,7 +12,9 @@
         {% csrf_token %}
         <label class="olbl">Date Paid</label>
         {{ form.paid_date }}
-        <label class="olbl">Reference (M-Pesa)</label>
+        <label class="olbl">Payment Method</label>
+        {{ form.payment_method }}
+        <label class="olbl">Reference <span style="color:var(--tx3);font-weight:400">(optional for cash)</span></label>
         {{ form.reference }}
         <label class="olbl">Notes</label>
         {{ form.notes }}

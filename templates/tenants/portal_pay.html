@@ -34,7 +34,9 @@
                 {{ form.due_date }}
                 <label class="olbl">Date Paid</label>
                 {{ form.paid_date }}
-                <label class="olbl">M-Pesa Reference</label>
+                <label class="olbl">Payment Method</label>
+                {{ form.payment_method }}
+                <label class="olbl">Reference <span style="color:var(--tx3);font-weight:400">(M-Pesa code, receipt)</span></label>
                 {{ form.reference }}
                 <label class="olbl">Notes</label>
                 {{ form.notes }}

@@ -32,12 +32,18 @@ class RentPayment(models.Model):
         ('overdue', 'Overdue'),
         ('late', 'Late'),
     ]
+    METHOD_CHOICES = [
+        ('mpesa', 'M-Pesa'),
+        ('cash', 'Cash'),
+        ('bank', 'Bank Transfer'),
+    ]
     tenancy = models.ForeignKey(Tenancy, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     due_date = models.DateField()
     paid_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    reference = models.CharField(max_length=100, blank=True, help_text='M-Pesa transaction reference')
+    payment_method = models.CharField(max_length=10, choices=METHOD_CHOICES, default='mpesa')
+    reference = models.CharField(max_length=100, blank=True, help_text='Transaction reference (M-Pesa code or receipt)')
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

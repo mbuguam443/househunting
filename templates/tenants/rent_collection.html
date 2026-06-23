@@ -65,7 +65,7 @@ function requestPayment(name, amount, due, ref) {
     {% if payments %}
     <div class="table-responsive">
         <table class="db-table">
-            <thead><tr><th>Tenant</th><th>Amount</th><th>Due</th><th>Paid</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Tenant</th><th>Amount</th><th>Due</th><th>Paid</th><th>Method</th><th>Status</th><th></th></tr></thead>
             <tbody>
                 {% for p in payments %}
                 <tr>
@@ -73,6 +73,7 @@ function requestPayment(name, amount, due, ref) {
                     <td>KES {{ p.amount }}</td>
                     <td style="font-size:.82rem">{{ p.due_date|date:'M d, Y' }}</td>
                     <td style="font-size:.82rem">{% if p.paid_date %}{{ p.paid_date|date:'M d, Y' }}{% else %}—{% endif %}</td>
+                    <td style="font-size:.78rem">{% if p.payment_method %}{{ p.get_payment_method_display }}{% else %}—{% endif %}</td>
                     <td>
                         {% if p.status == 'paid' %}<span class="badge-vacant">Paid</span>
                         {% elif p.status == 'overdue' %}<span class="badge-occupied">Overdue</span>

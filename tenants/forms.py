@@ -43,18 +43,20 @@ class TenancyForm(forms.ModelForm):
 class RentPaymentForm(forms.ModelForm):
     class Meta:
         model = RentPayment
-        fields = ['amount', 'due_date', 'paid_date', 'reference', 'notes']
+        fields = ['amount', 'due_date', 'paid_date', 'payment_method', 'reference', 'notes']
         widgets = {
             'due_date': forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}),
             'paid_date': forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}),
             'amount': forms.NumberInput(attrs={'class': 'oinp'}),
-            'reference': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'M-Pesa ref'}),
+            'payment_method': forms.Select(attrs={'class': 'oinp'}),
+            'reference': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Transaction ref (M-Pesa code or receipt)'}),
             'notes': forms.Textarea(attrs={'class': 'oinp', 'rows': 3}),
         }
 
 class MarkPaidForm(forms.Form):
     paid_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}))
-    reference = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'M-Pesa reference'}))
+    payment_method = forms.ChoiceField(choices=RentPayment.METHOD_CHOICES, widget=forms.Select(attrs={'class': 'oinp'}))
+    reference = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'M-Pesa code, receipt no., or leave blank for cash'}))
     notes = forms.CharField(max_length=500, required=False, widget=forms.Textarea(attrs={'class': 'oinp', 'rows': 2}))
 
 class MaintenanceForm(forms.ModelForm):
