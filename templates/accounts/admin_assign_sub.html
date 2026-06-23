@@ -1,0 +1,25 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}Assign Subscription - PataNyumba Admin{% endblock %}
+{% block admin_title %}Assign Subscription{% endblock %}
+{% block admin_content %}
+<div class="gc p-4" style="max-width:500px">
+    <p style="color:var(--tx2);margin-bottom:16px">Assign a subscription plan to <strong style="color:var(--tx)">{{ landlord.username }}</strong></p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Plan</label>
+            <select name="plan_id" required class="oinp" style="width:100%">
+                <option value="">— Select Plan —</option>
+                {% for plan in plans %}
+                <option value="{{ plan.id }}">{{ plan.name }} — KES {{ plan.amount }} ({{ plan.duration_days }} days)</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Payment Reference (optional)</label>
+            <input name="payment_reference" class="oinp" style="width:100%" placeholder="M-Pesa code or bank ref">
+        </div>
+        <button class="bgrd btn w-100 py-2">Activate Subscription</button>
+    </form>
+</div>
+{% endblock %}

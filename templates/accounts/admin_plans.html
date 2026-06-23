@@ -1,0 +1,31 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}Subscription Plans - PataNyumba Admin{% endblock %}
+{% block admin_title %}Subscription Plans{% endblock %}
+{% block admin_content %}
+<div class="gc p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-semibold mb-0"><i class="fa-solid fa-credit-card me-2"></i>Plans</h5>
+        <a href="{% url 'accounts:admin_plan_create' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem">+ Add Plan</a>
+    </div>
+    {% if plans %}
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Name</th><th>Amount</th><th>Duration</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for plan in plans %}
+                <tr>
+                    <td style="font-weight:600;color:var(--tx)">{{ plan.name }}</td>
+                    <td>KES {{ plan.amount }}</td>
+                    <td>{{ plan.duration_days }} days</td>
+                    <td>{% if plan.is_active %}<span class="badge-vacant">Active</span>{% else %}<span class="badge-occupied">Inactive</span>{% endif %}</td>
+                    <td><a href="{% url 'accounts:admin_plan_toggle' plan.id %}" class="boc btn py-1 px-2" style="font-size:.72rem">{% if plan.is_active %}Deactivate{% else %}Activate{% endif %}</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--tx3);text-align:center;padding:20px 0">No plans yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}Landlords - PataNyumba Admin{% endblock %}
+{% block admin_title %}Landlords{% endblock %}
+{% block admin_content %}
+<div class="gc p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-semibold mb-0"><i class="fa-solid fa-building me-2"></i>All Landlords</h5>
+        <a href="{% url 'accounts:admin_create_landlord' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem">+ New Landlord</a>
+    </div>
+    {% if landlords %}
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Username</th><th>Name</th><th>Phone</th><th>Properties</th><th>Subscription</th><th></th></tr></thead>
+            <tbody>
+                {% for p in landlords %}
+                <tr>
+                    <td style="font-weight:600;color:var(--tx)">{{ p.user.username }}</td>
+                    <td>{{ p.user.get_full_name|default:'—' }}</td>
+                    <td>{{ p.phone|default:'—' }}</td>
+                    <td>{{ p.user.properties.count }}</td>
+                    {% with sub=p.user.subscriptions.first %}
+                    <td>{% if sub %}{% if sub.status == 'active' %}<span class="badge-vacant">Active</span> till {{ sub.end_date|date:'M d, Y' }}{% else %}<span class="badge-occupied">{{ sub.get_status_display }}</span>{% endif %}{% else %}<span class="ftag">None</span>{% endif %}</td>
+                    {% endwith %}
+                    <td><a href="{% url 'accounts:admin_assign_sub' p.user.id %}" class="boc btn py-1 px-2" style="font-size:.72rem">Assign Plan</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--tx3);text-align:center;padding:20px 0">No landlords yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

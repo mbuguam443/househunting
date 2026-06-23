@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin - PataNyumba{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="db-sidebar" id="adminSidebar">
+        <div class="db-logo">
+            <div class="logo-i"><i class="fa-solid fa-shield-halved"></i></div>
+            <span>PataNyumba</span>
+        </div>
+        <div class="db-nav">
+            <div class="db-nav-section">Admin</div>
+            <a href="{% url 'accounts:admin_dashboard' %}" class="db-nl {% if active_tab == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+            <a href="{% url 'accounts:admin_landlords' %}" class="db-nl {% if active_tab == 'landlords' %}active{% endif %}"><i class="fa-solid fa-building"></i> Landlords</a>
+            <a href="{% url 'accounts:admin_plans' %}" class="db-nl {% if active_tab == 'plans' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> Subscription Plans</a>
+            <div class="db-nav-section">General</div>
+            <a href="{% url 'website:home' %}" class="db-nl"><i class="fa-solid fa-globe"></i> Public Site</a>
+            <a href="{% url 'accounts:logout' %}" class="db-nl"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+        </div>
+    </div>
+
+    <div class="db-top">
+        <button class="hamburger-db" id="adminMenuToggle"><i class="fa-solid fa-bars"></i></button>
+        <div style="font-weight:600">{% block admin_title %}Admin Portal{% endblock %}</div>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <div class="db-avatar">{{ request.user.username|first|upper }}</div>
+            <span style="font-size:.85rem;font-weight:500">{{ request.user.username }}</span>
+        </div>
+    </div>
+
+    <div class="db-main">
+        {% if messages %}
+        <div style="padding:16px 28px 0">
+            {% for message in messages %}
+            <div class="msg" style="animation:fadU .3s ease;background:{% if message.tags == 'error' %}rgba(248,113,113,.1){% else %}rgba(52,211,153,.1){% endif %};border:1px solid {% if message.tags == 'error' %}rgba(248,113,113,.2){% else %}rgba(52,211,153,.2){% endif %};color:{% if message.tags == 'error' %}#f87171{% else %}#34d399{% endif %};padding:12px 18px;border-radius:10px;margin-bottom:12px">
+                <i class="fa-solid fa-{% if message.tags == 'error' %}circle-exclamation{% else %}check-circle{% endif %} me-1"></i> {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="db-content">
+            {% block admin_content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="/static/js/jquery-3.7.1.min.js"></script>
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('adminMenuToggle')?.addEventListener('click', function(){
+            document.getElementById('adminSidebar').classList.toggle('mob-open');
+        });
+        setTimeout(function(){ $('.msg').fadeOut(400); }, 5000);
+    </script>
+</body>
+</html>

@@ -1,12 +1,12 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from accounts.models import Profile
+from accounts.models import Profile, SubscriptionPlan, LandlordSubscription
 from properties.models import Property
 from units.models import Unit, UnitAmenity
 from website.models import Testimonial, Faq
 from tenants.models import Tenancy
 from tenants.rent_utils import generate_rent_payments
-from datetime import date
+from datetime import date, timedelta
 
 
 class Command(BaseCommand):
@@ -21,9 +21,16 @@ class Command(BaseCommand):
             admin.set_password('admin123')
             admin.first_name = 'Admin'
             admin.save()
-            admin.profile.role = 'landlord'
-            admin.profile.phone = '+254 700 000 000'
-            admin.profile.save()
+        admin.profile.role = 'admin'
+        admin.profile.phone = '+254 700 000 000'
+        admin.profile.save()
+
+        for plan_name, amt, days, desc in [
+            ('Monthly', 500, 30, '30 days of platform access'),
+            ('Quarterly', 1200, 90, '90 days — save 20%'),
+            ('Yearly', 4000, 365, 'Full year — save 33%'),
+        ]:
+            SubscriptionPlan.objects.get_or_create(name=plan_name, defaults=dict(amount=amt, duration_days=days, description=desc))
 
         tenant_user, _ = User.objects.get_or_create(
             username='johndoe',

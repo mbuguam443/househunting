@@ -1,0 +1,31 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}{{ title }} - PataNyumba Admin{% endblock %}
+{% block admin_title %}{{ title }}{% endblock %}
+{% block admin_content %}
+<div class="row" style="max-width:500px">
+    <div class="col">
+        <div class="gc p-4">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Plan Name</label>
+                    <input name="name" required class="oinp" style="width:100%" placeholder="e.g. Monthly">
+                </div>
+                <div class="mb-3">
+                    <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Amount (KES)</label>
+                    <input name="amount" type="number" min="0" step="0.01" required class="oinp" style="width:100%">
+                </div>
+                <div class="mb-3">
+                    <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Duration (days)</label>
+                    <input name="duration_days" type="number" min="1" required class="oinp" style="width:100%" placeholder="30">
+                </div>
+                <div class="mb-3">
+                    <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Description (optional)</label>
+                    <textarea name="description" class="oinp" style="width:100%;min-height:80px"></textarea>
+                </div>
+                <button class="bgrd btn w-100 py-2">Save Plan</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

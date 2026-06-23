@@ -1,0 +1,33 @@
+{% extends 'website/base.html' %}
+{% block title %}Admin Login - PataNyumba{% endblock %}
+{% block content %}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+    <div style="width:100%;max-width:400px">
+        <div style="text-align:center;margin-bottom:24px">
+            <div style="font-size:2.5rem;margin-bottom:8px"><i class="fa-solid fa-shield-halved" style="color:var(--pur)"></i></div>
+            <h4 style="color:var(--tx);font-weight:700">Admin Portal</h4>
+            <p style="color:var(--tx3);font-size:.88rem">Platform owner login</p>
+        </div>
+        <div class="gc p-4">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Username</label>
+                    <input name="username" required class="oinp" style="width:100%">
+                </div>
+                <div class="mb-3">
+                    <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Password</label>
+                    <input type="password" name="password" required class="oinp" style="width:100%">
+                </div>
+                <button class="bgrd btn w-100 py-2">Login</button>
+            </form>
+            {% if messages %}
+            <div style="margin-top:12px">
+                {% for m in messages %}<p style="color:#f87171;font-size:.82rem;text-align:center">{{ m }}</p>{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        <p style="text-align:center;margin-top:16px;font-size:.82rem"><a href="{% url 'accounts:login' %}" style="color:var(--pur)">Landlord / Tenant Login</a></p>
+    </div>
+</div>
+{% endblock %}

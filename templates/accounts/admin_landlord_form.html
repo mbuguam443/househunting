@@ -1,0 +1,33 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}{{ title }} - PataNyumba Admin{% endblock %}
+{% block admin_title %}{{ title }}{% endblock %}
+{% block admin_content %}
+<div class="row" style="max-width:500px">
+    <div class="col">
+        <div class="gc p-4">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Username</label>
+                    <input name="username" required class="oinp" style="width:100%">
+                    {% if form.username.errors %}<div style="color:#f87171;font-size:.78rem;margin-top:4px">{{ form.username.errors }}</div>{% endif %}
+                </div>
+                <div class="mb-3">
+                    <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Password</label>
+                    <input type="password" name="password1" required class="oinp" style="width:100%">
+                </div>
+                <div class="mb-3">
+                    <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Confirm Password</label>
+                    <input type="password" name="password2" required class="oinp" style="width:100%">
+                    {% if form.password2.errors %}<div style="color:#f87171;font-size:.78rem;margin-top:4px">{{ form.password2.errors }}</div>{% endif %}
+                </div>
+                <div class="mb-3">
+                    <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Phone</label>
+                    <input name="phone" class="oinp" style="width:100%" placeholder="+254 7XX XXX XXX">
+                </div>
+                <button class="bgrd btn w-100 py-2">Create Landlord</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

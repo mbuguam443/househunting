@@ -1,0 +1,46 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}Admin Dashboard - PataNyumba{% endblock %}
+{% block admin_title %}Admin Dashboard{% endblock %}
+{% block admin_content %}
+<div class="row g-3 mb-4">
+    <div class="col">
+        <div class="db-stat-card"><div class="db-stat-val gt">{{ landlord_count }}</div><div class="db-stat-lbl">Landlords</div></div>
+    </div>
+    <div class="col">
+        <div class="db-stat-card"><div class="db-stat-val" style="color:#34d399">{{ tenant_count }}</div><div class="db-stat-lbl">Tenants</div></div>
+    </div>
+    <div class="col">
+        <div class="db-stat-card"><div class="db-stat-val" style="color:#a78bfa">{{ prop_count }}</div><div class="db-stat-lbl">Properties</div></div>
+    </div>
+    <div class="col">
+        <div class="db-stat-card"><div class="db-stat-val" style="color:#fbbf24">{{ unit_count }}</div><div class="db-stat-lbl">Units</div></div>
+    </div>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col">
+        <div class="db-stat-card"><div class="db-stat-val gt">{{ active_subs }}</div><div class="db-stat-lbl">Active Subscriptions</div></div>
+    </div>
+    <div class="col">
+        <div class="db-stat-card"><div class="db-stat-val" style="color:#f87171">{{ expired_subs }}</div><div class="db-stat-lbl">Expired</div></div>
+    </div>
+    <div class="col">
+        <div class="db-stat-card"><div class="db-stat-val gt">KES {{ sub_revenue|floatformat:0 }}</div><div class="db-stat-lbl">Monthly Revenue</div></div>
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-md-4">
+        <a href="{% url 'accounts:admin_landlords' %}" class="gc p-4" style="display:block;text-decoration:none;cursor:pointer;transition:transform .2s" onmouseenter="this.style.transform='scale(1.02)'" onmouseleave="this.style.transform='scale(1)'">
+            <i class="fa-solid fa-building" style="font-size:2rem;color:var(--pur);margin-bottom:12px"></i>
+            <h6 style="color:var(--tx);font-weight:600">Manage Landlords</h6>
+            <p style="color:var(--tx3);font-size:.82rem;margin:0">Create and manage landlord accounts</p>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'accounts:admin_plans' %}" class="gc p-4" style="display:block;text-decoration:none;cursor:pointer;transition:transform .2s" onmouseenter="this.style.transform='scale(1.02)'" onmouseleave="this.style.transform='scale(1)'">
+            <i class="fa-solid fa-credit-card" style="font-size:2rem;color:var(--pur);margin-bottom:12px"></i>
+            <h6 style="color:var(--tx);font-weight:600">Subscription Plans</h6>
+            <p style="color:var(--tx3);font-size:.82rem;margin:0">Manage pricing and plans</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

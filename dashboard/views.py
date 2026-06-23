@@ -8,6 +8,7 @@ from properties.models import Property
 from units.models import Unit
 from website.models import Inquiry
 from tenants.models import Tenancy, MaintenanceRequest
+from accounts.models import landlord_subscription_status
 
 @login_required
 def overview(request):
@@ -65,6 +66,7 @@ def overview(request):
         inquiry_dates.append(day.strftime('%a'))
         inquiry_counts.append(Inquiry.objects.filter(unit__property__owner=request.user, created_at__date=day).count())
 
+    sub_status, sub = landlord_subscription_status(request.user)
     ctx = {
         'active_tab': 'overview',
         'properties_count': properties.count(),
@@ -86,6 +88,8 @@ def overview(request):
         'type_colors': json.dumps(type_colors[:len(type_labels)]),
         'inquiry_dates': json.dumps(inquiry_dates),
         'inquiry_counts': json.dumps(inquiry_counts),
+        'sub_status': sub_status,
+        'sub': sub,
     }
     return render(request, 'dashboard/overview.html', ctx)
 
