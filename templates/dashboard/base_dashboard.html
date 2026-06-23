@@ -28,7 +28,7 @@
             <a href="{% url 'tenants:rent_collection' %}" class="db-nl {% if active_tab == 'rent' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> Rent Collection</a>
             <a href="{% url 'tenants:maintenance_list' %}" class="db-nl {% if active_tab == 'maintenance' %}active{% endif %}"><i class="fa-solid fa-wrench"></i> Maintenance</a>
             <div class="db-nav-section">Management</div>
-            <a href="{% url 'dashboard:inquiries' %}" class="db-nl {% if active_tab == 'inquiries' %}active{% endif %}"><i class="fa-regular fa-message"></i> Inquiries <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;background:#ef4444;color:#fff;font-size:.65rem;font-weight:700;padding:0 5px;margin-left:6px;line-height:1">{{ unread_count }}</span></a>
+            <a href="{% url 'dashboard:inquiries' %}" class="db-nl {% if active_tab == 'inquiries' %}active{% endif %}"><i class="fa-regular fa-message"></i> Inquiries {% if unread_count %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;background:#ef4444;color:#fff;font-size:.65rem;font-weight:700;padding:0 5px;margin-left:6px;line-height:1">{{ unread_count }}</span>{% endif %}</a>
             <a href="{% url 'dashboard:overview' %}" class="db-nl"><i class="fa-solid fa-chart-simple"></i> Analytics</a>
             <a href="{% url 'accounts:profile' %}" class="db-nl {% if active_tab == 'profile' %}active{% endif %}"><i class="fa-regular fa-user"></i> Profile</a>
             <a href="{% url 'accounts:change_password' %}" class="db-nl"><i class="fa-solid fa-lock"></i> Change Password</a>
@@ -45,7 +45,7 @@
             <div style="position:relative;display:inline-block">
                 <button onclick="toggleDrop('notifDrop')" style="background:none;border:none;color:var(--tx2);font-size:1.15rem;cursor:pointer;padding:6px;display:flex;align-items:center;border-radius:50px;transition:background .2s" onmouseenter="this.style.background='var(--bd)'" onmouseleave="this.style.background='transparent'">
                     <i class="fa-regular fa-bell"></i>
-                    <span style="position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;background:#ef4444;color:#fff;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--bg2);line-height:1">{{ unread_count }}</span>
+                    {% if unread_count %}<span style="position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;background:#ef4444;color:#fff;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--bg2);line-height:1">{{ unread_count }}</span>{% endif %}
                 </button>
                 <div id="notifDrop" style="position:absolute;top:calc(100% + 8px);right:0;width:340px;background:var(--bg2);border:1px solid var(--bd);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:999;display:none;overflow:hidden">
                     <div style="padding:12px 16px;font-weight:600;font-size:.85rem;border-bottom:1px solid var(--bd);color:var(--tx)">Notifications</div>
