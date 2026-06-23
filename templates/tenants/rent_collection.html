@@ -1,4 +1,5 @@
 {% extends 'dashboard/base_dashboard.html' %}
+{% load tenant_extras %}
 {% block title %}Rent Collection - PataNyumba{% endblock %}
 {% block db_title %}Rent Collection{% endblock %}
 {% block dashboard_content %}
@@ -41,13 +42,16 @@ function requestPayment(name, amount, due, ref) {
     {% if tenancies %}
     <div class="table-responsive">
         <table class="db-table">
-            <thead><tr><th>Tenant</th><th>Unit</th><th>Rent</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Tenant</th><th>Unit</th><th>Rent</th><th>Balance</th><th>Status</th><th></th></tr></thead>
             <tbody>
                 {% for t in tenancies %}
                 <tr>
                     <td style="font-weight:600;color:var(--tx)">{{ t.tenant.get_full_name|default:t.tenant.username }}</td>
                     <td>{{ t.unit.property.name|truncatechars:15 }} — {{ t.unit.unit_number }}</td>
                     <td>KES {{ t.monthly_rent }}</td>
+                    {% with balance=tenancy_balances|dict_get:t.id %}
+                    <td><span style="color:{% if balance > 0 %}#f87171{% else %}#34d399{% endif %}">KES {{ balance }}</span></td>
+                    {% endwith %}
                     <td><span class="badge-vacant">Active</span></td>
                     <td><a href="{% url 'tenants:detail' t.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem">View</a></td>
                 </tr>

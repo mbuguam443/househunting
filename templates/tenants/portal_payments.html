@@ -4,13 +4,19 @@
 {% block portal_content %}
 {% if tenancy %}
 <div class="row g-3 mb-4">
-    <div class="col-sm-6">
+    <div class="col">
         <div class="db-stat-card">
             <div class="db-stat-val gt">KES {{ tenancy.monthly_rent }}</div>
             <div class="db-stat-lbl">Monthly Rent</div>
         </div>
     </div>
-    <div class="col-sm-6">
+    <div class="col">
+        <div class="db-stat-card">
+            <div class="db-stat-val" style="color:{% if total_balance > 0 %}#f87171{% else %}#34d399{% endif %}">KES {{ total_balance }}</div>
+            <div class="db-stat-lbl">Outstanding Balance</div>
+        </div>
+    </div>
+    <div class="col">
         <div class="db-stat-card">
             <div class="db-stat-val" style="color:#34d399">{{ tenancy.start_date|date:'M d, Y' }}</div>
             <div class="db-stat-lbl">Tenancy Started</div>

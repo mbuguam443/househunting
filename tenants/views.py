@@ -94,17 +94,22 @@ def rent_collection(request):
     mark_overdue_payments(landlord=request.user)
     tenancies = Tenancy.objects.filter(
         unit__property__owner=request.user, status='active'
-    ).select_related('tenant', 'unit')
+    ).select_related('tenant', 'unit').prefetch_related('payments')
     payments = RentPayment.objects.filter(tenancy__unit__property__owner=request.user).select_related('tenancy__tenant', 'tenancy__unit')
     total_collected = payments.filter(status='paid').aggregate(Sum('amount'))['amount__sum'] or 0
     pending_count = payments.filter(status='pending').count()
     overdue_count = payments.filter(status='overdue').count()
+    tenancy_balances = {}
+    for t in tenancies:
+        balance = RentPayment.objects.filter(tenancy=t).exclude(status='paid').exclude(notes='stk_intermediary').aggregate(s=Sum('amount'))['s'] or 0
+        tenancy_balances[t.id] = balance
     return render(request, 'tenants/rent_collection.html', {
         'tenancies': tenancies,
         'payments': payments,
         'total_collected': total_collected,
         'pending_count': pending_count,
         'overdue_count': overdue_count,
+        'tenancy_balances': tenancy_balances,
         'active_tab': 'rent',
     })
 
@@ -171,10 +176,12 @@ def portal_home(request):
         messages.error(request, 'Tenant portal is for tenants only.')
         return redirect('website:home')
     tenancy = Tenancy.objects.filter(tenant=request.user, status='active').select_related('unit__property').first()
+    total_balance = RentPayment.objects.filter(tenancy__tenant=request.user).exclude(status='paid').exclude(notes='stk_intermediary').aggregate(s=Sum('amount'))['s'] or 0
     upcoming_payments = RentPayment.objects.filter(tenancy__tenant=request.user, status__in=['pending', 'overdue'])[:5]
     recent_maintenance = MaintenanceRequest.objects.filter(tenant=request.user)[:3]
     return render(request, 'tenants/portal_home.html', {
         'tenancy': tenancy,
+        'total_balance': total_balance,
         'upcoming_payments': upcoming_payments,
         'recent_maintenance': recent_maintenance,
     })
@@ -186,7 +193,8 @@ def portal_payments(request):
         return redirect('website:home')
     payments = RentPayment.objects.filter(tenancy__tenant=request.user).select_related('tenancy__unit')
     tenancy = Tenancy.objects.filter(tenant=request.user, status='active').first()
-    return render(request, 'tenants/portal_payments.html', {'payments': payments, 'tenancy': tenancy})
+    total_balance = RentPayment.objects.filter(tenancy__tenant=request.user).exclude(status='paid').exclude(notes='stk_intermediary').aggregate(s=Sum('amount'))['s'] or 0
+    return render(request, 'tenants/portal_payments.html', {'payments': payments, 'tenancy': tenancy, 'total_balance': total_balance})
 
 @login_required
 def portal_pay(request):

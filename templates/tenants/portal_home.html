@@ -3,26 +3,32 @@
 {% block portal_title %}Tenant Portal{% endblock %}
 {% block portal_content %}
 {% if tenancy %}
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
+<div class="row g-3 mb-4">
+    <div class="col">
         <div class="db-stat-card">
             <div class="db-stat-val gt">KES {{ tenancy.monthly_rent }}</div>
             <div class="db-stat-lbl">Monthly Rent</div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col">
+        <div class="db-stat-card">
+            <div class="db-stat-val" style="color:{% if total_balance > 0 %}#f87171{% else %}#34d399{% endif %}">KES {{ total_balance }}</div>
+            <div class="db-stat-lbl">Outstanding Balance</div>
+        </div>
+    </div>
+    <div class="col">
         <div class="db-stat-card">
             <div class="db-stat-val" style="color:#34d399">{{ tenancy.start_date|date:'M d, Y' }}</div>
             <div class="db-stat-lbl">Tenancy Started</div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col">
         <div class="db-stat-card">
             <div class="db-stat-val" style="color:#a78bfa">{{ tenancy.unit.property.name|truncatechars:15 }}</div>
             <div class="db-stat-lbl">{{ tenancy.unit.get_house_type_display }} — Unit {{ tenancy.unit.unit_number }}</div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col">
         <a href="{% url 'portal:pay' %}" style="text-decoration:none;display:block">
             <div class="db-stat-card" style="background:var(--grad);border-color:transparent;cursor:pointer;transition:transform .2s" onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform='scale(1)'">
                 <div class="db-stat-val" style="color:#fff;font-size:1rem"><i class="fa-solid fa-money-bill-wave me-2"></i> Pay Rent</div>
