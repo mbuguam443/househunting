@@ -1,12 +1,17 @@
+import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
+from django.http import JsonResponse, HttpResponse
 from datetime import timedelta
 from .models import Tenancy, RentPayment, MaintenanceRequest
 from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm
 from .rent_utils import generate_rent_payments, mark_overdue_payments
+from .mpesa_utils import stk_push, process_callback
 from units.models import Unit
 
 # ==================== LANDLORD VIEWS ====================
@@ -206,7 +211,13 @@ def portal_pay(request):
             'due_date': timezone.now().date(),
             'paid_date': timezone.now().date(),
         })
-    return render(request, 'tenants/portal_pay.html', {'form': form, 'tenancy': tenancy})
+    pending_payments = RentPayment.objects.filter(tenancy=tenancy, status='pending').order_by('due_date')
+    mpesa_txs = MpesaTransaction.objects.filter(payment__tenancy=tenancy)[:5]
+    return render(request, 'tenants/portal_pay.html', {
+        'form': form, 'tenancy': tenancy,
+        'pending_payments': pending_payments,
+        'mpesa_txs': mpesa_txs,
+    })
 
 @login_required
 def portal_maintenance(request):
@@ -230,3 +241,39 @@ def portal_maintenance(request):
     else:
         form = MaintenanceForm()
     return render(request, 'tenants/portal_maintenance.html', {'requests': requests, 'form': form})
+
+
+# ==================== M-PESA VIEWS ====================
+
+@csrf_exempt
+@require_POST
+def mpesa_callback(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponse('Invalid JSON', status=400)
+    success, result = process_callback(data)
+    if success:
+        return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Success'})
+    return JsonResponse({'ResultCode': 1, 'ResultDesc': str(result)})
+
+
+@login_required
+def stk_push_view(request, payment_id):
+    if request.user.profile.role != 'tenant':
+        return JsonResponse({'error': 'Tenant access required'}, status=403)
+
+    payment = get_object_or_404(RentPayment, pk=payment_id, tenancy__tenant=request.user, status='pending')
+    phone = request.POST.get('phone') or request.user.profile.phone
+
+    if not phone:
+        return JsonResponse({'error': 'No phone number. Update your profile first.'}, status=400)
+
+    tx, error = stk_push(payment, phone)
+    if error:
+        return JsonResponse({'error': error}, status=400)
+    return JsonResponse({
+        'success': True,
+        'message': 'STK push sent. Check your phone and enter your M-Pesa PIN.',
+        'checkout_id': tx.checkout_request_id,
+    })

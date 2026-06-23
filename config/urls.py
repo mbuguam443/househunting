@@ -11,6 +11,7 @@ urlpatterns = [
     path('units/', include('units.urls')),
     path('dashboard/tenants/', include('tenants.urls')),
     path('portal/', include('tenants.portal_urls')),
+    path('mpesa/', include('tenants.mpesa_urls')),
     path('dashboard/', include('dashboard.urls')),
     path('', include('website.urls')),
     path('manifest.json', pwa_views.manifest),

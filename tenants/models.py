@@ -51,6 +51,34 @@ class RentPayment(models.Model):
     def __str__(self):
         return f'{self.tenancy.tenant.username} - KES {self.amount} ({self.get_status_display()})'
 
+class MpesaTransaction(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    payment = models.ForeignKey(RentPayment, on_delete=models.CASCADE, related_name='mpesa_transactions')
+    phone = models.CharField(max_length=15)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    merchant_request_id = models.CharField(max_length=100, blank=True)
+    checkout_request_id = models.CharField(max_length=100, blank=True)
+    response_code = models.CharField(max_length=10, blank=True)
+    response_description = models.CharField(max_length=255, blank=True)
+    receipt = models.CharField(max_length=50, blank=True, help_text='M-Pesa receipt number')
+    transaction_date = models.DateTimeField(null=True, blank=True)
+    result_code = models.CharField(max_length=10, blank=True)
+    result_desc = models.CharField(max_length=255, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    raw_callback = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.phone} - KES {self.amount} ({self.get_status_display()})'
+
 class MaintenanceRequest(models.Model):
     PRIORITY_CHOICES = [
         ('low', 'Low'),
