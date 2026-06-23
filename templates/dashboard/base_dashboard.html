@@ -28,6 +28,7 @@
             <a href="{% url 'tenants:rent_collection' %}" class="db-nl {% if active_tab == 'rent' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> Rent Collection</a>
             <a href="{% url 'tenants:maintenance_list' %}" class="db-nl {% if active_tab == 'maintenance' %}active{% endif %}"><i class="fa-solid fa-wrench"></i> Maintenance</a>
             <div class="db-nav-section">Management</div>
+            <a href="{% url 'dashboard:inquiries' %}" class="db-nl {% if active_tab == 'inquiries' %}active{% endif %}"><i class="fa-regular fa-message"></i> Inquiries</a>
             <a href="{% url 'dashboard:overview' %}" class="db-nl"><i class="fa-solid fa-chart-simple"></i> Analytics</a>
             <a href="{% url 'accounts:profile' %}" class="db-nl {% if active_tab == 'profile' %}active{% endif %}"><i class="fa-regular fa-user"></i> Profile</a>
             <a href="{% url 'accounts:change_password' %}" class="db-nl"><i class="fa-solid fa-lock"></i> Change Password</a>

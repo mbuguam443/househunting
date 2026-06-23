@@ -1,5 +1,5 @@
 import json
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -88,3 +88,14 @@ def overview(request):
         'inquiry_counts': json.dumps(inquiry_counts),
     }
     return render(request, 'dashboard/overview.html', ctx)
+
+
+@login_required
+def inquiries(request):
+    if request.user.profile.role != 'landlord':
+        return render(request, 'dashboard/overview.html', {'access_denied': True})
+    qs = Inquiry.objects.filter(unit__property__owner=request.user).select_related('unit', 'unit__property').order_by('-created_at')
+    if request.GET.get('mark_read'):
+        Inquiry.objects.filter(pk=request.GET['mark_read'], unit__property__owner=request.user).update(is_read=True)
+        return redirect('dashboard:inquiries')
+    return render(request, 'dashboard/inquiries.html', {'inquiries': qs, 'active_tab': 'inquiries'})

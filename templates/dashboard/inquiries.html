@@ -1,0 +1,45 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Inquiries - PataNyumba{% endblock %}
+{% block db_title %}Inquiries{% endblock %}
+{% block dashboard_content %}
+<div class="gc p-4">
+{% if inquiries %}
+<div class="table-responsive">
+<table class="table table-dark table-borderless align-middle mb-0">
+<thead><tr style="border-bottom:1px solid var(--bd)">
+<th style="color:var(--tx3);font-size:.78rem;font-weight:500">Date</th>
+<th style="color:var(--tx3);font-size:.78rem;font-weight:500">Name</th>
+<th style="color:var(--tx3);font-size:.78rem;font-weight:500">Contact</th>
+<th style="color:var(--tx3);font-size:.78rem;font-weight:500">Unit</th>
+<th style="color:var(--tx3);font-size:.78rem;font-weight:500">Message</th>
+<th style="color:var(--tx3);font-size:.78rem;font-weight:500"></th>
+</tr></thead>
+<tbody>
+{% for i in inquiries %}
+<tr style="{% if not i.is_read %}border-left:3px solid #6a4cdb;{% endif %}vertical-align:middle">
+<td style="font-size:.82rem;white-space:nowrap;color:var(--tx2)">{{ i.created_at|date:"d M Y" }}<br><span style="font-size:.7rem;color:var(--tx3)">{{ i.created_at|time:"H:i" }}</span></td>
+<td style="font-size:.85rem;font-weight:{% if not i.is_read %}600{% else %}400{% endif %};color:var(--tx)">{{ i.name }}</td>
+<td style="font-size:.82rem;color:var(--tx2)">{{ i.email }}<br>{% if i.phone %}{{ i.phone }}{% endif %}</td>
+<td style="font-size:.82rem;color:var(--tx)">{{ i.unit.unit_number }}<br><span style="font-size:.7rem;color:var(--tx3)">{{ i.unit.property.name }}</span></td>
+<td style="font-size:.82rem;color:var(--tx2);max-width:300px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ i.message }}">{{ i.message }}</div></td>
+<td style="white-space:nowrap">
+{% if not i.is_read %}
+<a href="?mark_read={{ i.pk }}" class="boc btn py-1 px-3" style="font-size:.75rem">Mark Read</a>
+{% else %}
+<span style="font-size:.75rem;color:var(--tx3)"><i class="fa-regular fa-check me-1"></i>Read</span>
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="text-center py-5">
+<i class="fa-regular fa-message" style="font-size:3rem;color:var(--tx3);margin-bottom:16px"></i>
+<h5 style="color:var(--tx2)">No inquiries yet</h5>
+<p style="color:var(--tx3)">When someone inquires about a unit, it will appear here.</p>
+</div>
+{% endif %}
+</div>
+{% endblock %}
