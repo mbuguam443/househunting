@@ -1,17 +1,35 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Prefetch
 from .models import Unit, UnitAmenity
+from properties.models import Property
 from .forms import UnitForm, UnitAmenityForm
 from accounts.models import require_landlord_sub
+from core.pagination import paginate
+from tenants.models import Tenancy
 
 @login_required
 def unit_list(request):
     ok, resp = require_landlord_sub(request.user)
     if not ok:
         return resp
-    units = Unit.objects.filter(property__owner=request.user).select_related('property')
-    return render(request, 'units/list.html', {'units': units, 'active_tab': 'units'})
+    active_tenancies = Tenancy.objects.filter(status='active').select_related('tenant')
+    qs = Unit.objects.filter(property__owner=request.user).select_related('property').prefetch_related(
+        Prefetch('tenancies', queryset=active_tenancies, to_attr='active_tenancies')
+    )
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(unit_number__icontains=q) | qs.filter(property__name__icontains=q) | qs.filter(house_type__icontains=q)
+    status_f = request.GET.get('status', '').strip()
+    if status_f:
+        qs = qs.filter(status=status_f)
+    prop_f = request.GET.get('property', '').strip()
+    if prop_f:
+        qs = qs.filter(property_id=prop_f)
+    properties = Property.objects.filter(owner=request.user)
+    page_obj = paginate(request, qs)
+    return render(request, 'units/list.html', {'units': page_obj, 'q': q, 'status_f': status_f, 'prop_f': prop_f, 'properties': properties, 'active_tab': 'units'})
 
 @login_required
 def unit_create(request):
@@ -68,5 +86,16 @@ def vacancies(request):
     ok, resp = require_landlord_sub(request.user)
     if not ok:
         return resp
-    units = Unit.objects.filter(property__owner=request.user, status='vacant').select_related('property')
-    return render(request, 'units/vacancies.html', {'units': units, 'active_tab': 'vacancies'})
+    qs = Unit.objects.filter(property__owner=request.user, status='vacant').select_related('property')
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(unit_number__icontains=q) | qs.filter(property__name__icontains=q) | qs.filter(house_type__icontains=q)
+    prop_f = request.GET.get('property', '').strip()
+    if prop_f:
+        qs = qs.filter(property_id=prop_f)
+    type_f = request.GET.get('type', '').strip()
+    if type_f:
+        qs = qs.filter(house_type=type_f)
+    properties = Property.objects.filter(owner=request.user)
+    page_obj = paginate(request, qs)
+    return render(request, 'units/vacancies.html', {'units': page_obj, 'q': q, 'prop_f': prop_f, 'type_f': type_f, 'properties': properties, 'active_tab': 'vacancies'})

@@ -2,11 +2,25 @@
 {% block title %}Tenants - PataNyumba{% endblock %}
 {% block db_title %}Tenants{% endblock %}
 {% block dashboard_content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <h4 class="fw-bold mb-0">Tenants</h4>
     <div class="d-flex gap-2">
-        <a href="{% url 'tenants:register' %}" class="boc btn px-3 py-2"><i class="fa-solid fa-user-plus me-1"></i> Register</a>
-        <a href="{% url 'tenants:create' %}" class="bgrd btn px-4 py-2"><i class="fa-solid fa-plus me-1"></i> Assign Tenant</a>
+        <form method="GET" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+            <input name="q" type="text" placeholder="Search tenant or unit..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:150px">
+            <select name="property" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+                <option value="">All Properties</option>
+                {% for prop in properties %}<option value="{{ prop.id }}" {% if prop_f == prop.id|stringformat:'s' %}selected{% endif %}>{{ prop.name|truncatechars:20 }}</option>{% endfor %}
+            </select>
+            <select name="status" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+                <option value="">All</option>
+                <option value="active" {% if status_f == 'active' %}selected{% endif %}>Active</option>
+                <option value="ended" {% if status_f == 'ended' %}selected{% endif %}>Ended</option>
+            </select>
+            <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-filter"></i></button>
+            {% if q or status_f or prop_f %}<a href="{% url 'tenants:list' %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+        </form>
+        <a href="{% url 'tenants:register' %}" class="boc btn px-3 py-1" style="font-size:.82rem"><i class="fa-solid fa-user-plus me-1"></i> Register</a>
+        <a href="{% url 'tenants:create' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem"><i class="fa-solid fa-plus me-1"></i> Assign</a>
     </div>
 </div>
 {% if tenancies %}
@@ -40,6 +54,7 @@
     </div>
     {% endfor %}
 </div>
+{% include 'pagination.html' with page_obj=tenancies %}
 {% else %}
 <div class="gc p-5 text-center">
     <i class="fa-regular fa-user" style="font-size:3rem;color:var(--tx3);margin-bottom:16px"></i>

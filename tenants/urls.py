@@ -13,4 +13,8 @@ urlpatterns = [
     path('payments/<int:pk>/mark-paid/', views.mark_paid, name='mark_paid'),
     path('maintenance/', views.maintenance_list, name='maintenance_list'),
     path('maintenance/<int:pk>/update/', views.maintenance_update, name='maintenance_update'),
+    path('lease/create/<int:tenancy_pk>/', views.lease_create, name='lease_create'),
+    path('lease/<int:pk>/', views.lease_detail, name='lease_detail'),
+    path('lease/<int:pk>/accept/', views.lease_accept, name='lease_accept'),
+    path('lease/<int:pk>/terminate/', views.lease_terminate, name='lease_terminate'),
 ]

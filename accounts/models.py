@@ -84,6 +84,9 @@ def require_landlord_sub(user):
 def landlord_has_active_sub(user):
     if user.profile.role != 'landlord':
         return True
+    # Zero fee = free service, no subscription needed
+    if user.profile.fee_per_unit is not None and user.profile.fee_per_unit == 0:
+        return True
     sub = user.subscriptions.filter(status='active', end_date__gte=date.today()).first()
     return sub is not None
 

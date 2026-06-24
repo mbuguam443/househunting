@@ -3,6 +3,19 @@
 {% block db_title %}Inquiries{% endblock %}
 {% block dashboard_content %}
 <div class="gc p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h5 class="fw-semibold mb-0"><i class="fa-regular fa-message me-2"></i>Inquiries</h5>
+        <form method="GET" style="display:flex;gap:4px;align-items:center">
+            <input name="q" type="text" placeholder="Search..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:160px">
+            <select name="read" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+                <option value="">All</option>
+                <option value="unread" {% if read_f == 'unread' %}selected{% endif %}>Unread</option>
+                <option value="read" {% if read_f == 'read' %}selected{% endif %}>Read</option>
+            </select>
+            <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-search"></i></button>
+            {% if q or read_f %}<a href="{% url 'dashboard:inquiries' %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+        </form>
+    </div>
 {% if inquiries %}
 <div class="table-responsive">
 <table class="table table-dark table-borderless align-middle mb-0">
@@ -24,7 +37,7 @@
 <td style="font-size:.82rem;color:var(--tx2);max-width:300px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ i.message }}">{{ i.message }}</div></td>
 <td style="white-space:nowrap">
 {% if not i.is_read %}
-<a href="?mark_read={{ i.pk }}" class="boc btn py-1 px-3" style="font-size:.75rem">Mark Read</a>
+<a href="?mark_read={{ i.pk }}{% if q %}&q={{ q }}{% endif %}{% if read_f %}&read={{ read_f }}{% endif %}" class="boc btn py-1 px-3" style="font-size:.75rem">Mark Read</a>
 {% else %}
 <span style="font-size:.75rem;color:var(--tx3)"><i class="fa-regular fa-check me-1"></i>Read</span>
 {% endif %}
@@ -34,6 +47,7 @@
 </tbody>
 </table>
 </div>
+{% include 'pagination.html' with page_obj=inquiries %}
 {% else %}
 <div class="text-center py-5">
 <i class="fa-regular fa-message" style="font-size:3rem;color:var(--tx3);margin-bottom:16px"></i>

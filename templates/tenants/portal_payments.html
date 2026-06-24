@@ -38,7 +38,7 @@
                 {% for p in payments %}
                 <tr>
                     <td>{{ p.due_date|date:'M d, Y' }}</td>
-                    <td>KES {{ p.amount }}</td>
+                    <td style="color:{% if p.status == 'paid' %}#34d399{% else %}#f87171{% endif %}">KES {% if p.status == 'paid' %}+{% else %}-{% endif %}{{ p.amount|floatformat:0 }}</td>
                     <td>{% if p.paid_date %}{{ p.paid_date|date:'M d, Y' }}{% else %}—{% endif %}</td>
                     <td style="font-size:.8rem">{{ p.reference|default:'—' }}</td>
                     <td>

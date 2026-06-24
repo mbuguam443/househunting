@@ -2,9 +2,25 @@
 {% block title %}Units - PataNyumba{% endblock %}
 {% block db_title %}Units{% endblock %}
 {% block dashboard_content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <h4 class="fw-bold mb-0">Units</h4>
-    <a href="{% url 'units:create' %}" class="bgrd btn px-4 py-2"><i class="fa-solid fa-plus me-1"></i> Add Unit</a>
+    <div class="d-flex gap-2">
+        <form method="GET" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+            <input name="q" type="text" placeholder="Search..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:140px">
+            <select name="property" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+                <option value="">All Properties</option>
+                {% for prop in properties %}<option value="{{ prop.id }}" {% if prop_f == prop.id|stringformat:'s' %}selected{% endif %}>{{ prop.name|truncatechars:20 }}</option>{% endfor %}
+            </select>
+            <select name="status" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+                <option value="">All</option>
+                <option value="vacant" {% if status_f == 'vacant' %}selected{% endif %}>Vacant</option>
+                <option value="occupied" {% if status_f == 'occupied' %}selected{% endif %}>Occupied</option>
+            </select>
+            <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-filter"></i></button>
+            {% if q or status_f or prop_f %}<a href="{% url 'units:list' %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+        </form>
+        <a href="{% url 'units:create' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem"><i class="fa-solid fa-plus me-1"></i> Add Unit</a>
+    </div>
 </div>
 {% if units %}
 <div class="gc p-4">
@@ -17,31 +33,40 @@
                     <th>Type</th>
                     <th>Bedrooms</th>
                     <th>Rent (KES)</th>
+                    <th>Occupied By</th>
                     <th>Status</th>
-                    <th>Published</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 {% for unit in units %}
+                {% with active_tenancy=unit.active_tenancies|first %}
                 <tr>
-                    <td style="font-weight:600;color:var(--tx)">{{ unit.unit_number }}</td>
+                    <td style="font-weight:600;color:var(--tx)">
+                        {% if unit.status == 'occupied' and active_tenancy %}
+                        <a href="{% url 'tenants:detail' active_tenancy.pk %}" style="color:var(--pur);text-decoration:none">{{ unit.unit_number }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a>
+                        {% else %}
+                        {{ unit.unit_number }}
+                        {% endif %}
+                    </td>
                     <td>{{ unit.property.name|truncatechars:18 }}</td>
                     <td>{{ unit.get_house_type_display }}</td>
                     <td>{{ unit.bedrooms }}</td>
                     <td>{{ unit.monthly_rent|floatformat:0 }}</td>
                     <td>
-                        {% if unit.status == 'vacant' %}
-                        <span class="badge-vacant">Vacant</span>
+                        {% if unit.status == 'occupied' and active_tenancy %}
+                        <a href="{% url 'tenants:detail' active_tenancy.pk %}" style="color:var(--tx2);text-decoration:none;font-size:.85rem">
+                            <i class="fa-regular fa-user me-1"></i>{{ active_tenancy.tenant.get_full_name|default:active_tenancy.tenant.username }}
+                        </a>
                         {% else %}
-                        <span class="badge-occupied">Occupied</span>
+                        <span style="color:var(--tx3);font-size:.82rem">—</span>
                         {% endif %}
                     </td>
                     <td>
                         {% if unit.status == 'vacant' %}
-                        <span style="color:#34d399;font-size:.8rem"><i class="fa-regular fa-eye me-1"></i>Live</span>
+                        <span class="badge-vacant">Vacant</span>
                         {% else %}
-                        <span style="color:var(--tx3);font-size:.8rem"><i class="fa-regular fa-eye-slash me-1"></i>Hidden</span>
+                        <span class="badge-occupied">Occupied</span>
                         {% endif %}
                     </td>
                     <td>
@@ -51,10 +76,12 @@
                         </div>
                     </td>
                 </tr>
+                {% endwith %}
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    {% include 'pagination.html' with page_obj=units %}
 </div>
 {% else %}
 <div class="gc p-5 text-center">

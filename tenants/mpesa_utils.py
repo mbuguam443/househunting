@@ -139,3 +139,25 @@ def process_callback(data):
             remaining = Decimal('0')
 
     return True, receipt
+
+
+def query_stk_status(checkout_request_id):
+    token = _get_access_token()
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    data_str = settings.MPESA_SHORTCODE + settings.MPESA_PASSKEY + timestamp
+    password = base64.b64encode(data_str.encode()).decode()
+
+    url = 'https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query'
+    if settings.MPESA_ENV == 'production':
+        url = 'https://api.safaricom.co.ke/mpesa/stkpushquery/v1/query'
+
+    payload = {
+        'BusinessShortCode': settings.MPESA_SHORTCODE,
+        'Password': password,
+        'Timestamp': timestamp,
+        'CheckoutRequestID': checkout_request_id,
+    }
+
+    headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
+    resp = requests.post(url, json=payload, headers=headers, timeout=20)
+    return resp.json()

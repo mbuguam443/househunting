@@ -1,12 +1,14 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from accounts.models import Profile, SubscriptionPlan, PlatformConfig
+from accounts.models import Profile, SubscriptionPlan, PlatformConfig, LandlordSubscription
 from properties.models import Property
 from units.models import Unit, UnitAmenity
 from website.models import Testimonial, Faq
-from tenants.models import Tenancy
+from tenants.models import Tenancy, LeaseAgreement
 from tenants.rent_utils import generate_rent_payments
 from datetime import date, timedelta
+from decimal import Decimal
+from django.utils import timezone
 
 
 class Command(BaseCommand):
@@ -17,15 +19,63 @@ class Command(BaseCommand):
             username='admin',
             defaults=dict(is_superuser=True, is_staff=True, email='admin@patanyumba.co.ke'),
         )
+        admin.set_password('admin123')
         if _:
-            admin.set_password('admin123')
             admin.first_name = 'Admin'
-            admin.save()
+        admin.save()
         admin.profile.role = 'admin'
         admin.profile.phone = '+254 700 000 000'
         admin.profile.save()
 
         PlatformConfig.objects.get_or_create(pk=1, defaults={'fee_per_unit': 50.00})
+
+        # --- Landlord: Grace (KES 50/unit, paid subscription) ---
+        grace, _ = User.objects.get_or_create(
+            username='grace',
+            defaults=dict(email='grace@email.com'),
+        )
+        grace.set_password('grace123')
+        if _:
+            grace.first_name = 'Grace'
+            grace.last_name = 'Kamau'
+        grace.save()
+        grace.profile.role = 'landlord'
+        grace.profile.phone = '+254 722 111 111'
+        grace.profile.fee_per_unit = 50.00
+        grace.profile.save()
+
+        # Assign Sunrise Court to Grace
+        Property.objects.filter(name='Sunrise Court').update(owner=grace)
+
+        LandlordSubscription.objects.get_or_create(
+            landlord=grace,
+            defaults=dict(
+                unit_count=4,
+                amount=200,
+                start_date=date(2026, 6, 1),
+                end_date=date(2026, 8, 31),
+                status='active',
+                notes='4 units × KES 50/unit × 3 months',
+            ),
+        )
+
+        # --- Landlord: Peter (fee=0, free service, no subscription) ---
+        peter, _ = User.objects.get_or_create(
+            username='peter',
+            defaults=dict(email='peter@email.com'),
+        )
+        peter.set_password('peter123')
+        if _:
+            peter.first_name = 'Peter'
+            peter.last_name = 'Mwangi'
+        peter.save()
+        peter.profile.role = 'landlord'
+        peter.profile.phone = '+254 733 222 222'
+        peter.profile.fee_per_unit = 0.00
+        peter.profile.save()
+
+        # Assign Mountain View Residences to Peter
+        Property.objects.filter(name='Mountain View Residences').update(owner=peter)
 
         for plan_name, amt, days, desc in [
             ('Monthly', 500, 30, '30 days of platform access'),
@@ -38,32 +88,35 @@ class Command(BaseCommand):
             username='johndoe',
             defaults=dict(email='john@email.com'),
         )
+        tenant_user.set_password('password123')
         if _:
-            tenant_user.set_password('password123')
             tenant_user.first_name = 'John'
             tenant_user.last_name = 'Doe'
-            tenant_user.save()
-            tenant_user.profile.role = 'tenant'
-            tenant_user.profile.phone = '+254 712 345 678'
-            tenant_user.profile.save()
+        tenant_user.save()
+        tenant_user.profile.role = 'tenant'
+        tenant_user.profile.phone = '+254 712 345 678'
+        tenant_user.profile.save()
 
         prop1, _ = Property.objects.get_or_create(
-            name='Green Valley Apartments', owner=admin,
+            name='Green Valley Apartments',
             defaults=dict(
+                owner=admin,
                 description='Modern apartment complex in the heart of Kilimani. Well-maintained compound with ample parking, 24-hour security, and close to shopping centers.',
                 county='Nairobi', town='Kilimani', estate='Woodley Estate',
             ),
         )
         prop2, _ = Property.objects.get_or_create(
-            name='Sunrise Court', owner=admin,
+            name='Sunrise Court',
             defaults=dict(
+                owner=admin,
                 description='Quiet residential area with easy access to Mombasa Road. Ideal for families.',
                 county='Nairobi', town='South B', estate='Madaraka Estate',
             ),
         )
         prop3, _ = Property.objects.get_or_create(
-            name='Mountain View Residences', owner=admin,
+            name='Mountain View Residences',
             defaults=dict(
+                owner=admin,
                 description='Premium units with stunning views of Mt. Kenya. Serene environment perfect for remote work.',
                 county='Nyeri', town='Nyeri Town', estate='Milimani',
             ),
@@ -95,15 +148,72 @@ class Command(BaseCommand):
             )
             UnitAmenity.objects.get_or_create(unit=unit, defaults=amenities)
 
-        # Mark some units as occupied
-        for unit_no in ['A1', 'B1', '1A', '2B', 'MV2']:
-            Unit.objects.filter(unit_number=unit_no).update(status='occupied')
+        # Additional tenant users
+        tenant_data = [
+            ('janewanjiku', 'Jane', 'Wanjiku', 'password123', '+254 712 345 679'),
+            ('bobkiarie', 'Bob', 'Kiarie', 'password123', '+254 712 345 680'),
+            ('alicemuthoni', 'Alice', 'Muthoni', 'password123', '+254 712 345 681'),
+            ('davidotieno', 'David', 'Otieno', 'password123', '+254 712 345 682'),
+            ('sarahchebet', 'Sarah', 'Chebet', 'password123', '+254 712 345 683'),
+            ('jamesmwangi', 'James', 'Mwangi', 'password123', '+254 712 345 684'),
+            ('faithnyambura', 'Faith', 'Nyambura', 'password123', '+254 712 345 685'),
+            ('peterowino', 'Peter', 'Owino', 'password123', '+254 712 345 686'),
+            ('marywangui', 'Mary', 'Wangui', 'password123', '+254 712 345 687'),
+            ('kevinmutua', 'Kevin', 'Mutua', 'password123', '+254 712 345 688'),
+            ('estherwambui', 'Esther', 'Wambui', 'password123', '+254 712 345 689'),
+        ]
+        tenant_map = {'johndoe': tenant_user}
+        for uname, fn, ln, pw, phone in tenant_data:
+            u, _ = User.objects.get_or_create(username=uname, defaults=dict(email=f'{uname}@email.com'))
+            u.set_password(pw)
+            if _:
+                u.first_name = fn
+                u.last_name = ln
+            u.save()
+            u.profile.role = 'tenant'
+            u.profile.phone = phone
+            u.profile.save()
+            tenant_map[uname] = u
 
-        demo_unit = Unit.objects.get(unit_number='A1')
-        Tenancy.objects.get_or_create(
-            tenant=tenant_user, unit=demo_unit,
-            defaults=dict(start_date=date(2026, 1, 1), monthly_rent=demo_unit.monthly_rent, deposit_paid=25000, status='active'),
-        )
+        # Reset all units to vacant, then mark only desired ones as occupied
+        Unit.objects.all().update(status='vacant')
+        Tenancy.objects.all().delete()
+        # Occupied units with assigned tenants (C1, 1B, MV3 left vacant)
+        unit_tenants = {
+            'A1': 'johndoe', 'A2': 'janewanjiku', 'B1': 'bobkiarie', 'B2': 'alicemuthoni',
+            '1A': 'sarahchebet', '2A': 'faithnyambura', '2B': 'peterowino',
+            'MV1': 'marywangui', 'MV2': 'kevinmutua',
+        }
+        for unit_no, uname in unit_tenants.items():
+            Unit.objects.filter(unit_number=unit_no).update(status='occupied')
+            unit = Unit.objects.get(unit_number=unit_no)
+            Tenancy.objects.get_or_create(
+                tenant=tenant_map[uname], unit=unit,
+                defaults=dict(
+                    start_date=date(2026, 1, 1) if unit_no in ('A1', 'A2', 'B1', 'B2') else date(2026, 3, 1),
+                    monthly_rent=unit.monthly_rent,
+                    deposit_paid=unit.monthly_rent * Decimal('1.5'),
+                    status='active',
+                ),
+            )
+        # Create a demo lease for John Doe
+        jd_tenancy = Tenancy.objects.filter(tenant=tenant_map['johndoe']).first()
+        if jd_tenancy and not hasattr(jd_tenancy, 'lease'):
+            LeaseAgreement.objects.create(
+                tenancy=jd_tenancy,
+                start_date=date(2026, 1, 1),
+                end_date=date(2026, 12, 31),
+                monthly_rent=jd_tenancy.monthly_rent,
+                deposit_amount=jd_tenancy.deposit_paid,
+                payment_due_day=5,
+                late_fee=500,
+                notice_period_days=30,
+                terms='1. Rent is due on or before the 5th of every month.\n2. A late fee of KES 500 applies for payments received after the due date.\n3. The tenant shall not sublet the premises without written consent from the landlord.\n4. The landlord shall maintain the premises in habitable condition.\n5. Either party may terminate this agreement with 30 days written notice.\n6. The tenant is responsible for water and electricity bills.\n7. No structural alterations without prior written approval.',
+                status='active',
+                landlord_accepted=True,
+                landlord_accepted_at=timezone.now(),
+                tenant_accepted=False,
+            )
         generate_rent_payments()
 
         Testimonial.objects.get_or_create(
@@ -143,4 +253,9 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('Database seeded successfully!'))
         self.stdout.write(f'  Admin: admin / admin123')
-        self.stdout.write(f'  Tenant: johndoe / password123')
+        self.stdout.write(f'  Landlord: grace / grace123 (KES 50/unit, paid)')
+        self.stdout.write(f'  Landlord: peter / peter123 (Free, KES 0)')
+        self.stdout.write(f'  Tenants: johndoe, janewanjiku, bobkiarie, alicemuthoni, davidotieno,')
+        self.stdout.write(f'          sarahchebet, jamesmwangi, faithnyambura, peterowino,')
+        self.stdout.write(f'          marywangui, kevinmutua, estherwambui')
+        self.stdout.write(f'          (all password: password123)')

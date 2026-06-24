@@ -19,13 +19,36 @@
                 {% if tenancy.end_date %}<p class="mb-0"><strong style="color:var(--tx)">Ended:</strong> {{ tenancy.end_date|date:'M d, Y' }}</p>{% endif %}
             </div>
             {% if tenancy.status == 'active' %}
-            <a href="{% url 'tenants:vacate' tenancy.pk %}" class="boc btn w-100 py-2 mt-3" style="color:#f87171"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Vacate Tenant</a>
+            <a href="{% url 'tenants:vacate' tenancy.pk %}" class="boc btn w-100 py-2 mt-2" style="color:#f87171"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Vacate Tenant</a>
+            {% endif %}
+            {% if tenancy.status == 'active' %}
+            <a href="{% url 'tenants:lease_create' tenancy.pk %}" class="bgrd btn w-100 py-2 mt-2"><i class="fa-solid fa-file-signature me-1"></i> {% if tenancy.lease %}View Lease{% else %}Create Lease{% endif %}</a>
             {% endif %}
         </div>
     </div>
     <div class="col-lg-8">
+        <div class="gc p-4 mb-4">
+            <h5 class="fw-semibold mb-0">Rent Balance</h5>
+            <div style="font-size:2rem;font-weight:700;color:{% if balance > 0 %}#f87171{% else %}#34d399{% endif %}">KES {% if balance > 0 %}-{% endif %}{{ balance|floatformat:0 }}</div>
+            <div style="color:var(--tx3);font-size:.82rem">
+                {% if balance > 0 %}Tenant owes — <a href="{% url 'tenants:rent_collection' %}">Collect Rent</a>{% else %}All paid up{% endif %}
+            </div>
+        </div>
         <div class="gc p-4">
-            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-credit-card me-2"></i>Payment History</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h5 class="fw-semibold mb-0"><i class="fa-solid fa-credit-card me-2"></i>Payment History</h5>
+                <form method="GET" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+                    <input name="q" type="text" placeholder="Search..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:130px">
+                    <select name="status" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+                        <option value="">All</option>
+                        <option value="pending" {% if status_f == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="paid" {% if status_f == 'paid' %}selected{% endif %}>Paid</option>
+                        <option value="overdue" {% if status_f == 'overdue' %}selected{% endif %}>Overdue</option>
+                    </select>
+                    <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-filter"></i></button>
+                    {% if q or status_f %}<a href="{% url 'tenants:detail' tenancy.pk %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+                </form>
+            </div>
             {% if payments %}
             <div class="table-responsive">
                 <table class="db-table">
@@ -34,7 +57,7 @@
                         {% for p in payments %}
                         <tr>
                             <td>{{ p.due_date|date:'M d, Y' }}</td>
-                            <td>KES {{ p.amount }}</td>
+                            <td style="color:{% if p.status == 'paid' %}#34d399{% else %}#f87171{% endif %}">KES {% if p.status == 'paid' %}+{% else %}-{% endif %}{{ p.amount|floatformat:0 }}</td>
                             <td>{% if p.paid_date %}{{ p.paid_date|date:'M d, Y' }}{% else %}—{% endif %}</td>
                             <td style="font-size:.78rem">{% if p.payment_method %}{{ p.get_payment_method_display }}{% else %}—{% endif %}</td>
                             <td style="font-size:.8rem">{{ p.reference|default:'—' }}</td>
@@ -49,6 +72,7 @@
                     </tbody>
                 </table>
             </div>
+            {% include 'pagination.html' with page_obj=payments %}
             {% else %}
             <p style="color:var(--tx3);text-align:center;padding:20px 0">No payment records yet.</p>
             {% endif %}

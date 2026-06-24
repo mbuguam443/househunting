@@ -5,14 +5,19 @@ from django.urls import reverse
 from .models import Property
 from .forms import PropertyForm
 from accounts.models import require_landlord_sub
+from core.pagination import paginate
 
 @login_required
 def property_list(request):
     ok, resp = require_landlord_sub(request.user)
     if not ok:
         return resp
-    properties = request.user.properties.all()
-    return render(request, 'properties/list.html', {'properties': properties, 'active_tab': 'properties'})
+    qs = request.user.properties.all()
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(name__icontains=q) | qs.filter(county__icontains=q) | qs.filter(town__icontains=q)
+    page_obj = paginate(request, qs)
+    return render(request, 'properties/list.html', {'properties': page_obj, 'q': q, 'active_tab': 'properties'})
 
 @login_required
 def property_create(request):

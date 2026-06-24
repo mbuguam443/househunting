@@ -1,0 +1,53 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Create Lease - PataNyumba{% endblock %}
+{% block db_title %}Create Lease{% endblock %}
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="gc p-4">
+            <p style="color:var(--tx3);margin-bottom:16px">Tenant: <strong style="color:var(--tx)">{{ tenancy.tenant.get_full_name|default:tenancy.tenant.username }}</strong> — {{ tenancy.unit.property.name }} Unit {{ tenancy.unit.unit_number }}</p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="olb">Start Date</label>
+                        {{ form.start_date }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="olb">End Date</label>
+                        {{ form.end_date }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="olb">Monthly Rent (KES)</label>
+                        {{ form.monthly_rent }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="olb">Deposit (KES)</label>
+                        {{ form.deposit_amount }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="olb">Payment Due Day</label>
+                        {{ form.payment_due_day }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="olb">Late Fee (KES)</label>
+                        {{ form.late_fee }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="olb">Notice Period (Days)</label>
+                        {{ form.notice_period_days }}
+                    </div>
+                    <div class="col-12">
+                        <label class="olb">Terms & Conditions</label>
+                        {{ form.terms }}
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="bgrd btn px-4 py-2"><i class="fa-solid fa-file-signature me-1"></i> Create Lease</button>
+                    <a href="{% url 'tenants:detail' tenancy.pk %}" class="boc btn px-4 py-2">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1245,19 +1245,22 @@ a {
   color: var(--tx);
 }
 .db-nl.active {
-  background: rgba(139, 92, 246, 0.15);
+  background: rgba(139, 92, 246, 0.2);
+  color: #c4b5fd;
+  font-weight: 700;
+}
+.db-nl.active i {
   color: #a78bfa;
-  font-weight: 600;
 }
 .db-nl.active::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 20%;
-  bottom: 20%;
-  width: 3px;
-  background: var(--grad);
-  border-radius: 0 3px 3px 0;
+  top: 10%;
+  bottom: 10%;
+  width: 4px;
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  border-radius: 0 4px 4px 0;
 }
 .db-badge {
   margin-left: auto;

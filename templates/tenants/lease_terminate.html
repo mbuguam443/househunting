@@ -1,0 +1,22 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Terminate Lease - PataNyumba{% endblock %}
+{% block db_title %}Terminate Lease{% endblock %}
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="gc p-5 text-center">
+            <i class="fa-solid fa-ban" style="font-size:3rem;color:#f87171;margin-bottom:16px"></i>
+            <h4 style="color:var(--tx)">Terminate Lease</h4>
+            <p style="color:var(--tx2);margin-bottom:4px">This will terminate the lease for <strong>{{ lease.tenancy.tenant.get_full_name|default:lease.tenancy.tenant.username }}</strong></p>
+            <p style="color:var(--tx3);font-size:.85rem;margin-bottom:24px">Unit {{ lease.tenancy.unit.unit_number }} will be marked as <strong>vacant</strong> and the tenancy will end.</p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="submit" class="btn px-5 py-2" style="background:#f87171;color:#fff;border:none;border-radius:10px"><i class="fa-solid fa-check me-1"></i> Confirm Terminate</button>
+                    <a href="{% url 'tenants:lease_detail' lease.pk %}" class="boc btn px-4 py-2">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

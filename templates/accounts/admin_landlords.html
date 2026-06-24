@@ -3,9 +3,16 @@
 {% block admin_title %}Landlords{% endblock %}
 {% block admin_content %}
 <div class="gc p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h5 class="fw-semibold mb-0"><i class="fa-solid fa-building me-2"></i>All Landlords</h5>
-        <a href="{% url 'accounts:admin_create_landlord' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem">+ New Landlord</a>
+        <div class="d-flex gap-2 align-items-center">
+            <form method="GET" style="display:flex;gap:4px">
+                <input name="q" type="text" placeholder="Search landlords..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:200px">
+                <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-search"></i></button>
+                {% if q %}<a href="{% url 'accounts:admin_landlords' %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+            </form>
+            <a href="{% url 'accounts:admin_create_landlord' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem">+ New Landlord</a>
+        </div>
     </div>
     {% if landlords %}
     <div class="table-responsive">
@@ -26,7 +33,7 @@
                         </form>
                     </td>
                     <td>KES {{ p.monthly_fee }}</td>
-                    <td>{% if sub %}{% if sub.status == 'active' %}<span class="badge-vacant">Active</span> till {{ sub.end_date|date:'M d, Y' }}{% else %}<span class="badge-occupied">{{ sub.get_status_display }}</span>{% endif %}{% else %}<span class="ftag">None</span>{% endif %}</td>
+                    <td>{% if sub %}{% if sub.status == 'active' %}<span class="badge-vacant">Active</span> till {{ sub.end_date|date:'M d, Y' }}{% else %}<span class="badge-occupied">{{ sub.get_status_display }}</span>{% endif %}{% elif p.fee_per_unit == 0 %}<span class="badge-vacant">Free (KES 0)</span>{% else %}<span class="ftag">None</span>{% endif %}</td>
                     <td>
                         <div class="d-flex gap-1">
                             <a href="{% url 'accounts:admin_assign_sub' p.user.id %}" class="boc btn py-1 px-2" style="font-size:.72rem">Pay</a>
@@ -38,6 +45,7 @@
             </tbody>
         </table>
     </div>
+    {% include 'pagination.html' with page_obj=landlords %}
     {% else %}
     <p style="color:var(--tx3);text-align:center;padding:20px 0">No landlords yet.</p>
     {% endif %}

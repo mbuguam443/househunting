@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Tenancy, RentPayment, MaintenanceRequest
+from .models import Tenancy, RentPayment, MaintenanceRequest, LeaseAgreement
 from units.models import Unit
 
 
@@ -56,7 +56,7 @@ class RentPaymentForm(forms.ModelForm):
 class MarkPaidForm(forms.Form):
     paid_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}))
     payment_method = forms.ChoiceField(choices=RentPayment.METHOD_CHOICES, widget=forms.Select(attrs={'class': 'oinp'}))
-    reference = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'M-Pesa confirmation code'}))
+    reference = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Transaction ref or receipt no.'}))
     notes = forms.CharField(max_length=500, required=False, widget=forms.Textarea(attrs={'class': 'oinp', 'rows': 2}))
 
 class MaintenanceForm(forms.ModelForm):
@@ -76,4 +76,19 @@ class MaintenanceStatusForm(forms.ModelForm):
         widgets = {
             'status': forms.Select(attrs={'class': 'oinp'}),
             'landlord_notes': forms.Textarea(attrs={'class': 'oinp', 'rows': 3, 'placeholder': 'Notes for the tenant'}),
+        }
+
+class LeaseForm(forms.ModelForm):
+    class Meta:
+        model = LeaseAgreement
+        fields = ['start_date', 'end_date', 'monthly_rent', 'deposit_amount', 'payment_due_day', 'late_fee', 'notice_period_days', 'terms']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}),
+            'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}),
+            'monthly_rent': forms.NumberInput(attrs={'class': 'oinp', 'step': '0.01'}),
+            'deposit_amount': forms.NumberInput(attrs={'class': 'oinp', 'step': '0.01'}),
+            'payment_due_day': forms.NumberInput(attrs={'class': 'oinp', 'min': 1, 'max': 28}),
+            'late_fee': forms.NumberInput(attrs={'class': 'oinp', 'step': '0.01'}),
+            'notice_period_days': forms.NumberInput(attrs={'class': 'oinp'}),
+            'terms': forms.Textarea(attrs={'class': 'oinp', 'rows': 6, 'placeholder': 'General terms and conditions of the lease agreement...'}),
         }

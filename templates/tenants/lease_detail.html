@@ -1,0 +1,171 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Lease - {{ lease.tenancy.tenant.username }}{% endblock %}
+{% block db_title %}Lease Agreement{% endblock %}
+{% block dashboard_content %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="gc p-4" id="leasePrintArea">
+            <div class="d-flex justify-content-between align-items-start mb-4" style="border-bottom:2px solid var(--bd);padding-bottom:16px">
+                <div>
+                    <h4 class="fw-bold mb-1" style="color:var(--tx)">Lease Agreement</h4>
+                    <p style="color:var(--tx3);font-size:.85rem">Prepared on {{ lease.created_at|date:'F d, Y' }}</p>
+                </div>
+                <span class="{% if lease.status == 'active' %}badge-vacant{% elif lease.status == 'draft' %}ftag{% elif lease.status == 'terminated' %}badge-occupied{% else %}ftag-warning{% endif %}">{{ lease.get_status_display }}</span>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div style="font-size:.78rem;color:var(--tx3)">Tenant</div>
+                    <div style="font-weight:600;color:var(--tx)">{{ lease.tenancy.tenant.get_full_name|default:lease.tenancy.tenant.username }}</div>
+                    <div style="font-size:.82rem;color:var(--tx2)">{{ lease.tenancy.tenant.email }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div style="font-size:.78rem;color:var(--tx3)">Landlord</div>
+                    <div style="font-weight:600;color:var(--tx)">{{ lease.tenancy.unit.property.owner.get_full_name|default:lease.tenancy.unit.property.owner.username }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div style="font-size:.78rem;color:var(--tx3)">Property</div>
+                    <div style="font-weight:600;color:var(--tx)">{{ lease.tenancy.unit.property.name }}</div>
+                    <div style="font-size:.82rem;color:var(--tx2)">{{ lease.tenancy.unit.unit_number }} ({{ lease.tenancy.unit.get_house_type_display }})</div>
+                </div>
+                <div class="col-md-3">
+                    <div style="font-size:.78rem;color:var(--tx3)">Start Date</div>
+                    <div style="font-weight:600;color:var(--tx)">{{ lease.start_date|date:'M d, Y' }}</div>
+                </div>
+                <div class="col-md-3">
+                    <div style="font-size:.78rem;color:var(--tx3)">End Date</div>
+                    <div style="font-weight:600;color:var(--tx)">{{ lease.end_date|date:'M d, Y' }}</div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="gc p-3 text-center">
+                        <div style="font-size:.72rem;color:var(--tx3)">Monthly Rent</div>
+                        <div class="gt" style="font-size:1.2rem;font-weight:700">KES {{ lease.monthly_rent|floatformat:0 }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="gc p-3 text-center">
+                        <div style="font-size:.72rem;color:var(--tx3)">Deposit</div>
+                        <div style="font-size:1.2rem;font-weight:700;color:var(--tx)">KES {{ lease.deposit_amount|floatformat:0 }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="gc p-3 text-center">
+                        <div style="font-size:.72rem;color:var(--tx3)">Due Day</div>
+                        <div style="font-size:1.2rem;font-weight:700;color:var(--tx)">{{ lease.payment_due_day }}th</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="gc p-3 text-center">
+                        <div style="font-size:.72rem;color:var(--tx3)">Late Fee</div>
+                        <div style="font-size:1.2rem;font-weight:700;color:#f87171">KES {{ lease.late_fee|floatformat:0 }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {% if lease.terms %}
+            <div class="mb-4">
+                <h6 class="fw-semibold mb-2" style="color:var(--tx)">Terms & Conditions</h6>
+                <div style="font-size:.85rem;color:var(--tx2);white-space:pre-wrap;line-height:1.7">{{ lease.terms }}</div>
+            </div>
+            {% endif %}
+
+            <div style="border-top:2px solid var(--bd);padding-top:16px">
+                <h6 class="fw-semibold mb-3" style="color:var(--tx)">Signatures</h6>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div style="padding:16px;border:1px dashed {% if lease.landlord_accepted %}#34d399{% else %}var(--bd){% endif %};border-radius:10px;text-align:center">
+                            <i class="fa-solid fa-{% if lease.landlord_accepted %}check-circle{% else %}pen{% endif %}" style="font-size:1.5rem;color:{% if lease.landlord_accepted %}#34d399{% else %}var(--tx3){% endif %};margin-bottom:8px"></i>
+                            <div style="font-weight:600;color:var(--tx)">{{ lease.tenancy.unit.property.owner.get_full_name|default:lease.tenancy.unit.property.owner.username }}</div>
+                            <div style="font-size:.78rem;color:var(--tx3)">Landlord</div>
+                            {% if lease.landlord_accepted %}<div style="font-size:.75rem;color:#34d399;margin-top:4px">Signed {{ lease.landlord_accepted_at|date:'M d, Y' }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div style="padding:16px;border:1px dashed {% if lease.tenant_accepted %}#34d399{% else %}var(--bd){% endif %};border-radius:10px;text-align:center">
+                            <i class="fa-solid fa-{% if lease.tenant_accepted %}check-circle{% else %}user{% endif %}" style="font-size:1.5rem;color:{% if lease.tenant_accepted %}#34d399{% else %}var(--tx3){% endif %};margin-bottom:8px"></i>
+                            <div style="font-weight:600;color:var(--tx)">{{ lease.tenancy.tenant.get_full_name|default:lease.tenancy.tenant.username }}</div>
+                            <div style="font-size:.78rem;color:var(--tx3)">Tenant</div>
+                            {% if lease.tenant_accepted %}<div style="font-size:.75rem;color:#34d399;margin-top:4px">Signed {{ lease.tenant_accepted_at|date:'M d, Y' }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4 flex-wrap">
+            <button onclick="window.print()" class="bgrd btn px-4 py-2"><i class="fa-solid fa-print me-1"></i> Print / Download</button>
+            {% if lease.status == 'active' and not lease.tenant_accepted and user == lease.tenancy.tenant %}
+            <a href="{% url 'tenants:lease_accept' lease.pk %}" class="bgrd btn px-4 py-2"><i class="fa-solid fa-file-signature me-1"></i> Accept Lease</a>
+            {% endif %}
+            {% if lease.status == 'active' and user.profile.role == 'landlord' and lease.tenancy.unit.property.owner == user %}
+            <a href="{% url 'tenants:lease_terminate' lease.pk %}" class="boc btn px-4 py-2" style="color:#f87171"><i class="fa-solid fa-ban me-1"></i> Terminate Lease</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-regular fa-clock me-2"></i>Lease Timeline</h5>
+            <div style="display:flex;flex-direction:column;gap:10px">
+                <div class="d-flex align-items-center gap-2" style="padding:8px 10px;background:var(--bg3);border-radius:8px;font-size:.82rem">
+                    <div style="width:8px;height:8px;border-radius:50%;background:var(--pur);flex-shrink:0"></div>
+                    <div style="flex:1"><strong style="color:var(--tx)">Created</strong><br><span style="color:var(--tx3);font-size:.75rem">{{ lease.created_at|date:'M d, Y H:i' }}</span></div>
+                </div>
+                {% if lease.landlord_accepted %}
+                <div class="d-flex align-items-center gap-2" style="padding:8px 10px;background:var(--bg3);border-radius:8px;font-size:.82rem">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#34d399;flex-shrink:0"></div>
+                    <div style="flex:1"><strong style="color:var(--tx)">Landlord Signed</strong><br><span style="color:var(--tx3);font-size:.75rem">{{ lease.landlord_accepted_at|date:'M d, Y H:i' }}</span></div>
+                </div>
+                {% endif %}
+                {% if lease.tenant_accepted %}
+                <div class="d-flex align-items-center gap-2" style="padding:8px 10px;background:var(--bg3);border-radius:8px;font-size:.82rem">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#34d399;flex-shrink:0"></div>
+                    <div style="flex:1"><strong style="color:var(--tx)">Tenant Signed</strong><br><span style="color:var(--tx3);font-size:.75rem">{{ lease.tenant_accepted_at|date:'M d, Y H:i' }}</span></div>
+                </div>
+                {% endif %}
+                {% if lease.status == 'terminated' %}
+                <div class="d-flex align-items-center gap-2" style="padding:8px 10px;background:var(--bg3);border-radius:8px;font-size:.82rem">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#f87171;flex-shrink:0"></div>
+                    <div style="flex:1"><strong style="color:#f87171">Terminated</strong></div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style media="print">
+@page { margin: 15mm 20mm }
+* { color:#000 !important;background:#fff !important;box-shadow:none !important;text-shadow:none !important }
+body { font-family:'Times New Roman',Georgia,serif !important;font-size:12pt !important;line-height:1.6 !important;color:#000 !important;background:#fff !important }
+#dbSidebar, .db-top, .hamburger-db, .d-flex.gap-2.mt-4, .col-lg-4, .d-flex.gap-2.mt-4.flex-wrap, .btn, button { display:none !important }
+.db-main, .db-content, .container-fluid { margin:0 !important;padding:0 !important;max-width:100% !important }
+.gc { border:none !important;background:none !important;padding:0 !important;margin:0 !important }
+#leasePrintArea { border:none !important;background:none !important;padding:0 !important }
+#leasePrintArea h4 { font-size:20pt !important;margin-bottom:4px !important }
+#leasePrintArea h6 { font-size:13pt !important;margin-top:20px !important;margin-bottom:8px !important }
+.row { display:block !important;margin:0 !important;padding:0 !important }
+[class*="col-"] { display:block !important;width:auto !important;max-width:100% !important;padding:0 !important;margin-bottom:6px !important }
+[style*="border-bottom"] { border-bottom:1px solid #000 !important }
+[style*="border-top"] { border-top:1px solid #000 !important }
+[style*="dashed"] { border:1px solid #000 !important;border-radius:0 !important;padding:12px !important;margin-bottom:12px !important }
+[style*="font-size:2rem"] { font-size:16pt !important }
+[style*="font-size:1.2rem"] { font-size:13pt !important }
+[style*="font-size:.85rem"] { font-size:10.5pt !important }
+[style*="font-size:.82rem"] { font-size:10pt !important }
+[style*="font-size:.78rem"] { font-size:9.5pt !important }
+[style*="font-size:.75rem"] { font-size:9pt !important }
+[style*="font-size:.72rem"] { font-size:9pt !important }
+.mb-4, [style*="margin-bottom:24px"] { margin-bottom:16px !important }
+.mb-3, [style*="margin-bottom:16px"] { margin-bottom:12px !important }
+.mb-2 { margin-bottom:8px !important }
+.mt-4 { margin-top:16px !important }
+.g-3 > div, .g-4 > div { margin-bottom:6px !important }
+.fw-semibold, [style*="font-weight:600"], [style*="font-weight:700"] { font-weight:bold !important }
+</style>
+{% endblock %}

@@ -9,12 +9,14 @@ from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from datetime import timedelta
 from decimal import Decimal
-from .models import Tenancy, RentPayment, MaintenanceRequest, MpesaTransaction
-from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm
+from .models import Tenancy, RentPayment, MaintenanceRequest, MpesaTransaction, LeaseAgreement
+from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm, LeaseForm
 from .rent_utils import generate_rent_payments, mark_overdue_payments
-from .mpesa_utils import stk_push, process_callback
+from .mpesa_utils import stk_push, process_callback, query_stk_status
 from units.models import Unit
+from properties.models import Property
 from accounts.models import require_landlord_sub
+from core.pagination import paginate
 
 # ==================== LANDLORD VIEWS ====================
 
@@ -46,8 +48,19 @@ def tenant_list(request):
     ok, resp = require_landlord_sub(request.user)
     if not ok:
         return resp
-    tenancies = Tenancy.objects.filter(unit__property__owner=request.user).select_related('tenant', 'unit__property')
-    return render(request, 'tenants/tenant_list.html', {'tenancies': tenancies, 'active_tab': 'tenants'})
+    qs = Tenancy.objects.filter(unit__property__owner=request.user).select_related('tenant', 'unit__property')
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(tenant__username__icontains=q) | qs.filter(tenant__first_name__icontains=q) | qs.filter(tenant__last_name__icontains=q) | qs.filter(unit__unit_number__icontains=q)
+    status_f = request.GET.get('status', '').strip()
+    if status_f:
+        qs = qs.filter(status=status_f)
+    prop_f = request.GET.get('property', '').strip()
+    if prop_f:
+        qs = qs.filter(unit__property_id=prop_f)
+    properties = Property.objects.filter(owner=request.user)
+    page_obj = paginate(request, qs)
+    return render(request, 'tenants/tenant_list.html', {'tenancies': page_obj, 'q': q, 'status_f': status_f, 'prop_f': prop_f, 'properties': properties, 'active_tab': 'tenants'})
 
 @login_required
 def tenant_create(request):
@@ -80,7 +93,15 @@ def tenant_detail(request, pk):
         messages.error(request, 'Access denied.')
         return redirect('tenants:list')
     payments = tenancy.payments.all()
-    return render(request, 'tenants/tenant_detail.html', {'tenancy': tenancy, 'payments': payments, 'active_tab': 'tenants'})
+    balance = payments.exclude(status='paid').exclude(notes='stk_intermediary').aggregate(s=Sum('amount'))['s'] or 0
+    q = request.GET.get('q', '').strip()
+    if q:
+        payments = payments.filter(tenancy__tenant__username__icontains=q) | payments.filter(tenancy__unit__unit_number__icontains=q)
+    status_f = request.GET.get('status', '').strip()
+    if status_f:
+        payments = payments.filter(status=status_f)
+    page_obj = paginate(request, payments)
+    return render(request, 'tenants/tenant_detail.html', {'tenancy': tenancy, 'payments': page_obj, 'balance': balance, 'q': q, 'status_f': status_f, 'active_tab': 'tenants'})
 
 @login_required
 def tenant_vacate(request, pk):
@@ -122,14 +143,29 @@ def rent_collection(request):
     for t in tenancies:
         balance = RentPayment.objects.filter(tenancy=t).exclude(status='paid').exclude(notes='stk_intermediary').aggregate(s=Sum('amount'))['s'] or 0
         tenancy_balances[t.id] = balance
+    q = request.GET.get('q', '').strip()
+    if q:
+        payments = payments.filter(tenancy__tenant__username__icontains=q) | payments.filter(tenancy__unit__unit_number__icontains=q)
+    status_f = request.GET.get('status', '').strip()
+    if status_f:
+        payments = payments.filter(status=status_f)
+    page_obj = paginate(request, payments)
+    stk_queryable = set(
+        MpesaTransaction.objects.filter(
+            payment__in=[p.pk for p in page_obj],
+            status='pending',
+        ).exclude(checkout_request_id='').values_list('payment_id', flat=True)
+    )
     return render(request, 'tenants/rent_collection.html', {
         'tenancies': tenancies,
-        'payments': payments,
+        'payments': page_obj,
         'total_collected': total_collected,
         'pending_count': pending_count,
         'overdue_count': overdue_count,
         'tenancy_balances': tenancy_balances,
+        'q': q, 'status_f': status_f,
         'active_tab': 'rent',
+        'stk_queryable': stk_queryable,
     })
 
 @login_required
@@ -164,13 +200,24 @@ def maintenance_list(request):
     ok, resp = require_landlord_sub(request.user)
     if not ok:
         return resp
-    requests = MaintenanceRequest.objects.filter(
+    qs = MaintenanceRequest.objects.filter(
         unit__property__owner=request.user
     ).select_related('tenant', 'unit__property')
-    urgent_count = requests.filter(priority='urgent', status__in=['submitted', 'in_progress']).count()
+    urgent_count = qs.filter(priority='urgent', status__in=['submitted', 'in_progress']).count()
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(tenant__username__icontains=q) | qs.filter(unit__unit_number__icontains=q) | qs.filter(title__icontains=q)
+    status_f = request.GET.get('status', '').strip()
+    if status_f:
+        qs = qs.filter(status=status_f)
+    priority_f = request.GET.get('priority', '').strip()
+    if priority_f:
+        qs = qs.filter(priority=priority_f)
+    page_obj = paginate(request, qs)
     return render(request, 'tenants/maintenance_list.html', {
-        'requests': requests,
+        'requests': page_obj,
         'urgent_count': urgent_count,
+        'q': q, 'status_f': status_f, 'priority_f': priority_f,
         'active_tab': 'maintenance',
     })
 
@@ -212,6 +259,7 @@ def portal_home(request):
         'total_balance': total_balance,
         'upcoming_payments': upcoming_payments,
         'recent_maintenance': recent_maintenance,
+        'active_tab': 'home',
     })
 
 @login_required
@@ -222,7 +270,7 @@ def portal_payments(request):
     payments = RentPayment.objects.filter(tenancy__tenant=request.user).select_related('tenancy__unit')
     tenancy = Tenancy.objects.filter(tenant=request.user, status='active').first()
     total_balance = RentPayment.objects.filter(tenancy__tenant=request.user).exclude(status='paid').exclude(notes='stk_intermediary').aggregate(s=Sum('amount'))['s'] or 0
-    return render(request, 'tenants/portal_payments.html', {'payments': payments, 'tenancy': tenancy, 'total_balance': total_balance})
+    return render(request, 'tenants/portal_payments.html', {'payments': payments, 'tenancy': tenancy, 'total_balance': total_balance, 'active_tab': 'payments'})
 
 @login_required
 def portal_pay(request):
@@ -243,6 +291,7 @@ def portal_pay(request):
         'paid_payments': paid_payments,
         'mpesa_txs': mpesa_txs,
         'total_balance': total_balance,
+        'active_tab': 'pay',
     })
 
 @login_required
@@ -266,7 +315,7 @@ def portal_maintenance(request):
                 messages.error(request, 'No active tenancy found.')
     else:
         form = MaintenanceForm()
-    return render(request, 'tenants/portal_maintenance.html', {'requests': requests, 'form': form})
+    return render(request, 'tenants/portal_maintenance.html', {'requests': requests, 'form': form, 'active_tab': 'maintenance'})
 
 
 # ==================== M-PESA VIEWS ====================
@@ -301,6 +350,46 @@ def check_payment_status(request):
         'receipt': pmt.reference,
         'amount': str(pmt.amount),
     })
+
+@login_required
+def query_stk_push(request, payment_id):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+    payment = get_object_or_404(RentPayment, pk=payment_id)
+    if payment.tenancy.unit.property.owner != request.user:
+        messages.error(request, 'Access denied.')
+        return redirect('tenants:rent_collection')
+    tx = MpesaTransaction.objects.filter(payment=payment, status='pending').exclude(checkout_request_id='').first()
+    if not tx:
+        messages.info(request, 'No pending STK push to query for this payment.')
+        return redirect('tenants:rent_collection')
+    data = query_stk_status(tx.checkout_request_id)
+    if data.get('ResponseCode') != '0':
+        messages.warning(request, f"M-Pesa query failed: {data.get('ResponseDescription', 'Unknown error')}")
+        return redirect('tenants:rent_collection')
+    result_code = data.get('ResultCode')
+    result_desc = data.get('ResultDesc', '')
+    tx.result_code = str(result_code) if result_code is not None else ''
+    tx.result_desc = result_desc
+    tx.raw_callback = data
+    if result_code == '0':
+        tx.status = 'completed'
+        tx.save()
+        payment.status = 'paid'
+        payment.paid_date = timezone.now().date()
+        payment.reference = data.get('ReceiptNumber', '')
+        payment.save()
+        messages.success(request, f'STK query confirmed payment of KES {payment.amount}. Payment marked as paid.')
+    else:
+        tx.status = 'failed'
+        tx.save()
+        messages.warning(request, f'STK query returned: {result_desc}')
+    return redirect('tenants:rent_collection')
+
 
 @login_required
 def stk_push_view(request):
@@ -341,3 +430,111 @@ def stk_push_view(request):
         'payment_id': payment.id,
         'checkout_id': tx.checkout_request_id,
     })
+
+
+# ---- Lease Views ----
+
+@login_required
+def lease_create(request, tenancy_pk):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Access denied.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+    tenancy = get_object_or_404(Tenancy, pk=tenancy_pk)
+    if tenancy.unit.property.owner != request.user:
+        messages.error(request, 'Access denied.')
+        return redirect('tenants:list')
+    if hasattr(tenancy, 'lease'):
+        messages.warning(request, 'A lease already exists for this tenancy.')
+        return redirect('tenants:lease_detail', pk=tenancy.lease.pk)
+    if request.method == 'POST':
+        form = LeaseForm(request.POST)
+        if form.is_valid():
+            lease = form.save(commit=False)
+            lease.tenancy = tenancy
+            lease.status = 'active'
+            lease.landlord_accepted = True
+            lease.landlord_accepted_at = timezone.now()
+            lease.save()
+            messages.success(request, f'Lease created for {tenancy.tenant.username}.')
+            return redirect('tenants:lease_detail', pk=lease.pk)
+    else:
+        form = LeaseForm(initial={
+            'start_date': tenancy.start_date,
+            'end_date': tenancy.end_date or (tenancy.start_date + timedelta(days=365)),
+            'monthly_rent': tenancy.monthly_rent,
+            'deposit_amount': tenancy.deposit_paid,
+        })
+    return render(request, 'tenants/lease_form.html', {'form': form, 'tenancy': tenancy, 'active_tab': 'tenants'})
+
+
+@login_required
+def lease_detail(request, pk):
+    lease = get_object_or_404(LeaseAgreement.objects.select_related('tenancy__tenant', 'tenancy__unit__property'), pk=pk)
+    if request.user.profile.role == 'landlord':
+        if lease.tenancy.unit.property.owner != request.user:
+            messages.error(request, 'Access denied.')
+            return redirect('website:home')
+    elif request.user.profile.role == 'tenant':
+        if lease.tenancy.tenant != request.user:
+            messages.error(request, 'Access denied.')
+            return redirect('portal:home')
+    else:
+        return redirect('website:home')
+    return render(request, 'tenants/lease_detail.html', {'lease': lease, 'active_tab': 'tenants'})
+
+
+@login_required
+def lease_accept(request, pk):
+    lease = get_object_or_404(LeaseAgreement, pk=pk)
+    if request.user != lease.tenancy.tenant:
+        messages.error(request, 'Access denied.')
+        return redirect('portal:home')
+    if lease.tenant_accepted:
+        messages.info(request, 'You have already accepted this lease.')
+        return redirect('tenants:lease_detail', pk=lease.pk)
+    if request.method == 'POST':
+        lease.tenant_accepted = True
+        lease.tenant_accepted_at = timezone.now()
+        lease.save()
+        messages.success(request, 'Lease accepted successfully.')
+        return redirect('tenants:lease_detail', pk=lease.pk)
+    return render(request, 'tenants/lease_accept.html', {'lease': lease})
+
+
+@login_required
+def lease_terminate(request, pk):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Access denied.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+    lease = get_object_or_404(LeaseAgreement, pk=pk)
+    if lease.tenancy.unit.property.owner != request.user:
+        messages.error(request, 'Access denied.')
+        return redirect('tenants:list')
+    if request.method == 'POST':
+        lease.status = 'terminated'
+        lease.save()
+        lease.tenancy.status = 'ended'
+        lease.tenancy.end_date = timezone.now().date()
+        lease.tenancy.save()
+        lease.tenancy.unit.status = 'vacant'
+        lease.tenancy.unit.save()
+        messages.success(request, 'Lease terminated. Unit is now vacant.')
+        return redirect('tenants:lease_detail', pk=lease.pk)
+    return render(request, 'tenants/lease_terminate.html', {'lease': lease})
+
+
+# ---- Tenant Portal Lease Views ----
+
+@login_required
+def portal_lease(request):
+    if request.user.profile.role != 'tenant':
+        return redirect('website:home')
+    tenancy = Tenancy.objects.filter(tenant=request.user, status='active').first()
+    lease = getattr(tenancy, 'lease', None) if tenancy else None
+    return render(request, 'tenants/portal_lease.html', {'lease': lease, 'tenancy': tenancy, 'active_tab': 'lease'})

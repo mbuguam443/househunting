@@ -7,6 +7,28 @@
     <i class="fa-solid fa-triangle-exclamation me-1"></i> {{ urgent_count }} urgent request{{ urgent_count|pluralize }} need attention
 </div>
 {% endif %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h4 class="fw-bold mb-0">Requests</h4>
+    <form method="GET" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+        <input name="q" type="text" placeholder="Search..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:150px">
+        <select name="status" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+            <option value="">All Status</option>
+            <option value="submitted" {% if status_f == 'submitted' %}selected{% endif %}>Submitted</option>
+            <option value="in_progress" {% if status_f == 'in_progress' %}selected{% endif %}>In Progress</option>
+            <option value="resolved" {% if status_f == 'resolved' %}selected{% endif %}>Resolved</option>
+            <option value="closed" {% if status_f == 'closed' %}selected{% endif %}>Closed</option>
+        </select>
+        <select name="priority" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+            <option value="">All Priority</option>
+            <option value="low" {% if priority_f == 'low' %}selected{% endif %}>Low</option>
+            <option value="medium" {% if priority_f == 'medium' %}selected{% endif %}>Medium</option>
+            <option value="high" {% if priority_f == 'high' %}selected{% endif %}>High</option>
+            <option value="urgent" {% if priority_f == 'urgent' %}selected{% endif %}>Urgent</option>
+        </select>
+        <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-filter"></i></button>
+        {% if q or status_f or priority_f %}<a href="{% url 'tenants:maintenance_list' %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+    </form>
+</div>
 {% if requests %}
 <div class="row g-4">
     {% for r in requests %}
@@ -29,6 +51,7 @@
     </div>
     {% endfor %}
 </div>
+{% include 'pagination.html' with page_obj=requests %}
 {% else %}
 <div class="gc p-5 text-center">
     <i class="fa-solid fa-wrench" style="font-size:3rem;color:var(--tx3);margin-bottom:16px"></i>

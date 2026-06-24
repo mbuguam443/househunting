@@ -1,13 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordChangeForm, UserCreationForm
 from django.contrib import messages
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import date, timedelta
+from decimal import Decimal
 from .forms import RegistrationForm, ProfileForm, UserForm
 from .models import Profile, SubscriptionPlan, LandlordSubscription, PlatformConfig, get_fee_per_unit
+from core.pagination import paginate
 from properties.models import Property
 from units.models import Unit
 from tenants.models import Tenancy, RentPayment
@@ -131,12 +134,17 @@ def admin_landlords(request):
     if request.user.profile.role != 'admin':
         messages.error(request, 'Admin access required.')
         return redirect('website:home')
-    landlords = Profile.objects.filter(role='landlord').select_related('user').prefetch_related('user__subscriptions')
-    for p in landlords:
+    qs = Profile.objects.filter(role='landlord').select_related('user').prefetch_related('user__subscriptions')
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(user__username__icontains=q) | qs.filter(user__first_name__icontains=q) | qs.filter(user__last_name__icontains=q) | qs.filter(phone__icontains=q)
+        qs = qs.distinct()
+    for p in qs:
         p.unit_count = Unit.objects.filter(property__owner=p.user).count()
         landlord_fee = get_fee_per_unit(p.user)
         p.monthly_fee = p.unit_count * landlord_fee
-    return render(request, 'accounts/admin_landlords.html', {'landlords': landlords})
+    page_obj = paginate(request, qs)
+    return render(request, 'accounts/admin_landlords.html', {'landlords': page_obj, 'q': q})
 
 
 @login_required
@@ -146,11 +154,18 @@ def admin_set_landlord_fee(request, landlord_id):
         return redirect('website:home')
     landlord = get_object_or_404(User, pk=landlord_id, profile__role='landlord')
     if request.method == 'POST':
-        fee = request.POST.get('fee_per_unit')
-        if fee is not None:
-            landlord.profile.fee_per_unit = fee
-            landlord.profile.save()
-            messages.success(request, f'Fee for {landlord.username} set to KES {fee}/unit.')
+        raw = request.POST.get('fee_per_unit', '').strip()
+        try:
+            fee = Decimal(raw)
+        except Exception:
+            messages.error(request, 'Invalid fee value.')
+            return redirect('accounts:admin_landlords')
+        if fee < 0:
+            messages.error(request, 'Fee cannot be negative.')
+            return redirect('accounts:admin_landlords')
+        landlord.profile.fee_per_unit = fee
+        landlord.profile.save()
+        messages.success(request, f'Fee for {landlord.username} set to KES {fee}/unit.')
         return redirect('accounts:admin_landlords')
     return redirect('accounts:admin_landlords')
 
@@ -211,6 +226,35 @@ def admin_plan_toggle(request, pk):
     plan.save()
     messages.success(request, f'Plan {"activated" if plan.is_active else "deactivated"}.')
     return redirect('accounts:admin_plans')
+
+
+@login_required
+def admin_revenue(request):
+    if request.user.profile.role != 'admin':
+        messages.error(request, 'Admin access required.')
+        return redirect('website:home')
+    subs = LandlordSubscription.objects.select_related('landlord').order_by('-created_at')
+    q = request.GET.get('q', '').strip()
+    if q:
+        subs = subs.filter(landlord__username__icontains=q)
+    status_f = request.GET.get('status', '').strip()
+    if status_f:
+        subs = subs.filter(status=status_f)
+    total_collected = LandlordSubscription.objects.aggregate(s=Sum('amount'))['s'] or 0
+    active_revenue = LandlordSubscription.objects.filter(status='active').aggregate(s=Sum('amount'))['s'] or 0
+    active_count = LandlordSubscription.objects.filter(status='active').count()
+    expired_count = LandlordSubscription.objects.filter(status='expired').count()
+    page_obj = paginate(request, subs)
+    return render(request, 'accounts/admin_revenue.html', {
+        'subscriptions': page_obj,
+        'total_collected': total_collected,
+        'active_revenue': active_revenue,
+        'active_count': active_count,
+        'expired_count': expired_count,
+        'landlord_count': Profile.objects.filter(role='landlord').count(),
+        'q': q, 'status_f': status_f,
+        'active_tab': 'revenue',
+    })
 
 
 @login_required

@@ -34,6 +34,9 @@ class RentPayment(models.Model):
     ]
     METHOD_CHOICES = [
         ('mpesa', 'M-Pesa'),
+        ('cash', 'Cash'),
+        ('bank', 'Bank Transfer'),
+        ('other', 'Other'),
     ]
     tenancy = models.ForeignKey(Tenancy, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -78,6 +81,38 @@ class MpesaTransaction(models.Model):
 
     def __str__(self):
         return f'{self.phone} - KES {self.amount} ({self.get_status_display()})'
+
+class LeaseAgreement(models.Model):
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('terminated', 'Terminated'),
+        ('expired', 'Expired'),
+    ]
+    tenancy = models.OneToOneField(Tenancy, on_delete=models.CASCADE, related_name='lease')
+    start_date = models.DateField()
+    end_date = models.DateField()
+    monthly_rent = models.DecimalField(max_digits=10, decimal_places=2)
+    deposit_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_due_day = models.IntegerField(default=5)
+    late_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    notice_period_days = models.IntegerField(default=30)
+    terms = models.TextField(blank=True)
+    clauses = models.JSONField(default=list, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    landlord_accepted = models.BooleanField(default=False)
+    landlord_accepted_at = models.DateTimeField(null=True, blank=True)
+    tenant_accepted = models.BooleanField(default=False)
+    tenant_accepted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Lease: {self.tenancy.tenant.username} @ {self.tenancy.unit.unit_number}'
+
 
 class MaintenanceRequest(models.Model):
     PRIORITY_CHOICES = [

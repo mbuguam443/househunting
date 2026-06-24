@@ -1,0 +1,56 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}Revenue - PataNyumba{% endblock %}
+{% block admin_title %}Revenue Overview{% endblock %}
+{% block admin_content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="db-stat-card"><div class="db-stat-val gt">KES {{ total_collected|floatformat:0 }}</div><div class="db-stat-lbl">Total Collected (all time)</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="db-stat-card"><div class="db-stat-val" style="color:#34d399">KES {{ active_revenue|floatformat:0 }}</div><div class="db-stat-lbl">Active Subscription Revenue</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="db-stat-card"><div class="db-stat-val gt">{{ active_count }}</div><div class="db-stat-lbl">Active Subscriptions</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="db-stat-card"><div class="db-stat-val" style="color:#f87171">{{ expired_count }}</div><div class="db-stat-lbl">Expired Subscriptions</div></div>
+    </div>
+</div>
+
+<div class="gc p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h5 class="fw-semibold mb-0"><i class="fa-solid fa-receipt me-2"></i>Payment History</h5>
+        <form method="GET" style="display:flex;gap:4px;align-items:center">
+            <input name="q" type="text" placeholder="Search by landlord..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:180px">
+            <select name="status" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+                <option value="">All</option>
+                <option value="active" {% if status_f == 'active' %}selected{% endif %}>Active</option>
+                <option value="expired" {% if status_f == 'expired' %}selected{% endif %}>Expired</option>
+                <option value="cancelled" {% if status_f == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+            <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-filter"></i></button>
+            {% if q or status_f %}<a href="{% url 'accounts:admin_revenue' %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Landlord</th><th>Units</th><th>Amount Paid</th><th>Period</th><th>Status</th><th>Reference</th></tr></thead>
+            <tbody>
+                {% for s in subscriptions %}
+                <tr>
+                    <td style="font-weight:600;color:var(--tx)">{{ s.landlord.username }}</td>
+                    <td>{{ s.unit_count }}</td>
+                    <td style="font-weight:600;color:#34d399">KES {{ s.amount|floatformat:0 }}</td>
+                    <td style="font-size:.82rem;color:var(--tx2)">{{ s.start_date|date:'M d, Y' }} — {{ s.end_date|date:'M d, Y' }}</td>
+                    <td>{% if s.status == 'active' %}<span class="badge-vacant">Active</span>{% elif s.status == 'expired' %}<span class="badge-occupied">Expired</span>{% else %}<span class="ftag">{{ s.get_status_display }}</span>{% endif %}</td>
+                    <td style="font-size:.82rem;color:var(--tx3)">{{ s.payment_reference|default:'—' }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:30px 0">No payments recorded yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page_obj=subscriptions %}
+</div>
+{% endblock %}

@@ -19,156 +19,150 @@
     <div style="flex:1;font-size:.88rem">Your subscription expired {{ sub.end_date|timesince }} ago. <a href="{% url 'accounts:profile' %}" style="color:var(--pur)">Renew now</a></div>
 </div>
 {% else %}
+
+{# --- Top stat cards --- #}
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
         <div class="db-stat-card">
-            <div class="db-stat-val gt">{{ properties_count }}</div>
-            <div class="db-stat-lbl">Properties</div>
-            <div class="db-stat-delta delta-up"><i class="fa-solid fa-building me-1"></i>Total buildings</div>
+            <div class="db-stat-val gt">KES {{ total_collected|floatformat:0 }}</div>
+            <div class="db-stat-lbl">Total Collected</div>
+            <div class="db-stat-delta delta-up"><i class="fa-solid fa-coins me-1"></i>All time revenue</div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="db-stat-card">
-            <div class="db-stat-val gt">{{ total_units }}</div>
-            <div class="db-stat-lbl">Total Units</div>
-            <div class="db-stat-delta delta-up"><i class="fa-solid fa-door-open me-1"></i>All units</div>
+            <div class="db-stat-val gt">KES {{ monthly_collected|floatformat:0 }}</div>
+            <div class="db-stat-lbl">This Month</div>
+            <div class="db-stat-delta">of KES {{ monthly_expected|floatformat:0 }} expected</div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="db-stat-card">
-            <div class="db-stat-val gt">{{ vacant_units }}</div>
-            <div class="db-stat-lbl">Vacant Units</div>
-            <div class="db-stat-delta delta-up" style="color:#34d399"><i class="fa-regular fa-eye me-1"></i>Visible on website</div>
+            <div class="db-stat-val gt" style="color:{% if collection_rate >= 80 %}#34d399{% elif collection_rate >= 50 %}#f59e0b{% else %}#f87171{% endif %}">{{ collection_rate }}%</div>
+            <div class="db-stat-lbl">Collection Rate</div>
+            <div class="db-stat-delta delta-up"><i class="fa-solid fa-percentage me-1"></i>Paid vs total billed</div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="db-stat-card">
-            <div class="db-stat-val gt">{{ occupied_units }}</div>
-            <div class="db-stat-lbl">Occupied Units</div>
-            <div class="db-stat-delta delta-dn"><i class="fa-solid fa-check me-1"></i>Hidden from public</div>
+            <div class="db-stat-val gt" style="color:{% if pending_count > 0 %}#f59e0b{% else %}#34d399{% endif %}">{{ pending_count }}</div>
+            <div class="db-stat-lbl">Pending Payments</div>
+            <div class="db-stat-delta avg">KES {{ pending_total|floatformat:0 }} outstanding</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt" style="color:{% if overdue_count > 0 %}#f87171{% else %}#34d399{% endif %}">{{ overdue_count }}</div>
+            <div class="db-stat-lbl">Overdue Payments</div>
+            <div class="db-stat-delta delta-dn">KES {{ overdue_total|floatformat:0 }} overdue</div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="db-stat-card">
             <div class="db-stat-val gt">{{ active_tenancies }}</div>
-            <div class="db-stat-lbl">Active Tenancies</div>
+            <div class="db-stat-lbl">Active Tenants</div>
             <div class="db-stat-delta delta-up"><i class="fa-regular fa-user me-1"></i>Currently renting</div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="db-stat-card">
-            <div class="db-stat-val gt">{{ urgent_maintenance }}</div>
-            <div class="db-stat-lbl">Urgent Issues</div>
-            <div class="db-stat-delta avg"{% if urgent_maintenance > 0 %} style="color:#f87171"{% endif %}><i class="fa-solid fa-wrench me-1"></i>Need attention</div>
+            <div class="db-stat-val gt">{{ total_units }}</div>
+            <div class="db-stat-lbl">Units</div>
+            <div class="db-stat-delta"><span class="badge-vacant" style="font-size:.7rem">{{ vacant_units }} vacant</span> <span class="badge-occupied" style="font-size:.7rem">{{ occupied_units }} occupied</span></div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">{{ properties_count }}</div>
+            <div class="db-stat-lbl">Properties</div>
+            <div class="db-stat-delta"><i class="fa-regular fa-building me-1"></i>{{ total_units }} units across {{ properties_count }} buildings</div>
         </div>
     </div>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-4">
+{# --- Subscription & Fee info bar --- #}
+<div class="gc p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2" style="background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.15)">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <span style="color:var(--tx2);font-size:.85rem"><i class="fa-solid fa-file-invoice me-1" style="color:var(--pur)"></i> <strong>Platform fee:</strong> KES {{ fee_per_unit|floatformat:0 }}/unit/month</span>
+        <span style="color:var(--tx2);font-size:.85rem"><i class="fa-solid fa-calculator me-1" style="color:var(--pur)"></i> <strong>Estimated monthly:</strong> KES {{ monthly_sub_fee|floatformat:0 }}</span>
+        {% if sub %}
+        <span style="color:var(--tx2);font-size:.85rem"><i class="fa-solid fa-check-circle me-1" style="color:#34d399"></i> <strong>Subscription:</strong> {{ sub.start_date|date:'M d' }} – {{ sub.end_date|date:'M d, Y' }} ({{ sub.end_date|timeuntil }} left)</span>
+        {% else %}
+        <span style="color:var(--tx2);font-size:.85rem"><i class="fa-solid fa-circle-exclamation me-1" style="color:#f59e0b"></i> <strong>No subscription</strong></span>
+        {% endif %}
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'tenants:rent_collection' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem"><i class="fa-solid fa-credit-card me-1"></i> Rent Collection</a>
+    </div>
+</div>
+
+{% if expiring_leases %}
+<div class="gc p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2" style="background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.15)">
+    <div style="color:#f59e0b;font-size:.85rem"><i class="fa-solid fa-calendar-exclamation me-1"></i> <strong>{{ expiring_leases|length }}</strong> lease{% if expiring_leases|length > 1 %}s{% endif %} expiring within 30 days</div>
+    <div style="font-size:.82rem;color:var(--tx2)">
+        {% for l in expiring_leases %}{{ l.tenancy.tenant.get_full_name|default:l.tenancy.tenant.username }} ({{ l.tenancy.unit.unit_number }}) — ends {{ l.end_date|date:'M d' }}{% if not forloop.last %}, {% endif %}{% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{# --- Charts row --- #}
+<div class="row g-4 mb-4">
+    <div class="col-xl-4">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-chart-line me-2"></i>Collections (7 Days)</h5>
+            <canvas id="collectionChart" height="200"></canvas>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-chart-pie me-2"></i>Unit Types</h5>
+            <canvas id="typeChart" height="200"></canvas>
+        </div>
+    </div>
+    <div class="col-xl-4">
         <div class="gc p-4 d-flex align-items-center gap-3">
             <div style="flex:1">
                 <div style="font-size:.78rem;color:var(--tx3);margin-bottom:4px">Occupancy Rate</div>
                 <div style="font-size:2.2rem;font-weight:700" class="gt">{{ occupancy_rate }}%</div>
+                <div style="font-size:.82rem;color:var(--tx2);margin-top:4px">{{ occupied_units }} of {{ total_units }} units occupied</div>
             </div>
             <div style="width:80px;height:80px;position:relative">
                 <svg viewBox="0 0 36 36" style="width:80px;height:80px;transform:rotate(-90deg)">
                     <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--bd2)" stroke-width="3"/>
                     <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="url(#grad)" stroke-width="3" stroke-dasharray="{{ occupancy_rate }}, 100" stroke-linecap="round"/>
                 </svg>
-                <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs>
             </div>
         </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-        <div class="gc p-4 d-flex align-items-center gap-3">
-            <i class="fa-regular fa-message" style="font-size:2rem;color:var(--pur)"></i>
-            <div>
-                <div style="font-size:.78rem;color:var(--tx3);margin-bottom:4px">Unread Inquiries</div>
-                <div style="font-size:2.2rem;font-weight:700" class="gt">{{ unread_inquiries }}</div>
+        <div class="gc p-4 mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-semibold mb-0"><i class="fa-regular fa-message me-2"></i>Inquiries</h5>
+                <a href="{% url 'dashboard:inquiries' %}" class="boc btn px-3 py-1" style="font-size:.78rem">View All</a>
             </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-        <div class="gc p-4 d-flex align-items-center gap-3">
-            <i class="fa-regular fa-building" style="font-size:2rem;color:var(--tx3)"></i>
-            <div>
-                <div style="font-size:.78rem;color:var(--tx3);margin-bottom:4px">Quick Actions</div>
-                <div class="d-flex gap-2 mt-2 flex-wrap">
-                    <a href="{% url 'properties:create' %}" class="boc btn px-3 py-1" style="font-size:.78rem">+ Property</a>
-                    <a href="{% url 'units:create' %}" class="boc btn px-3 py-1" style="font-size:.78rem">+ Unit</a>
-                    <a href="{% url 'tenants:register' %}" class="boc btn px-3 py-1" style="font-size:.78rem">+ Tenant</a>
-                    <a href="{% url 'tenants:rent_collection' %}" class="boc btn px-3 py-1" style="font-size:.78rem">Rent</a>
-                </div>
-            </div>
+            <div style="font-size:1.8rem;font-weight:700" class="gt">{{ unread_inquiries }}</div>
+            <div style="color:var(--tx3);font-size:.82rem">Unread inquiries</div>
         </div>
     </div>
 </div>
 
 <div class="row g-4 mb-4">
-    <div class="col-xl-4">
-        <div class="gc p-4">
-            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-chart-pie me-2"></i>Unit Types</h5>
-            <canvas id="typeChart" height="220"></canvas>
-        </div>
-    </div>
     <div class="col-xl-8">
         <div class="gc p-4">
             <h5 class="fw-semibold mb-3"><i class="fa-solid fa-chart-column me-2"></i>Property Occupancy</h5>
             <canvas id="occupancyChart" height="220"></canvas>
         </div>
     </div>
-</div>
-
-<div class="row g-4 mb-4">
-    <div class="col-xl-6">
-        <div class="gc p-4">
-            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-chart-line me-2"></i>Inquiries (7 Days)</h5>
-            <canvas id="inquiryChart" height="200"></canvas>
-        </div>
-    </div>
-    <div class="col-xl-6">
-        <div class="gc p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-semibold mb-0"><i class="fa-regular fa-message me-2"></i>Recent Inquiries</h5>
-                <a href="{% url 'dashboard:overview' %}" class="boc btn px-3 py-1" style="font-size:.82rem">View All</a>
-            </div>
-            {% if recent_inquiries %}
-            <div class="table-responsive">
-                <table class="db-table">
-                    <thead><tr><th>Name</th><th>Unit</th><th>Date</th><th>Status</th></tr></thead>
-                    <tbody>
-                        {% for inq in recent_inquiries %}
-                        <tr>
-                            <td style="font-weight:600;color:var(--tx)">{{ inq.name }}</td>
-                            <td>{{ inq.unit.unit_number }}</td>
-                            <td style="font-size:.8rem">{{ inq.created_at|date:'M d, Y' }}</td>
-                            <td>{% if inq.is_read %}<span class="ftag">Read</span>{% else %}<span class="ftag-success">New</span>{% endif %}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p style="color:var(--tx3);text-align:center;padding:20px 0">No inquiries yet</p>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<div class="row g-4">
-    <div class="col-xl-6">
+    <div class="col-xl-4">
         <div class="gc p-4">
             <h5 class="fw-semibold mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i>Recent Activity</h5>
             {% if recent_activity %}
-            <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;flex-direction:column;gap:8px">
                 {% for item in recent_activity %}
-                <div class="d-flex align-items-center gap-3" style="padding:10px 12px;background:var(--bg3);border-radius:12px;font-size:.85rem">
-                    <div style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:{% if item.type == 'inquiry' %}rgba(248,113,113,.15){% elif item.type == 'tenant' %}rgba(52,211,153,.15){% else %}rgba(139,92,246,.15){% endif %};color:{% if item.type == 'inquiry' %}#f87171{% elif item.type == 'tenant' %}#34d399{% else %}#8b5cf6{% endif %};flex-shrink:0">
-                        <i class="fa-solid fa-{% if item.type == 'inquiry' %}message{% elif item.type == 'tenant' %}user{% else %}door-open{% endif %} fa-xs"></i>
+                <div class="d-flex align-items-center gap-2" style="padding:8px 10px;background:var(--bg3);border-radius:10px;font-size:.82rem">
+                    <div style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:{% if item.type == 'payment' %}rgba(52,211,153,.15){% elif item.type == 'inquiry' %}rgba(248,113,113,.15){% elif item.type == 'tenant' %}rgba(139,92,246,.15){% else %}rgba(59,130,246,.15){% endif %};color:{% if item.type == 'payment' %}#34d399{% elif item.type == 'inquiry' %}#f87171{% elif item.type == 'tenant' %}#8b5cf6{% else %}#3b82f6{% endif %};flex-shrink:0">
+                        <i class="fa-solid fa-{% if item.type == 'payment' %}coins{% elif item.type == 'inquiry' %}message{% elif item.type == 'tenant' %}user-plus{% else %}door-open{% endif %} fa-xs"></i>
                     </div>
-                    <div style="flex:1;color:var(--tx2)">{{ item.text }}</div>
-                    <div style="font-size:.72rem;color:var(--tx3);flex-shrink:0">{{ item.time|timesince }} ago</div>
+                    <div style="flex:1;color:var(--tx2);line-height:1.3">{{ item.text }}</div>
+                    <div style="font-size:.7rem;color:var(--tx3);flex-shrink:0;white-space:nowrap">{{ item.time|timesince }} ago</div>
                 </div>
                 {% endfor %}
             </div>
@@ -177,6 +171,9 @@
             {% endif %}
         </div>
     </div>
+</div>
+
+<div class="row g-4">
     <div class="col-xl-12">
         <div class="gc p-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -186,7 +183,7 @@
             {% if properties %}
             <div class="table-responsive">
                 <table class="db-table">
-                    <thead><tr><th>Name</th><th>Location</th><th>Units</th><th>Vacant</th><th></th></tr></thead>
+                    <thead><tr><th>Name</th><th>Location</th><th>Units</th><th>Vacant</th><th>Occupied</th><th></th></tr></thead>
                     <tbody>
                         {% for p in properties %}
                         <tr>
@@ -194,6 +191,7 @@
                             <td>{{ p.town|truncatechars:15 }}</td>
                             <td>{{ p.unit_count }}</td>
                             <td><span class="badge-vacant">{{ p.vacant_count }}</span></td>
+                            <td><span class="badge-occupied">{{ p.occupied_count }}</span></td>
                             <td><a href="{% url 'properties:update' p.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem">Edit</a></td>
                         </tr>
                         {% endfor %}
@@ -218,12 +216,12 @@
     var propLabels = {{ chart_prop_labels|safe }};
     var propVacant = {{ chart_prop_vacant|safe }};
     var propOccupied = {{ chart_prop_occupied|safe }};
-    var inqDates = {{ inquiry_dates|safe }};
-    var inqCounts = {{ inquiry_counts|safe }};
+    var collDates = {{ collection_dates|safe }};
+    var collAmounts = {{ collection_amounts|safe }};
 
     var typeChartInst = null;
     var occChartInst = null;
-    var inqChartInst = null;
+    var collChartInst = null;
 
     function chartColors() {
         var isDark = !document.getElementById('htmlRoot').classList.contains('lm');
@@ -260,9 +258,9 @@
                             position: 'bottom',
                             labels: {
                                 color: c.text,
-                                font: { family: 'Space Grotesk', size: 11 },
-                                padding: 12,
-                                boxWidth: 12,
+                                font: { family: 'Space Grotesk', size: 10 },
+                                padding: 8,
+                                boxWidth: 10,
                                 borderRadius: 4,
                             }
                         }
@@ -334,30 +332,28 @@
         } catch(e) { console.error('occChart:', e); }
     }
 
-    function initInqChart() {
-        var ctx = document.getElementById('inquiryChart');
+    function initCollChart() {
+        var ctx = document.getElementById('collectionChart');
         if (!ctx) return;
-        if (inqChartInst) { inqChartInst.destroy(); inqChartInst = null; }
+        if (collChartInst) { collChartInst.destroy(); collChartInst = null; }
         var c = chartColors();
         try {
             var canvas = ctx.getContext('2d');
             var g = canvas.createLinearGradient(0, 0, 0, 180);
-            g.addColorStop(0, 'rgba(139,92,246,0.35)');
-            g.addColorStop(1, 'rgba(59,130,246,0.02)');
-            inqChartInst = new Chart(ctx, {
-                type: 'line',
+            g.addColorStop(0, 'rgba(52,211,153,0.35)');
+            g.addColorStop(1, 'rgba(52,211,153,0.02)');
+            collChartInst = new Chart(ctx, {
+                type: 'bar',
                 data: {
-                    labels: inqDates,
+                    labels: collDates,
                     datasets: [{
-                        label: 'Inquiries',
-                        data: inqCounts,
-                        fill: true,
+                        label: 'Collected (KES)',
+                        data: collAmounts,
                         backgroundColor: g,
-                        borderColor: '#8b5cf6',
-                        borderWidth: 2.5,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#8b5cf6',
-                        tension: .35,
+                        borderColor: '#34d399',
+                        borderWidth: 2,
+                        borderRadius: 4,
+                        borderSkipped: false,
                     }]
                 },
                 options: {
@@ -369,24 +365,24 @@
                     scales: {
                         x: {
                             grid: { color: c.grid },
-                            ticks: { color: c.ticks, font: { family: 'Space Grotesk', size: 11 } }
+                            ticks: { color: c.ticks, font: { family: 'Space Grotesk', size: 10 } }
                         },
                         y: {
                             grid: { color: c.grid },
                             ticks: {
                                 color: c.ticks,
-                                font: { family: 'Space Grotesk', size: 11 },
-                                stepSize: 1,
+                                font: { family: 'Space Grotesk', size: 10 },
+                                callback: function(v) { return 'KES ' + v; }
                             }
                         }
                     }
                 }
             });
-        } catch(e) { console.error('inqChart:', e); }
+        } catch(e) { console.error('collChart:', e); }
     }
 
     function updateChartColors() {
-        [typeChartInst, occChartInst, inqChartInst].forEach(function(ch) {
+        [typeChartInst, occChartInst, collChartInst].forEach(function(ch) {
             if (!ch) return;
             var c = chartColors();
             if (ch.options.scales && ch.options.scales.x) {
@@ -411,7 +407,7 @@
         }
         initTypeChart();
         initOccChart();
-        initInqChart();
+        initCollChart();
     }
 
     initCharts();

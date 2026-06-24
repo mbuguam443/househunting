@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Tenancy, RentPayment, MaintenanceRequest
+from .models import Tenancy, RentPayment, MaintenanceRequest, LeaseAgreement
 
 @admin.register(Tenancy)
 class TenancyAdmin(admin.ModelAdmin):
@@ -16,3 +16,8 @@ class RentPaymentAdmin(admin.ModelAdmin):
 class MaintenanceRequestAdmin(admin.ModelAdmin):
     list_display = ['title', 'tenant', 'unit', 'priority', 'status']
     list_filter = ['priority', 'status']
+
+@admin.register(LeaseAgreement)
+class LeaseAgreementAdmin(admin.ModelAdmin):
+    list_display = ['tenancy', 'status', 'start_date', 'end_date', 'monthly_rent']
+    list_filter = ['status']

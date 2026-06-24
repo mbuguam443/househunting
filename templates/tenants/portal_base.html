@@ -22,6 +22,7 @@
             <a href="{% url 'portal:payments' %}" class="db-nl {% if active_tab == 'payments' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> Payments</a>
             <a href="{% url 'portal:pay' %}" class="db-nl {% if active_tab == 'pay' %}active{% endif %}"><i class="fa-solid fa-money-bill-wave"></i> Pay Rent</a>
             <a href="{% url 'portal:maintenance' %}" class="db-nl {% if active_tab == 'maintenance' %}active{% endif %}"><i class="fa-solid fa-wrench"></i> Maintenance</a>
+            <a href="{% url 'portal:lease' %}" class="db-nl {% if active_tab == 'lease' %}active{% endif %}"><i class="fa-solid fa-file-signature"></i> My Lease</a>
             <div class="db-nav-section">General</div>
             <a href="{% url 'accounts:profile' %}" class="db-nl"><i class="fa-regular fa-user"></i> Profile</a>
             <a href="{% url 'website:home' %}" class="db-nl"><i class="fa-solid fa-globe"></i> Public Site</a>
