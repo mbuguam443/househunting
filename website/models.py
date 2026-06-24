@@ -1,7 +1,7 @@
 from django.db import models
 
 class Inquiry(models.Model):
-    unit = models.ForeignKey('units.Unit', on_delete=models.CASCADE, related_name='inquiries')
+    unit = models.ForeignKey('units.Unit', null=True, blank=True, on_delete=models.CASCADE, related_name='inquiries')
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True)

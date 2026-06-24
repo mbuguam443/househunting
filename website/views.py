@@ -97,6 +97,12 @@ def about(request):
 
 def contact(request):
     if request.method == 'POST':
+        Inquiry.objects.create(
+            name=request.POST.get('name', ''),
+            email=request.POST.get('email', ''),
+            phone=request.POST.get('phone', ''),
+            message=request.POST.get('message', ''),
+        )
         messages.success(request, 'Thank you for reaching out. We will get back to you shortly.')
         return redirect('website:contact')
     return render(request, 'website/contact.html')

@@ -21,6 +21,9 @@
             <a href="{% url 'accounts:admin_dashboard' %}" class="db-nl {% if active_tab == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
             <a href="{% url 'accounts:admin_landlords' %}" class="db-nl {% if active_tab == 'landlords' %}active{% endif %}"><i class="fa-solid fa-building"></i> Landlords</a>
             <a href="{% url 'accounts:admin_plans' %}" class="db-nl {% if active_tab == 'plans' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> Subscription Plans</a>
+            <div class="db-nav-section">Properties</div>
+            <a href="{% url 'properties:list' %}" class="db-nl {% if active_tab == 'properties' %}active{% endif %}"><i class="fa-solid fa-building"></i> Properties</a>
+            <a href="{% url 'units:list' %}" class="db-nl {% if active_tab == 'units' %}active{% endif %}"><i class="fa-solid fa-door-open"></i> Units</a>
             <div class="db-nav-section">General</div>
             <a href="{% url 'website:home' %}" class="db-nl"><i class="fa-solid fa-globe"></i> Public Site</a>
             <a href="{% url 'accounts:logout' %}" class="db-nl"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>

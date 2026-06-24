@@ -30,7 +30,7 @@
         <div class="db-stat-card"><div class="db-stat-val gt">KES {{ fee_per_unit|floatformat:0 }}</div><div class="db-stat-lbl">Fee per Unit (monthly)</div></div>
     </div>
 </div>
-<div class="row g-3">
+<div class="row g-3 mb-4">
     <div class="col-md-4">
         <a href="{% url 'accounts:admin_landlords' %}" class="gc p-4" style="display:block;text-decoration:none;cursor:pointer;transition:transform .2s" onmouseenter="this.style.transform='scale(1.02)'" onmouseleave="this.style.transform='scale(1)'">
             <i class="fa-solid fa-building" style="font-size:2rem;color:var(--pur);margin-bottom:12px"></i>
@@ -46,4 +46,20 @@
         </a>
     </div>
 </div>
+
+{% if contact_inquiries %}
+<div class="gc p-4 mt-3">
+    <h6 class="fw-semibold mb-3"><i class="fa-regular fa-envelope me-2"></i>Recent Contact Messages</h6>
+    {% for i in contact_inquiries %}
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--bd)">
+        <div>
+            <strong style="color:var(--tx);font-size:.88rem">{{ i.name }}</strong>
+            <span style="color:var(--tx3);font-size:.8rem;display:block">{{ i.email }}{% if i.phone %} &middot; {{ i.phone }}{% endif %}</span>
+            <p style="color:var(--tx2);font-size:.82rem;margin:4px 0 0">{{ i.message|truncatewords:30 }}</p>
+        </div>
+        <small style="color:var(--tx3);white-space:nowrap;margin-left:12px">{{ i.created_at|date:'M d, H:i' }}</small>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 {% endblock %}

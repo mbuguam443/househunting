@@ -115,11 +115,14 @@ def admin_dashboard(request):
     expired_subs = LandlordSubscription.objects.filter(status='expired').count()
     sub_revenue = LandlordSubscription.objects.filter(status='active').aggregate(s=Sum('amount'))['s'] or 0
     fee = get_fee_per_unit()
+    from website.models import Inquiry
+    contact_inquiries = Inquiry.objects.filter(unit__isnull=True).order_by('-created_at')[:6]
     return render(request, 'accounts/admin_dashboard.html', {
         'landlord_count': landlord_count, 'tenant_count': tenant_count,
         'prop_count': prop_count, 'unit_count': unit_count,
         'active_subs': active_subs, 'expired_subs': expired_subs,
         'sub_revenue': sub_revenue, 'fee_per_unit': fee,
+        'contact_inquiries': contact_inquiries,
     })
 
 
