@@ -129,11 +129,27 @@ def admin_landlords(request):
         messages.error(request, 'Admin access required.')
         return redirect('website:home')
     landlords = Profile.objects.filter(role='landlord').select_related('user').prefetch_related('user__subscriptions')
-    fee = get_fee_per_unit()
     for p in landlords:
         p.unit_count = Unit.objects.filter(property__owner=p.user).count()
-        p.monthly_fee = p.unit_count * fee
-    return render(request, 'accounts/admin_landlords.html', {'landlords': landlords, 'fee_per_unit': fee})
+        landlord_fee = get_fee_per_unit(p.user)
+        p.monthly_fee = p.unit_count * landlord_fee
+    return render(request, 'accounts/admin_landlords.html', {'landlords': landlords})
+
+
+@login_required
+def admin_set_landlord_fee(request, landlord_id):
+    if request.user.profile.role != 'admin':
+        messages.error(request, 'Admin access required.')
+        return redirect('website:home')
+    landlord = get_object_or_404(User, pk=landlord_id, profile__role='landlord')
+    if request.method == 'POST':
+        fee = request.POST.get('fee_per_unit')
+        if fee is not None:
+            landlord.profile.fee_per_unit = fee
+            landlord.profile.save()
+            messages.success(request, f'Fee for {landlord.username} set to KES {fee}/unit.')
+        return redirect('accounts:admin_landlords')
+    return redirect('accounts:admin_landlords')
 
 
 @login_required
@@ -214,7 +230,7 @@ def admin_assign_subscription(request, landlord_id):
         messages.error(request, 'Admin access required.')
         return redirect('website:home')
     landlord = get_object_or_404(User, pk=landlord_id, profile__role='landlord')
-    fee = get_fee_per_unit()
+    fee = get_fee_per_unit(landlord)
     unit_count = Unit.objects.filter(property__owner=landlord).count()
     monthly_fee = unit_count * fee
     if request.method == 'POST':

@@ -8,12 +8,15 @@ from properties.models import Property
 from units.models import Unit
 from website.models import Inquiry
 from tenants.models import Tenancy, MaintenanceRequest
-from accounts.models import landlord_subscription_status
+from accounts.models import landlord_subscription_status, landlord_has_active_sub
 
 @login_required
 def overview(request):
     if request.user.profile.role != 'landlord':
         return render(request, 'dashboard/overview.html', {'access_denied': True})
+    if not landlord_has_active_sub(request.user):
+        sub_status, _ = landlord_subscription_status(request.user)
+        return render(request, 'dashboard/locked.html', {'sub_status': sub_status, 'active_tab': 'overview'})
 
     properties = request.user.properties.annotate(
         unit_count=Count('units'),
@@ -98,6 +101,8 @@ def overview(request):
 def inquiries(request):
     if request.user.profile.role != 'landlord':
         return render(request, 'dashboard/overview.html', {'access_denied': True})
+    if not landlord_has_active_sub(request.user):
+        return render(request, 'dashboard/locked.html', {'active_tab': 'inquiries'})
     qs = Inquiry.objects.filter(unit__property__owner=request.user).select_related('unit', 'unit__property').order_by('-created_at')
     if request.GET.get('mark_read'):
         Inquiry.objects.filter(pk=request.GET['mark_read'], unit__property__owner=request.user).update(is_read=True)

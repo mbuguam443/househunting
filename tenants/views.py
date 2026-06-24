@@ -14,6 +14,7 @@ from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPai
 from .rent_utils import generate_rent_payments, mark_overdue_payments
 from .mpesa_utils import stk_push, process_callback
 from units.models import Unit
+from accounts.models import require_landlord_sub
 
 # ==================== LANDLORD VIEWS ====================
 
@@ -22,6 +23,9 @@ def register_tenant(request):
     if request.user.profile.role != 'landlord':
         messages.error(request, 'Landlord access required.')
         return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     if request.method == 'POST':
         form = TenantRegistrationForm(request.POST)
         if form.is_valid():
@@ -39,6 +43,9 @@ def tenant_list(request):
     if request.user.profile.role != 'landlord':
         messages.error(request, 'Landlord access required.')
         return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     tenancies = Tenancy.objects.filter(unit__property__owner=request.user).select_related('tenant', 'unit__property')
     return render(request, 'tenants/tenant_list.html', {'tenancies': tenancies, 'active_tab': 'tenants'})
 
@@ -47,6 +54,9 @@ def tenant_create(request):
     if request.user.profile.role != 'landlord':
         messages.error(request, 'Landlord access required.')
         return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     if request.method == 'POST':
         form = TenancyForm(request.POST, landlord=request.user)
         if form.is_valid():
@@ -62,6 +72,9 @@ def tenant_create(request):
 
 @login_required
 def tenant_detail(request, pk):
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     tenancy = get_object_or_404(Tenancy.objects.select_related('tenant', 'unit__property'), pk=pk)
     if tenancy.unit.property.owner != request.user:
         messages.error(request, 'Access denied.')
@@ -71,6 +84,9 @@ def tenant_detail(request, pk):
 
 @login_required
 def tenant_vacate(request, pk):
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     tenancy = get_object_or_404(Tenancy, pk=pk)
     if tenancy.unit.property.owner != request.user:
         messages.error(request, 'Access denied.')
@@ -90,6 +106,9 @@ def rent_collection(request):
     if request.user.profile.role != 'landlord':
         messages.error(request, 'Landlord access required.')
         return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     generate_rent_payments(landlord=request.user)
     mark_overdue_payments(landlord=request.user)
     tenancies = Tenancy.objects.filter(
@@ -115,6 +134,9 @@ def rent_collection(request):
 
 @login_required
 def mark_paid(request, pk):
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     payment = get_object_or_404(RentPayment, pk=pk)
     if payment.tenancy.unit.property.owner != request.user:
         messages.error(request, 'Access denied.')
@@ -139,6 +161,9 @@ def maintenance_list(request):
     if request.user.profile.role != 'landlord':
         messages.error(request, 'Landlord access required.')
         return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     requests = MaintenanceRequest.objects.filter(
         unit__property__owner=request.user
     ).select_related('tenant', 'unit__property')
@@ -151,6 +176,9 @@ def maintenance_list(request):
 
 @login_required
 def maintenance_update(request, pk):
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     req = get_object_or_404(MaintenanceRequest, pk=pk)
     if req.unit.property.owner != request.user:
         messages.error(request, 'Access denied.')

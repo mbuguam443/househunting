@@ -25,6 +25,8 @@ class Profile(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='landlord')
     phone = models.CharField(max_length=20, blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True)
+    fee_per_unit = models.DecimalField(max_digits=8, decimal_places=2, default=50.00,
+        help_text='Monthly platform fee per unit for this landlord (KES). Set 0 for free.')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -71,7 +73,24 @@ class LandlordSubscription(models.Model):
         return f'{self.landlord.username} — KES {self.amount} ({self.get_status_display()})'
 
 
-def get_fee_per_unit():
+def require_landlord_sub(user):
+    """Check if landlord has active subscription. Returns (has_active, response_or_None)."""
+    from django.shortcuts import redirect as redir
+    if user.profile.role == 'landlord' and not landlord_has_active_sub(user):
+        return False, redir('dashboard:overview')
+    return True, None
+
+
+def landlord_has_active_sub(user):
+    if user.profile.role != 'landlord':
+        return True
+    sub = user.subscriptions.filter(status='active', end_date__gte=date.today()).first()
+    return sub is not None
+
+
+def get_fee_per_unit(landlord=None):
+    if landlord and hasattr(landlord, 'profile') and landlord.profile.fee_per_unit is not None:
+        return landlord.profile.fee_per_unit
     cfg, _ = PlatformConfig.objects.get_or_create(pk=1, defaults={'fee_per_unit': 50.00})
     return cfg.fee_per_unit
 

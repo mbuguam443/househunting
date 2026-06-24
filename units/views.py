@@ -3,14 +3,21 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Unit, UnitAmenity
 from .forms import UnitForm, UnitAmenityForm
+from accounts.models import require_landlord_sub
 
 @login_required
 def unit_list(request):
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     units = Unit.objects.filter(property__owner=request.user).select_related('property')
     return render(request, 'units/list.html', {'units': units, 'active_tab': 'units'})
 
 @login_required
 def unit_create(request):
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     if request.method == 'POST':
         form = UnitForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
@@ -25,6 +32,9 @@ def unit_create(request):
 
 @login_required
 def unit_update(request, pk):
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     unit = get_object_or_404(Unit, pk=pk, property__owner=request.user)
     amenity, _ = UnitAmenity.objects.get_or_create(unit=unit)
     if request.method == 'POST':
@@ -45,6 +55,9 @@ def unit_update(request, pk):
 
 @login_required
 def unit_delete(request, pk):
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     unit = get_object_or_404(Unit, pk=pk, property__owner=request.user)
     unit.delete()
     messages.success(request, 'Unit deleted.')
@@ -52,5 +65,8 @@ def unit_delete(request, pk):
 
 @login_required
 def vacancies(request):
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
     units = Unit.objects.filter(property__owner=request.user, status='vacant').select_related('property')
     return render(request, 'units/vacancies.html', {'units': units, 'active_tab': 'vacancies'})
