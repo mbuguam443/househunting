@@ -45,7 +45,7 @@
             </tbody>
         </table>
     </div>
-    {% include 'core/pagination.html' with page=listings %}
+    {% include 'pagination.html' with page_obj=listings %}
     {% else %}
     <p style="color:var(--tx3);text-align:center;padding:40px 0">No listings yet.</p>
     {% endif %}

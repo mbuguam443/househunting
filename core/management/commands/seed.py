@@ -252,6 +252,26 @@ class Command(BaseCommand):
         ], 1):
             Faq.objects.get_or_create(question=q, defaults=dict(answer=a, order=i, is_active=True))
 
+        from website.models import AdminListing
+        listing_data = [
+            ('Fully Furnished 1BR in Westlands', 'Modern one-bedroom apartment with WiFi, DStv connection, and gym access. Walking distance to Sarit Centre.', 'Nairobi', 'Westlands', 'Rhapta Road', 'one_bedroom', 1, 1, 28000, 'James K.', '+254 722 100 200'),
+            ('Executive 2BR in Kilimani', 'Spacious two-bedroom on the 5th floor with panoramic city views. Open-plan living, fitted kitchen, and dedicated parking.', 'Nairobi', 'Kilimani', 'Kirichwa Road', 'two_bedroom', 2, 2, 45000, 'Mary W.', '+254 733 200 300'),
+            ('Affordable Bedsitter in Ruiru', 'Clean bedsitter with water and electricity included. Secure compound with gatekeeper.', 'Kiambu', 'Ruiru', 'Kenyatta Road', 'bedsitter', 1, 1, 6500, 'Esther N.', '+254 711 300 400'),
+            ('3BR Townhouse in Syokimau', 'Beautiful townhouse in a gated community. 24-hour security, kids play area, adjacent to shopping mall.', 'Machakos', 'Syokimau', 'Old Mombasa Road', 'three_bedroom', 3, 2, 55000, 'Peter O.', '+254 722 400 500'),
+            ('Studio Unit in Thika Town', 'Cozy studio with kitchenette and separate bathroom. Walking distance to Thika Mall. Great for students.', 'Kiambu', 'Thika', 'Town Centre', 'studio', 1, 1, 9500, 'Grace K.', '+254 733 500 600'),
+        ]
+        admin_user = User.objects.get(username='admin')
+        for title, desc, county, town, estate, htype, beds, baths, rent, contact_name, contact_phone in listing_data:
+            AdminListing.objects.get_or_create(
+                title=title,
+                defaults=dict(
+                    description=desc, county=county, town=town, estate=estate,
+                    house_type=htype, bedrooms=beds, bathrooms=baths, rent=rent,
+                    contact_name=contact_name, contact_phone=contact_phone,
+                    status='available', created_by=admin_user,
+                ),
+            )
+
         self.stdout.write(self.style.SUCCESS('Database seeded successfully!'))
         self.stdout.write(f'  Admin: admin / admin123')
         self.stdout.write(f'  Landlord: grace / grace123 (KES 50/unit, paid)')
