@@ -19,10 +19,15 @@ class RegistrationForm(UserCreationForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['phone', 'avatar']
+        fields = ['phone', 'avatar', 'mpesa_consumer_key', 'mpesa_consumer_secret', 'mpesa_passkey', 'mpesa_shortcode', 'mpesa_callback_url']
         widgets = {
             'phone': forms.TextInput(attrs={'class': 'oinp'}),
             'avatar': forms.FileInput(attrs={'class': 'oinp'}),
+            'mpesa_consumer_key': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Your Daraja Consumer Key'}),
+            'mpesa_consumer_secret': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Your Daraja Consumer Secret'}),
+            'mpesa_passkey': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Your M-Pesa Passkey'}),
+            'mpesa_shortcode': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'e.g. 174379'}),
+            'mpesa_callback_url': forms.URLInput(attrs={'class': 'oinp', 'placeholder': 'https://your-ngrok-url.ngrok-free.app'}),
         }
 
 class UserForm(forms.ModelForm):

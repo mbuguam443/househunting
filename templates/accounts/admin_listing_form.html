@@ -1,0 +1,103 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}{{ title }} - PataNyumba Admin{% endblock %}
+{% block admin_title %}{{ title }}{% endblock %}
+{% block admin_content %}
+<div class="gc p-4" style="max-width:700px">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="olbl">Title *</label>
+            <input name="title" class="oinp" style="width:100%" value="{{ listing.title|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="olbl">Description *</label>
+            <textarea name="description" rows="4" class="oinp" style="width:100%" required>{{ listing.description|default:'' }}</textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+            <div>
+                <label class="olbl">County *</label>
+                <input name="county" class="oinp" style="width:100%" value="{{ listing.county|default:'' }}" required>
+            </div>
+            <div>
+                <label class="olbl">Town *</label>
+                <input name="town" class="oinp" style="width:100%" value="{{ listing.town|default:'' }}" required>
+            </div>
+            <div>
+                <label class="olbl">Estate</label>
+                <input name="estate" class="oinp" style="width:100%" value="{{ listing.estate|default:'' }}">
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+            <div>
+                <label class="olbl">House Type</label>
+                <select name="house_type" class="oinp" style="width:100%">
+                    <option value="bedsitter" {% if listing.house_type == 'bedsitter' %}selected{% endif %}>Bedsitter</option>
+                    <option value="studio" {% if listing.house_type == 'studio' %}selected{% endif %}>Studio</option>
+                    <option value="one_bedroom" {% if listing.house_type == 'one_bedroom' %}selected{% endif %}>One Bedroom</option>
+                    <option value="two_bedroom" {% if listing.house_type == 'two_bedroom' %}selected{% endif %}>Two Bedroom</option>
+                    <option value="three_bedroom" {% if listing.house_type == 'three_bedroom' %}selected{% endif %}>Three Bedroom</option>
+                    <option value="four_bedroom" {% if listing.house_type == 'four_bedroom' %}selected{% endif %}>Four Bedroom+</option>
+                    <option value="townhouse" {% if listing.house_type == 'townhouse' %}selected{% endif %}>Townhouse</option>
+                    <option value="villa" {% if listing.house_type == 'villa' %}selected{% endif %}>Villa</option>
+                </select>
+            </div>
+            <div>
+                <label class="olbl">Bedrooms</label>
+                <input name="bedrooms" type="number" min="1" class="oinp" style="width:100%" value="{{ listing.bedrooms|default:'1' }}">
+            </div>
+            <div>
+                <label class="olbl">Bathrooms</label>
+                <input name="bathrooms" type="number" min="1" class="oinp" style="width:100%" value="{{ listing.bathrooms|default:'1' }}">
+            </div>
+            <div>
+                <label class="olbl">Rent (KES) *</label>
+                <input name="rent" type="number" step="0.01" class="oinp" style="width:100%" value="{{ listing.rent|default:'' }}" required>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div>
+                <label class="olbl">Contact Name</label>
+                <input name="contact_name" class="oinp" style="width:100%" value="{{ listing.contact_name|default:'' }}">
+            </div>
+            <div>
+                <label class="olbl">Contact Phone</label>
+                <input name="contact_phone" class="oinp" style="width:100%" value="{{ listing.contact_phone|default:'' }}">
+            </div>
+        </div>
+        {% if listing %}
+        <div class="mb-3">
+            <label class="olbl">Status</label>
+            <select name="status" class="oinp" style="width:100%">
+                <option value="available" {% if listing.status == 'available' %}selected{% endif %}>Available</option>
+                <option value="rented" {% if listing.status == 'rented' %}selected{% endif %}>Rented</option>
+                <option value="withdrawn" {% if listing.status == 'withdrawn' %}selected{% endif %}>Withdrawn</option>
+            </select>
+        </div>
+        {% endif %}
+        <div class="mb-3">
+            <label class="olbl">Main Image</label>
+            <input name="image" type="file" class="oinp" style="width:100%" accept="image/*">
+            {% if listing.image %}<p class="mt-1" style="font-size:.8rem;color:var(--tx3)">Current: <a href="{{ listing.image.url }}" target="_blank">{{ listing.image.name }}</a></p>{% endif %}
+        </div>
+        <div class="mb-3">
+            <label class="olbl">Gallery Images <span style="font-size:.78rem;color:var(--tx3)">(optional, for slider)</span></label>
+            <input name="extra_images" type="file" class="oinp" style="width:100%" accept="image/*" multiple>
+            {% with listing.images.all as gallery %}
+            {% if gallery %}
+            <div class="mt-2" style="display:flex;gap:8px;flex-wrap:wrap">
+                {% for img in gallery %}
+                <div style="position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--bd)">
+                    <img src="{{ img.image.url }}" style="width:100%;height:100%;object-fit:cover">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+        <div class="d-flex gap-2">
+            <button class="bgrd btn px-4 py-2"><i class="fa-solid fa-check me-1"></i> Save</button>
+            <a href="{% url 'accounts:admin_listings' %}" class="boc btn px-4 py-2">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

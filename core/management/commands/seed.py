@@ -42,6 +42,7 @@ class Command(BaseCommand):
         grace.profile.role = 'landlord'
         grace.profile.phone = '+254 722 111 111'
         grace.profile.fee_per_unit = 50.00
+        grace.profile.trial_started_at = timezone.now()
         grace.profile.save()
 
         # Assign Sunrise Court to Grace

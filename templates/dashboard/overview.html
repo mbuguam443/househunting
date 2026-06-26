@@ -8,6 +8,11 @@
     <h4 style="color:var(--tx2)">Landlord Access Only</h4>
     <p style="color:var(--tx3)">This dashboard is for landlords. <a href="{% url 'website:home' %}" style="color:var(--pur)">Go home</a></p>
 </div>
+{% elif trial_info %}
+<div style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:16px;color:#34d399">
+    <i class="fa-solid fa-flask" style="font-size:1.2rem"></i>
+    <div style="flex:1;font-size:.88rem"><strong>Free Trial</strong> — {{ trial_info.remaining_days }} day{% if trial_info.remaining_days != 1 %}s{% endif %} remaining (ends {{ trial_info.end_date|date:'M d, Y' }}). <a href="{% url 'accounts:profile' %}" style="color:var(--pur)">Contact admin</a> to subscribe before trial expires.</div>
+</div>
 {% elif sub_status == 'none' %}
 <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:16px;color:#fbbf24">
     <i class="fa-solid fa-triangle-exclamation" style="font-size:1.2rem"></i>
@@ -96,6 +101,12 @@
     </div>
 </div>
 
+{% if trial_info and trial_info.is_expiring %}
+<div class="gc p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.2)">
+    <div style="color:#f59e0b;font-size:.85rem"><i class="fa-solid fa-clock me-1"></i> <strong>Trial expires in {{ trial_info.remaining_days }} day{% if trial_info.remaining_days != 1 %}s{% endif %}</strong> — {{ trial_info.end_date|date:'M d, Y' }}</div>
+    <a href="{% url 'accounts:profile' %}" class="boc btn py-1 px-2" style="font-size:.78rem">Contact Admin</a>
+</div>
+{% endif %}
 {% if expiring_leases %}
 <div class="gc p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2" style="background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.15)">
     <div style="color:#f59e0b;font-size:.85rem"><i class="fa-solid fa-calendar-exclamation me-1"></i> <strong>{{ expiring_leases|length }}</strong> lease{% if expiring_leases|length > 1 %}s{% endif %} expiring within 30 days</div>

@@ -4,8 +4,8 @@
 <section style="padding-top:calc(var(--nav) + 40px);padding-bottom:60px;">
     <div class="container">
         <div class="text-center mb-5" data-aos="fade-up">
-            <h1 class="stitle">Browse <span class="gt">Vacant Houses</span></h1>
-            <p class="ssub mx-auto">{{ units.count }} available unit{{ units.count|pluralize }} waiting for you</p>
+            <h1 class="stitle">Browse <span class="gt">Available Houses</span></h1>
+            <p class="ssub mx-auto">{{ total }} listing{{ total|pluralize }} waiting for you</p>
         </div>
 
         <form method="GET" class="mb-5" data-aos="fade-up">
@@ -13,14 +13,14 @@
                 <div class="row g-2">
                     <div class="col-md-3">
                         <label class="olbl"><i class="fa-solid fa-search me-1"></i>Search</label>
-                        <input type="text" name="q" class="oinp" value="{{ request.GET.q }}" placeholder="Location, estate, name...">
+                        <input type="text" name="q" class="oinp" value="{{ q }}" placeholder="Location, estate, name...">
                     </div>
                     <div class="col-md-2">
                         <label class="olbl"><i class="fa-regular fa-building me-1"></i>Type</label>
                         <select name="house_type" class="oinp">
                             <option value="">All Types</option>
                             {% for k, v in house_types %}
-                            <option value="{{ k }}" {% if request.GET.house_type == k %}selected{% endif %}>{{ v }}</option>
+                            <option value="{{ k }}" {% if house_type == k %}selected{% endif %}>{{ v }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -29,7 +29,7 @@
                         <select name="bedrooms" class="oinp">
                             <option value="">Any</option>
                             {% for i in "12345"|make_list %}
-                            <option value="{{ i }}" {% if request.GET.bedrooms == i %}selected{% endif %}>{{ i }}+</option>
+                            <option value="{{ i }}" {% if bedrooms == i %}selected{% endif %}>{{ i }}+</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -38,7 +38,7 @@
                         <select name="county" class="oinp">
                             <option value="">All Counties</option>
                             {% for c in counties %}
-                            <option value="{{ c }}" {% if request.GET.county == c %}selected{% endif %}>{{ c }}</option>
+                            <option value="{{ c }}" {% if county == c %}selected{% endif %}>{{ c }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -46,19 +46,19 @@
                         <label class="olbl"><i class="fa-solid fa-credit-card me-1"></i>Max Rent</label>
                         <select name="max_rent" class="oinp">
                             <option value="">Any</option>
-                            <option value="10000" {% if request.GET.max_rent == '10000' %}selected{% endif %}>KES 10K</option>
-                            <option value="15000" {% if request.GET.max_rent == '15000' %}selected{% endif %}>KES 15K</option>
-                            <option value="25000" {% if request.GET.max_rent == '25000' %}selected{% endif %}>KES 25K</option>
-                            <option value="35000" {% if request.GET.max_rent == '35000' %}selected{% endif %}>KES 35K</option>
-                            <option value="50000" {% if request.GET.max_rent == '50000' %}selected{% endif %}>KES 50K</option>
-                            <option value="100000" {% if request.GET.max_rent == '100000' %}selected{% endif %}>KES 100K</option>
+                            <option value="10000" {% if max_rent == '10000' %}selected{% endif %}>KES 10K</option>
+                            <option value="15000" {% if max_rent == '15000' %}selected{% endif %}>KES 15K</option>
+                            <option value="25000" {% if max_rent == '25000' %}selected{% endif %}>KES 25K</option>
+                            <option value="35000" {% if max_rent == '35000' %}selected{% endif %}>KES 35K</option>
+                            <option value="50000" {% if max_rent == '50000' %}selected{% endif %}>KES 50K</option>
+                            <option value="100000" {% if max_rent == '100000' %}selected{% endif %}>KES 100K</option>
                         </select>
                     </div>
                     <div class="col-md-1 d-flex align-items-end">
                         <button type="submit" class="bgrd btn w-100 py-2"><i class="fa-solid fa-filter"></i></button>
                     </div>
                 </div>
-                {% if request.GET.q or request.GET.house_type or request.GET.bedrooms or request.GET.county or request.GET.max_rent %}
+                {% if q or house_type or bedrooms or county or max_rent %}
                 <div class="mt-2">
                     <a href="{% url 'website:browse' %}" class="boc btn px-3 py-1" style="font-size:.78rem"><i class="fa-solid fa-xmark me-1"></i>Clear filters</a>
                 </div>
@@ -66,43 +66,79 @@
             </div>
         </form>
 
-        {% if units %}
+        {% if combined %}
         <div class="row g-4">
-            {% for unit in units %}
+            {% for item in combined %}
             <div class="col-md-6 col-lg-4" data-aos="fade-up">
-                <a href="{% url 'website:house_detail' unit.pk %}" style="text-decoration:none;color:inherit">
-                    <div class="gc h-100">
-                        {% if unit.image %}
-                        <img src="{{ unit.image.url }}" alt="{{ unit.unit_number }}" class="prop-card-img">
-                        {% else %}
-                        <div class="prop-card-img d-flex align-items-center justify-content-center" style="background:var(--bg3);"><i class="fa-solid fa-building" style="font-size:3rem;color:var(--tx3)"></i></div>
-                        {% endif %}
-                        <div class="p-4">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h3 class="fs-5 fw-semibold mb-0" style="color:var(--tx)">{{ unit.property.name|truncatechars:22 }}</h3>
-                                <span class="ftag mt-0">KES {{ unit.monthly_rent|floatformat:0 }}</span>
+                {% if item.source == 'landlord' %}<a href="{{ item.url }}" style="text-decoration:none;color:inherit">{% endif %}
+                <div class="gc h-100">
+                    <div class="prop-card-img" style="position:relative;overflow:hidden">
+                        {% if item.images %}
+                        <div class="si-wrapper" style="display:flex;transition:transform .4s ease;height:100%">
+                            {% for img in item.images %}
+                            <div style="min-width:100%;height:200px;overflow:hidden">
+                                <img src="{{ img }}" alt="{{ item.title }}" style="width:100%;height:100%;object-fit:cover">
                             </div>
-                            <p style="font-size:.82rem;color:var(--tx3);margin-bottom:8px"><i class="fa-solid fa-location-dot me-1"></i>{{ unit.property.town }}, {{ unit.property.county }}</p>
-                            <div class="d-flex gap-3 flex-wrap" style="font-size:.8rem;color:var(--tx2)">
-                                <span><i class="fa-regular fa-building me-1"></i>{{ unit.get_house_type_display }}</span>
-                                <span><i class="fa-regular fa-bed me-1"></i>{{ unit.bedrooms }} Bed</span>
-                                <span><i class="fa-regular fa-shower me-1"></i>{{ unit.bathrooms }} Bath</span>
-                                {% if unit.deposit %}<span class="ftag mt-0" style="background:rgba(59,130,246,0.12);color:#60a5fa;border-color:rgba(59,130,246,0.2)">Deposit KES {{ unit.deposit|floatformat:0 }}</span>{% endif %}
-                            </div>
+                            {% endfor %}
                         </div>
+                        {% if item.images|length > 1 %}
+                        <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:5px">
+                            {% for img in item.images %}
+                            <span class="si-dot" data-idx="{{ forloop.counter0 }}" style="width:7px;height:7px;border-radius:50%;background:{% if forloop.first %}rgba(255,255,255,.9){% else %}rgba(255,255,255,.4){% endif %};cursor:pointer;display:block"></span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% elif item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.title }}" style="width:100%;height:200px;object-fit:cover">
+                        {% else %}
+                        <div style="height:200px;display:flex;align-items:center;justify-content:center;background:var(--bg3)"><i class="fa-solid fa-building" style="font-size:3rem;color:var(--tx3)"></i></div>
+                        {% endif %}
                     </div>
-                </a>
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h3 class="fs-5 fw-semibold mb-0" style="color:var(--tx)">{{ item.title|truncatechars:22 }}</h3>
+                            <span class="ftag mt-0">KES {{ item.rent|floatformat:0 }}</span>
+                        </div>
+                        <p style="font-size:.82rem;color:var(--tx3);margin-bottom:8px"><i class="fa-solid fa-location-dot me-1"></i>{{ item.subtitle }}</p>
+                        <div class="d-flex gap-3 flex-wrap" style="font-size:.8rem;color:var(--tx2)">
+                            <span><i class="fa-regular fa-building me-1"></i>{{ item.house_type_display }}</span>
+                            <span><i class="fa-regular fa-bed me-1"></i>{{ item.bedrooms }} Bed</span>
+                            <span><i class="fa-regular fa-shower me-1"></i>{{ item.bathrooms }} Bath</span>
+                            {% if item.deposit %}<span class="ftag mt-0" style="background:rgba(59,130,246,0.12);color:#60a5fa;border-color:rgba(59,130,246,0.2)">Deposit KES {{ item.deposit|floatformat:0 }}</span>{% endif %}
+                            {% if item.source == 'admin' %}
+                            <span class="ftag mt-0" style="background:rgba(168,85,247,.12);color:#c084fc;border-color:rgba(168,85,247,.2)"><i class="fa-solid fa-shield me-1"></i>Verified</span>
+                            {% endif %}
+                        </div>
+                        {% if item.source == 'admin' and item.contact_phone %}
+                        <div class="mt-3">
+                            <a href="tel:{{ item.contact_phone }}" class="bgrd btn py-1 px-3 w-100" style="font-size:.82rem"><i class="fa-solid fa-phone me-1"></i> Call {{ item.contact_phone }}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if item.source == 'landlord' %}</a>{% endif %}
             </div>
             {% endfor %}
         </div>
         {% else %}
         <div class="gc p-5 text-center" data-aos="fade-up">
             <i class="fa-regular fa-face-frown" style="font-size:3rem;color:var(--tx3);margin-bottom:16px"></i>
-            <h4 style="color:var(--tx2)">No vacant units found</h4>
+            <h4 style="color:var(--tx2)">No listings found</h4>
             <p style="color:var(--tx3)">Try adjusting your search filters or check back later.</p>
             <a href="{% url 'website:browse' %}" class="bgrd btn px-4 py-2">View All Listings</a>
         </div>
         {% endif %}
     </div>
 </section>
+{% endblock %}
+{% block scripts %}
+<script>
+$('.si-dot').on('click', function(){
+    var idx = $(this).data('idx');
+    var wrapper = $(this).closest('.prop-card-img').find('.si-wrapper');
+    wrapper.css('transform', 'translateX(-' + (idx * 100) + '%)');
+    $(this).closest('.prop-card-img').find('.si-dot').css('background', 'rgba(255,255,255,.4)');
+    $(this).css('background', 'rgba(255,255,255,.9)');
+});
+</script>
 {% endblock %}

@@ -18,6 +18,8 @@ from properties.models import Property
 from accounts.models import require_landlord_sub
 from core.pagination import paginate
 
+DEFAULT_TENANT_PASSWORD = 'password123'
+
 # ==================== LANDLORD VIEWS ====================
 
 @login_required
@@ -31,14 +33,16 @@ def register_tenant(request):
     if request.method == 'POST':
         form = TenantRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save(commit=False)
+            user.set_password(DEFAULT_TENANT_PASSWORD)
+            user.save()
             user.profile.role = 'tenant'
             user.profile.save()
-            messages.success(request, f'Tenant "{user.username}" registered. Now assign them to a unit.')
+            messages.success(request, f'Tenant "{user.username}" registered. Password: <strong>{DEFAULT_TENANT_PASSWORD}</strong>. Now assign them to a unit.')
             return redirect('tenants:create')
     else:
         form = TenantRegistrationForm()
-    return render(request, 'tenants/register_tenant.html', {'form': form, 'active_tab': 'tenants'})
+    return render(request, 'tenants/register_tenant.html', {'form': form, 'active_tab': 'tenants', 'default_password': DEFAULT_TENANT_PASSWORD})
 
 @login_required
 def tenant_list(request):
@@ -180,17 +184,47 @@ def mark_paid(request, pk):
     if request.method == 'POST':
         form = MarkPaidForm(request.POST)
         if form.is_valid():
-            payment.status = 'paid'
-            payment.paid_date = form.cleaned_data['paid_date']
-            payment.payment_method = form.cleaned_data['payment_method']
-            payment.reference = form.cleaned_data['reference']
-            payment.notes = form.cleaned_data['notes']
-            payment.save()
-            messages.success(request, f'Payment of KES {payment.amount} marked as paid.')
+            paid_amount = form.cleaned_data['amount']
+            paid_date = form.cleaned_data['paid_date']
+            method = form.cleaned_data['payment_method']
+            ref = form.cleaned_data['reference']
+            notes = form.cleaned_data['notes']
+            tenancy = payment.tenancy
+            if paid_amount >= payment.amount:
+                payment.status = 'paid'
+                payment.paid_date = paid_date
+                payment.payment_method = method
+                payment.reference = ref
+                payment.notes = notes
+                payment.save()
+                remaining = paid_amount - payment.amount
+                invoices = RentPayment.objects.filter(tenancy=tenancy).exclude(status='paid').exclude(pk=payment.pk).order_by('due_date', 'id')
+                for inv in invoices:
+                    if remaining <= 0:
+                        break
+                    if inv.amount <= remaining:
+                        inv.status = 'paid'
+                        inv.paid_date = paid_date
+                        inv.payment_method = method
+                        inv.reference = ref
+                        inv.notes = notes
+                        inv.save()
+                        remaining -= inv.amount
+                    else:
+                        inv.amount -= remaining
+                        inv.save()
+                        remaining = Decimal('0')
+                msg = f'Payment of KES {paid_amount} recorded.'
+            else:
+                payment.amount -= paid_amount
+                payment.save()
+                msg = f'Partial payment of KES {paid_amount} recorded. Balance: KES {payment.amount}.'
+            messages.success(request, msg)
             return redirect('tenants:rent_collection')
     else:
-        form = MarkPaidForm(initial={'paid_date': timezone.now().date()})
-    return render(request, 'tenants/mark_paid.html', {'payment': payment, 'form': form, 'active_tab': 'rent'})
+        form = MarkPaidForm(initial={'amount': payment.amount, 'paid_date': timezone.now().date()})
+    total_balance = RentPayment.objects.filter(tenancy=payment.tenancy).exclude(status='paid').exclude(notes='stk_intermediary').aggregate(s=Sum('amount'))['s'] or 0
+    return render(request, 'tenants/mark_paid.html', {'payment': payment, 'form': form, 'active_tab': 'rent', 'total_balance': total_balance})
 
 @login_required
 def maintenance_list(request):
@@ -416,11 +450,13 @@ def stk_push_view(request):
     if not phone:
         return JsonResponse({'error': 'No phone number. Update your profile first.'}, status=400)
 
+    landlord = tenancy.unit.property.owner
+
     payment = RentPayment.objects.create(
         tenancy=tenancy, amount=amount, due_date=timezone.now().date(), status='pending', notes='stk_intermediary'
     )
 
-    tx, error = stk_push(payment, phone)
+    tx, error = stk_push(payment, phone, landlord)
     if error:
         payment.delete()
         return JsonResponse({'error': error}, status=400)

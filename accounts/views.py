@@ -8,31 +8,12 @@ from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import date, timedelta
 from decimal import Decimal
-from .forms import RegistrationForm, ProfileForm, UserForm
-from .models import Profile, SubscriptionPlan, LandlordSubscription, PlatformConfig, get_fee_per_unit
+from .forms import ProfileForm, UserForm
+from .models import Profile, SubscriptionPlan, LandlordSubscription, PlatformConfig, get_fee_per_unit, landlord_trial_info
 from core.pagination import paginate
 from properties.models import Property
 from units.models import Unit
 from tenants.models import Tenancy, RentPayment
-
-def register(request):
-    if request.method == 'POST':
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            profile = user.profile
-            profile.role = form.cleaned_data['role']
-            profile.save()
-            login(request, user)
-            messages.success(request, f'Welcome to PataNyumba, {user.username}!')
-            if profile.role == 'landlord':
-                return redirect('dashboard:overview')
-            if profile.role == 'tenant':
-                return redirect('portal:home')
-            return redirect('website:home')
-    else:
-        form = RegistrationForm()
-    return render(request, 'accounts/register.html', {'form': form})
 
 def login_view(request):
     if request.method == 'POST':
@@ -143,6 +124,8 @@ def admin_landlords(request):
         p.unit_count = Unit.objects.filter(property__owner=p.user).count()
         landlord_fee = get_fee_per_unit(p.user)
         p.monthly_fee = p.unit_count * landlord_fee
+        p.trial_info_val = landlord_trial_info(p.user)
+        p.mpesa_set = bool(p.mpesa_shortcode)
     page_obj = paginate(request, qs)
     return render(request, 'accounts/admin_landlords.html', {'landlords': page_obj, 'q': q})
 
@@ -181,6 +164,7 @@ def admin_create_landlord(request):
             user = form.save()
             user.profile.role = 'landlord'
             user.profile.phone = request.POST.get('phone', '')
+            user.profile.trial_started_at = timezone.now()
             user.profile.save()
             messages.success(request, f'Landlord "{user.username}" created.')
             return redirect('accounts:admin_landlords')
@@ -297,3 +281,115 @@ def admin_assign_subscription(request, landlord_id):
         'landlord': landlord, 'fee_per_unit': fee,
         'unit_count': unit_count, 'monthly_fee': monthly_fee,
     })
+
+
+@login_required
+def admin_landlord_mpesa(request, landlord_id):
+    if request.user.profile.role != 'admin':
+        messages.error(request, 'Admin access required.')
+        return redirect('website:home')
+    landlord = get_object_or_404(User, pk=landlord_id, profile__role='landlord')
+    if request.method == 'POST':
+        for field in ['mpesa_consumer_key', 'mpesa_consumer_secret', 'mpesa_passkey', 'mpesa_shortcode', 'mpesa_callback_url']:
+            val = request.POST.get(field, '').strip()
+            setattr(landlord.profile, field, val)
+        landlord.profile.save()
+        messages.success(request, f'M-Pesa credentials updated for {landlord.username}.')
+        return redirect('accounts:admin_landlords')
+    return render(request, 'accounts/admin_landlord_mpesa.html', {'landlord': landlord})
+
+
+# ==================== ADMIN LISTINGS (Independent House Hunting) ====================
+
+@login_required
+def admin_listings(request):
+    if request.user.profile.role != 'admin':
+        messages.error(request, 'Admin access required.')
+        return redirect('website:home')
+    from website.models import AdminListing
+    qs = AdminListing.objects.select_related('created_by').all()
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(title__icontains=q) | qs.filter(county__icontains=q) | qs.filter(town__icontains=q) | qs.filter(estate__icontains=q)
+    status_f = request.GET.get('status', '').strip()
+    if status_f:
+        qs = qs.filter(status=status_f)
+    page_obj = paginate(request, qs)
+    return render(request, 'accounts/admin_listings.html', {'listings': page_obj, 'q': q, 'status_f': status_f})
+
+
+@login_required
+def admin_listing_create(request):
+    if request.user.profile.role != 'admin':
+        return redirect('website:home')
+    if request.method == 'POST':
+        from website.models import AdminListing
+        title = request.POST.get('title')
+        desc = request.POST.get('description')
+        county = request.POST.get('county')
+        town = request.POST.get('town')
+        estate = request.POST.get('estate', '')
+        house_type = request.POST.get('house_type')
+        bedrooms = int(request.POST.get('bedrooms', 1))
+        bathrooms = int(request.POST.get('bathrooms', 1))
+        rent = request.POST.get('rent')
+        contact_name = request.POST.get('contact_name', '')
+        contact_phone = request.POST.get('contact_phone', '')
+        image = request.FILES.get('image')
+        extra_images = request.FILES.getlist('extra_images')
+        if title and desc and county and town and rent:
+            listing = AdminListing.objects.create(
+                title=title, description=desc, county=county, town=town, estate=estate,
+                house_type=house_type, bedrooms=bedrooms, bathrooms=bathrooms, rent=rent,
+                contact_name=contact_name, contact_phone=contact_phone, image=image,
+                created_by=request.user,
+            )
+            for i, img in enumerate(extra_images):
+                listing.images.create(image=img, order=i)
+            messages.success(request, 'Listing created and visible on the public site.')
+            return redirect('accounts:admin_listings')
+        messages.error(request, 'Title, description, county, town, and rent are required.')
+    return render(request, 'accounts/admin_listing_form.html', {'title': 'New Listing'})
+
+
+@login_required
+def admin_listing_edit(request, pk):
+    if request.user.profile.role != 'admin':
+        return redirect('website:home')
+    from website.models import AdminListing
+    listing = get_object_or_404(AdminListing, pk=pk)
+    if request.method == 'POST':
+        listing.title = request.POST.get('title')
+        listing.description = request.POST.get('description')
+        listing.county = request.POST.get('county')
+        listing.town = request.POST.get('town')
+        listing.estate = request.POST.get('estate', '')
+        listing.house_type = request.POST.get('house_type')
+        listing.bedrooms = int(request.POST.get('bedrooms', 1))
+        listing.bathrooms = int(request.POST.get('bathrooms', 1))
+        listing.rent = request.POST.get('rent')
+        listing.contact_name = request.POST.get('contact_name', '')
+        listing.contact_phone = request.POST.get('contact_phone', '')
+        listing.status = request.POST.get('status', 'available')
+        if request.FILES.get('image'):
+            listing.image = request.FILES['image']
+        extra_images = request.FILES.getlist('extra_images')
+        if extra_images:
+            start = listing.images.count()
+            for i, img in enumerate(extra_images):
+                listing.images.create(image=img, order=start + i)
+        listing.save()
+        messages.success(request, 'Listing updated.')
+        return redirect('accounts:admin_listings')
+    return render(request, 'accounts/admin_listing_form.html', {'listing': listing, 'title': 'Edit Listing'})
+
+
+@login_required
+def admin_listing_delete(request, pk):
+    if request.user.profile.role != 'admin':
+        return redirect('website:home')
+    from website.models import AdminListing
+    listing = get_object_or_404(AdminListing, pk=pk)
+    listing.delete()
+    messages.success(request, 'Listing deleted.')
+    return redirect('accounts:admin_listings')

@@ -1,0 +1,57 @@
+{% extends 'accounts/admin_base.html' %}
+{% load humanize %}
+{% block title %}Admin Listings - PataNyumba Admin{% endblock %}
+{% block admin_title %}Admin Listings{% endblock %}
+{% block admin_content %}
+<div class="gc p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h5 class="fw-semibold mb-0"><i class="fa-solid fa-magnifying-glass me-2"></i>Admin Listings</h5>
+        <div class="d-flex gap-2 align-items-center">
+            <form method="GET" style="display:flex;gap:4px">
+                <input name="q" type="text" placeholder="Search listings..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:200px">
+                <select name="status" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+                    <option value="">All</option>
+                    <option value="available" {% if status_f == 'available' %}selected{% endif %}>Available</option>
+                    <option value="rented" {% if status_f == 'rented' %}selected{% endif %}>Rented</option>
+                    <option value="withdrawn" {% if status_f == 'withdrawn' %}selected{% endif %}>Withdrawn</option>
+                </select>
+                <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-search"></i></button>
+                {% if q or status_f %}<a href="{% url 'accounts:admin_listings' %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+            </form>
+            <a href="{% url 'accounts:admin_listing_create' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem">+ New Listing</a>
+        </div>
+    </div>
+    {% if listings %}
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Title</th><th>County/Town</th><th>Rent</th><th>Type</th><th>Beds</th><th>Status</th><th>Posted</th><th>By</th><th></th></tr></thead>
+            <tbody>
+            {% for l in listings %}
+            <tr>
+                <td style="font-weight:500">{{ l.title }}</td>
+                <td>{{ l.county }}/{{ l.town }}{% if l.estate %}, {{ l.estate }}{% endif %}</td>
+                <td>KES {{ l.rent|floatformat:0|intcomma }}</td>
+                <td>{{ l.get_house_type_display }}</td>
+                <td>{{ l.bedrooms }}</td>
+                <td><span class="badge bg-{% if l.status == 'available' %}success{% elif l.status == 'rented' %}secondary{% else %}warning{% endif %}">{{ l.get_status_display }}</span></td>
+                <td style="font-size:.78rem">{{ l.created_at|date:'d M Y' }}</td>
+                <td style="font-size:.78rem">{{ l.created_by.username }}</td>
+                <td>
+                    <a href="{% url 'accounts:admin_listing_edit' l.pk %}" class="boc py-1 px-2" style="font-size:.75rem;border-radius:6px" title="Edit"><i class="fa-regular fa-pen-to-square"></i></a>
+                    <a href="{% url 'accounts:admin_listing_delete' l.pk %}" class="boc py-1 px-2" style="font-size:.75rem;border-radius:6px;color:#f87171" title="Delete" onclick="return confirm('Delete this listing?')"><i class="fa-regular fa-trash-can"></i></a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'core/pagination.html' with page=listings %}
+    {% else %}
+    <p style="color:var(--tx3);text-align:center;padding:40px 0">No listings yet.</p>
+    {% endif %}
+    <div class="mt-3">
+        <a href="{% url 'website:browse' %}" target="_blank" class="boc py-1 px-3" style="font-size:.82rem;border-radius:8px"><i class="fa-solid fa-up-right-from-square me-1"></i> View on Browse page</a>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}{{ block.super }}{% endblock %}

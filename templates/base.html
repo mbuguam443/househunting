@@ -21,7 +21,7 @@
     <nav id="nbar">
         <div class="container">
             <div class="d-flex align-items-center justify-content-between w-100">
-                <a href="{% url 'website:home' %}" class="d-flex align-items-center gap-2" style="font-size:1.2rem;font-weight:700;color:var(--tx)">
+                <a href="{% if user.is_authenticated %}{% if user.profile.role == 'admin' %}{% url 'accounts:admin_dashboard' %}{% elif user.profile.role == 'landlord' %}{% url 'dashboard:overview' %}{% elif user.profile.role == 'tenant' %}{% url 'portal:home' %}{% else %}{% url 'website:home' %}{% endif %}{% else %}{% url 'website:home' %}{% endif %}" class="d-flex align-items-center gap-2" style="font-size:1.2rem;font-weight:700;color:var(--tx)">
                     <div class="logo-i"><i class="fa-solid fa-compass"></i></div>
                     <span>PataNyumba</span>
                 </a>
@@ -62,9 +62,9 @@
                     <a href="{% url 'accounts:logout' %}" class="boc px-2 py-2 d-sm-none" style="font-size:.82rem"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
                     {% else %}
                     <a href="{% url 'accounts:login' %}" class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1"><i class="fa-regular fa-user fa-sm"></i> Log in</a>
-                    <a href="{% url 'accounts:register' %}" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1">Get Started <i class="fa-solid fa-arrow-right fa-sm"></i></a>
+                    <a href="{% url 'accounts:login' %}" class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1">Log in <i class="fa-solid fa-arrow-right fa-sm"></i></a>
                     {% endif %}
-                    <button class="boc d-lg-none px-2 py-2" id="mbtog" style="border-radius:10px">
+                    <button class="boc d-lg-none px-3 py-2" id="mbtog" style="border-radius:10px;background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.25);font-size:1.05rem;line-height:1">
                         <i class="fa-solid fa-bars" id="barIcon"></i>
                         <i class="fa-solid fa-xmark" id="xIcon" style="display:none"></i>
                     </button>
@@ -91,7 +91,7 @@
             <a href="{% url 'accounts:logout' %}" class="boc flex-fill py-2 btn">Logout</a>
             {% else %}
             <a href="{% url 'accounts:login' %}" class="boc flex-fill py-2 btn">Log in</a>
-            <a href="{% url 'accounts:register' %}" class="bgrd flex-fill py-2 btn">Get Started</a>
+            <a href="{% url 'accounts:login' %}" class="bgrd flex-fill py-2 btn">Log in</a>
             {% endif %}
         </div>
     </div>
@@ -113,7 +113,7 @@
         <div class="container">
             <div class="row g-5 mb-5">
                 <div class="col-lg-4">
-                    <a class="d-flex align-items-center gap-2 mb-3" href="{% url 'website:home' %}" style="font-size:1.15rem;font-weight:700;color:var(--tx)">
+                    <a class="d-flex align-items-center gap-2 mb-3" href="{% if user.is_authenticated %}{% if user.profile.role == 'admin' %}{% url 'accounts:admin_dashboard' %}{% elif user.profile.role == 'landlord' %}{% url 'dashboard:overview' %}{% elif user.profile.role == 'tenant' %}{% url 'portal:home' %}{% else %}{% url 'website:home' %}{% endif %}{% else %}{% url 'website:home' %}{% endif %}" style="font-size:1.15rem;font-weight:700;color:var(--tx)">
                         <div class="logo-i"><i class="fa-solid fa-compass"></i></div> PataNyumba
                     </a>
                     <p style="font-size:.875rem;color:var(--tx3);line-height:1.65;max-width:280px">Find your next home with confidence. Kenya's simplest platform for finding and managing rental properties.</p>
@@ -127,7 +127,7 @@
                 </div>
                 <div class="col-6 col-md-2 fcol">
                     <h5>For Landlords</h5>
-                    <a href="{% url 'accounts:register' %}">List a Property</a>
+                    <a href="{% url 'accounts:login' %}">List a Property</a>
                     <a href="{% url 'accounts:login' %}">Landlord Login</a>
                     <a href="{% url 'dashboard:overview' %}">Dashboard</a>
                 </div>
@@ -161,7 +161,9 @@
     <script src="/static/js/aos.js"></script>
     <script>
         AOS.init({ duration: 650, once: true, easing: 'ease-out' });
-        $('#mbtog').click(function(){ $('#mbmenu').toggleClass('open'); $('#barIcon,#xIcon').toggle(); });
+        $('#mbtog').click(function(e){ e.stopPropagation(); $('#mbmenu').toggleClass('open'); $('#barIcon,#xIcon').toggle(); });
+        $(document).click(function(e){ if ($('#mbmenu').hasClass('open') && !$(e.target).closest('#mbmenu, #mbtog').length) { $('#mbmenu').removeClass('open'); $('#barIcon,#xIcon').toggle(); } });
+        $('#mbmenu a').click(function(){ $('#mbmenu').removeClass('open'); $('#barIcon,#xIcon').toggle(); });
         $(window).scroll(function(){ $('#nbar').toggleClass('scr', $(this).scrollTop() > 40); });
         setTimeout(function(){ $('.msg').fadeOut(400); }, 5000);
         if ('serviceWorker' in navigator) {

@@ -1,0 +1,34 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}M-Pesa - {{ landlord.username }} - PataNyumba Admin{% endblock %}
+{% block admin_title %}M-Pesa Credentials: {{ landlord.username }}{% endblock %}
+{% block admin_content %}
+<div class="gc p-4" style="max-width:540px">
+    <p style="color:var(--tx2);margin-bottom:16px">Set M-Pesa Daraja API credentials for <strong style="color:var(--tx)">{{ landlord.get_full_name|default:landlord.username }}</strong></p>
+    <p style="font-size:.82rem;color:var(--tx3);margin-bottom:16px">Leave a field blank to fall back to the platform default or settings.py.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="olbl">Consumer Key</label>
+            <input name="mpesa_consumer_key" class="oinp" style="width:100%" value="{{ landlord.profile.mpesa_consumer_key }}" placeholder="Daraja Consumer Key">
+        </div>
+        <div class="mb-3">
+            <label class="olbl">Consumer Secret</label>
+            <input name="mpesa_consumer_secret" class="oinp" style="width:100%" value="{{ landlord.profile.mpesa_consumer_secret }}" placeholder="Daraja Consumer Secret">
+        </div>
+        <div class="mb-3">
+            <label class="olbl">Passkey</label>
+            <input name="mpesa_passkey" class="oinp" style="width:100%" value="{{ landlord.profile.mpesa_passkey }}" placeholder="M-Pesa Passkey">
+        </div>
+        <div class="mb-3">
+            <label class="olbl">Shortcode / Paybill</label>
+            <input name="mpesa_shortcode" class="oinp" style="width:100%" value="{{ landlord.profile.mpesa_shortcode }}" placeholder="e.g. 174379">
+        </div>
+        <div class="mb-3">
+            <label class="olbl">Callback URL <span style="font-size:.78rem;color:var(--tx3)">(update when ngrok URL changes)</span></label>
+            <input name="mpesa_callback_url" class="oinp" style="width:100%" value="{{ landlord.profile.mpesa_callback_url }}" placeholder="https://your-ngrok-url.ngrok-free.app">
+        </div>
+        <button class="bgrd btn px-4 py-2">Save Credentials</button>
+        <a href="{% url 'accounts:admin_landlords' %}" class="boc btn px-4 py-2 ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

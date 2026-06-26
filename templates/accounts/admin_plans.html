@@ -2,14 +2,14 @@
 {% block title %}Subscription - PataNyumba Admin{% endblock %}
 {% block admin_title %}Subscription Settings{% endblock %}
 {% block admin_content %}
-<div class="gc p-4 mb-4" style="max-width:500px">
-    <h5 class="fw-semibold mb-3"><i class="fa-solid fa-gear me-2"></i>Fee per Unit</h5>
+<div class="gc p-4 mb-4" style="max-width:600px">
+    <h5 class="fw-semibold mb-3"><i class="fa-solid fa-gear me-2"></i>Platform Settings</h5>
     <form method="post" action="{% url 'accounts:admin_update_fee' %}">
         {% csrf_token %}
         <div class="mb-3">
             <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Monthly platform fee per unit (KES)</label>
             <div class="d-flex gap-2">
-                <input name="fee_per_unit" type="number" step="0.01" min="0" value="{{ config.fee_per_unit }}" class="oinp" style="flex:1">
+                <input name="fee_per_unit" type="number" step="0.01" min="0" value="{{ config.fee_per_unit }}" class="oinp" style="width:140px">
                 <button class="bgrd btn px-3 py-2">Update</button>
             </div>
             <div style="font-size:.78rem;color:var(--tx3);margin-top:4px">A landlord with N units pays N × KES {{ config.fee_per_unit }} per month</div>

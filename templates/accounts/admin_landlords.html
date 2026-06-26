@@ -17,7 +17,7 @@
     {% if landlords %}
     <div class="table-responsive">
         <table class="db-table">
-            <thead><tr><th>Username</th><th>Name</th><th>Units</th><th>Fee/Unit</th><th>Monthly Fee</th><th>Subscription</th><th></th></tr></thead>
+            <thead><tr><th>Username</th><th>Name</th><th>Units</th><th>Fee/Unit</th><th>Monthly Fee</th><th>Sub</th><th>M-Pesa</th><th></th></tr></thead>
             <tbody>
                 {% for p in landlords %}
                 {% with sub=p.user.subscriptions.first %}
@@ -33,10 +33,12 @@
                         </form>
                     </td>
                     <td>KES {{ p.monthly_fee }}</td>
-                    <td>{% if sub %}{% if sub.status == 'active' %}<span class="badge-vacant">Active</span> till {{ sub.end_date|date:'M d, Y' }}{% else %}<span class="badge-occupied">{{ sub.get_status_display }}</span>{% endif %}{% elif p.fee_per_unit == 0 %}<span class="badge-vacant">Free (KES 0)</span>{% else %}<span class="ftag">None</span>{% endif %}</td>
+                    <td>{% if sub %}{% if sub.status == 'active' %}<span class="badge-vacant">Active</span> till {{ sub.end_date|date:'M d, Y' }}{% else %}<span class="badge-occupied">{{ sub.get_status_display }}</span>{% endif %}{% elif p.fee_per_unit == 0 %}<span class="badge-vacant">Free (KES 0)</span>{% elif p.trial_info_val %}<span class="ftag" style="color:#34d399">Trial ({{ p.trial_info_val.remaining_days }}d)</span>{% else %}<span class="ftag">None</span>{% endif %}</td>
+                    <td>{% if p.mpesa_set %}<span class="badge-vacant">Set</span>{% else %}<span class="ftag">Not Set</span>{% endif %}</td>
                     <td>
                         <div class="d-flex gap-1">
-                            <a href="{% url 'accounts:admin_assign_sub' p.user.id %}" class="boc btn py-1 px-2" style="font-size:.72rem">Pay</a>
+                            <a href="{% url 'accounts:admin_assign_sub' p.user.id %}" class="boc btn py-1 px-2" style="font-size:.72rem">Subscribe</a>
+                            <a href="{% url 'accounts:admin_landlord_mpesa' p.user.id %}" class="boc btn py-1 px-2" style="font-size:.72rem">M-Pesa</a>
                         </div>
                     </td>
                 </tr>

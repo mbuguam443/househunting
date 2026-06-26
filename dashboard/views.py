@@ -9,7 +9,7 @@ from properties.models import Property
 from units.models import Unit
 from website.models import Inquiry
 from tenants.models import Tenancy, MaintenanceRequest, RentPayment, LeaseAgreement
-from accounts.models import landlord_subscription_status, landlord_has_active_sub, get_fee_per_unit
+from accounts.models import landlord_subscription_status, landlord_has_active_sub, get_fee_per_unit, landlord_trial_info
 from core.pagination import paginate
 
 @login_required
@@ -60,6 +60,7 @@ def overview(request):
     # Subscription info
     sub_status, sub = landlord_subscription_status(request.user)
     fee_per_unit = get_fee_per_unit(request.user)
+    trial_info = landlord_trial_info(request.user)
     monthly_sub_fee = total_units * fee_per_unit if fee_per_unit else Decimal('0.00')
 
     # Recent activity log
@@ -123,6 +124,7 @@ def overview(request):
         'sub': sub,
         'fee_per_unit': fee_per_unit,
         'monthly_sub_fee': monthly_sub_fee,
+        'trial_info': trial_info,
         'recent_activity': recent_activity,
         'properties': properties,
         'chart_prop_labels': json.dumps(chart_prop_labels),

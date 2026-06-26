@@ -30,7 +30,10 @@
             <label style="font-size:.85rem;color:var(--tx2);margin-bottom:6px;display:block">Payment Reference (optional)</label>
             <input name="payment_reference" class="oinp" style="width:100%" placeholder="M-Pesa code or bank ref">
         </div>
-        <button class="bgrd btn w-100 py-2">Activate Subscription</button>
+        <div class="d-flex gap-2 mt-2">
+            <button class="bgrd btn flex-fill py-2">Activate Subscription</button>
+            <a href="{% url 'accounts:admin_landlords' %}" class="boc btn flex-fill py-2">Cancel</a>
+        </div>
     </form>
 </div>
 {% endblock %}

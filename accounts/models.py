@@ -1,11 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
-from datetime import date
+from datetime import date, timedelta
 
 
 class PlatformConfig(models.Model):
     fee_per_unit = models.DecimalField(max_digits=8, decimal_places=2, default=50.00,
         help_text='Monthly platform fee per unit (KES)')
+    trial_days = models.PositiveIntegerField(default=14, help_text='Free trial duration in days')
+    callback_url = models.CharField(max_length=500, blank=True, help_text='Override M-Pesa callback URL (e.g., ngrok URL). Leave blank to use MPESA_CALLBACK_URL from settings.')
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -27,6 +29,12 @@ class Profile(models.Model):
     avatar = models.ImageField(upload_to='avatars/', blank=True)
     fee_per_unit = models.DecimalField(max_digits=8, decimal_places=2, default=50.00,
         help_text='Monthly platform fee per unit for this landlord (KES). Set 0 for free.')
+    trial_started_at = models.DateTimeField(null=True, blank=True, help_text='When the free trial started')
+    mpesa_consumer_key = models.CharField(max_length=200, blank=True, help_text='Your M-Pesa Consumer Key (Daraja API)')
+    mpesa_consumer_secret = models.CharField(max_length=200, blank=True, help_text='Your M-Pesa Consumer Secret')
+    mpesa_passkey = models.CharField(max_length=200, blank=True, help_text='Your M-Pesa Passkey')
+    mpesa_shortcode = models.CharField(max_length=20, blank=True, help_text='Your M-Pesa Shortcode / Paybill')
+    mpesa_callback_url = models.CharField(max_length=500, blank=True, help_text='Override M-Pesa callback URL (e.g., ngrok URL) for this landlord')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -81,14 +89,57 @@ def require_landlord_sub(user):
     return True, None
 
 
+def get_trial_end(user):
+    """Returns the trial end date for a landlord, or None if not applicable."""
+    if user.profile.role != 'landlord':
+        return None
+    if user.profile.fee_per_unit is not None and user.profile.fee_per_unit == 0:
+        return None
+    if not user.profile.trial_started_at:
+        return None
+    cfg, _ = PlatformConfig.objects.get_or_create(pk=1, defaults={'fee_per_unit': 50.00, 'trial_days': 14})
+    return user.profile.trial_started_at.date() + timedelta(days=cfg.trial_days)
+
+
 def landlord_has_active_sub(user):
     if user.profile.role != 'landlord':
         return True
     # Zero fee = free service, no subscription needed
     if user.profile.fee_per_unit is not None and user.profile.fee_per_unit == 0:
         return True
+    # Active subscription
     sub = user.subscriptions.filter(status='active', end_date__gte=date.today()).first()
-    return sub is not None
+    if sub:
+        return True
+    # Free trial period
+    trial_end = get_trial_end(user)
+    if trial_end and trial_end >= date.today():
+        return True
+    return False
+
+
+def landlord_trial_info(user):
+    """Returns dict with trial days remaining and warning thresholds, or None."""
+    if user.profile.role != 'landlord':
+        return None
+    if user.profile.fee_per_unit is not None and user.profile.fee_per_unit == 0:
+        return None
+    if not user.profile.trial_started_at:
+        return None
+    trial_end = get_trial_end(user)
+    if not trial_end:
+        return None
+    today = date.today()
+    remaining = (trial_end - today).days
+    if remaining < 0:
+        return None
+    cfg, _ = PlatformConfig.objects.get_or_create(pk=1, defaults={'fee_per_unit': 50.00, 'trial_days': 14})
+    return {
+        'end_date': trial_end,
+        'remaining_days': remaining,
+        'total_days': cfg.trial_days,
+        'is_expiring': remaining <= 7,
+    }
 
 
 def get_fee_per_unit(landlord=None):

@@ -5,16 +5,21 @@
 <div class="gc p-4" style="max-width:500px">
     <div class="mb-4">
         <p style="color:var(--tx2);margin-bottom:4px"><strong>Tenant:</strong> {{ payment.tenancy.tenant.get_full_name|default:payment.tenancy.tenant.username }}</p>
-        <p style="color:var(--tx2);margin-bottom:4px"><strong>Amount:</strong> KES {{ payment.amount }}</p>
+        <p style="color:var(--tx2);margin-bottom:4px"><strong>Invoice Balance:</strong> KES {{ payment.amount }}</p>
         <p style="color:var(--tx2);margin-bottom:4px"><strong>Due:</strong> {{ payment.due_date|date:'M d, Y' }}</p>
+        <p style="margin-bottom:0;padding:8px 12px;border-radius:8px;background:{% if total_balance > 0 %}rgba(248,113,113,0.1){% else %}rgba(52,211,153,0.1){% endif %};color:{% if total_balance > 0 %}#f87171{% else %}#34d399{% endif %}">
+            <strong>Total Balance:</strong> KES {% if total_balance > 0 %}-{% endif %}{{ total_balance|floatformat:0 }}
+        </p>
     </div>
     <form method="POST">
         {% csrf_token %}
+        <label class="olbl">Amount Paid</label>
+        {{ form.amount }}
         <label class="olbl">Date Paid</label>
         {{ form.paid_date }}
         <label class="olbl">Payment Method</label>
         {{ form.payment_method }}
-        <label class="olbl">M-Pesa Code</label>
+        <label class="olbl">Reference / Receipt No.</label>
         {{ form.reference }}
         <label class="olbl">Notes</label>
         {{ form.notes }}

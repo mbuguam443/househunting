@@ -1,14 +1,13 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Tenancy, RentPayment, MaintenanceRequest, LeaseAgreement
 from units.models import Unit
 
 
-class TenantRegistrationForm(UserCreationForm):
+class TenantRegistrationForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2']
+        fields = ['username', 'email']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -17,8 +16,6 @@ class TenantRegistrationForm(UserCreationForm):
         self.fields['email'].required = True
         self.fields['email'].widget.attrs['placeholder'] = 'e.g. tenant@example.com'
         self.fields['username'].widget.attrs['placeholder'] = 'Username for tenant portal login'
-        self.fields['password1'].widget.attrs['placeholder'] = 'At least 8 characters'
-        self.fields['password2'].widget.attrs['placeholder'] = 'Repeat the password'
 
 class TenancyForm(forms.ModelForm):
     class Meta:
@@ -54,6 +51,7 @@ class RentPaymentForm(forms.ModelForm):
         }
 
 class MarkPaidForm(forms.Form):
+    amount = forms.DecimalField(max_digits=10, decimal_places=2, widget=forms.NumberInput(attrs={'class': 'oinp', 'step': '0.01'}))
     paid_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}))
     payment_method = forms.ChoiceField(choices=RentPayment.METHOD_CHOICES, widget=forms.Select(attrs={'class': 'oinp'}))
     reference = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Transaction ref or receipt no.'}))
