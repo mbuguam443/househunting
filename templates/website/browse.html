@@ -1,5 +1,32 @@
 {% extends 'base.html' %}
-{% block title %}Browse Houses - PataNyumba{% endblock %}
+{% block title %}Browse Houses for Rent in Kenya — {{ total }} Listing{{ total|pluralize }} | PataNyumba{% endblock %}
+{% block json_ld %}
+{{ block.super }}
+{% if combined %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Available Houses for Rent in Kenya",
+    "description": "Browse {{ total }} available rental listings across Kenya.",
+    "numberOfItems": {{ total }},
+    "itemListElement": [
+        {% for item in combined %}
+        {
+            "@type": "ListItem",
+            "position": {{ forloop.counter }},
+            "url": "https://patanyumba.co.ke{% if item.url %}{{ item.url }}{% endif %}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+{% endif %}
+{% endblock %}
+{% block meta_description %}Browse {{ total }} available houses for rent across Kenya. Search by county, town, house type, bedrooms, and rent range. Find your next home today.{% endblock %}
+{% block meta_keywords %}browse houses for rent, rental listings Kenya, houses to rent near me, apartments for rent, {{ counties|slice:':5'|join:', ' }} houses{% endblock %}
+{% block og_title %}Browse {{ total }} Houses for Rent in Kenya | PataNyumba{% endblock %}
+{% block canonical %}{{ request.build_absolute_uri }}{% if q %}?q={{ q }}{% endif %}{% endblock %}
 {% block content %}
 <section style="padding-top:calc(var(--nav) + 40px);padding-bottom:60px;">
     <div class="container">
@@ -19,8 +46,8 @@
                         <label class="olbl"><i class="fa-regular fa-building me-1"></i>Type</label>
                         <select name="house_type" class="oinp">
                             <option value="">All Types</option>
-                            {% for k, v in house_types %}
-                            <option value="{{ k }}" {% if house_type == k %}selected{% endif %}>{{ v }}</option>
+                            {% for ht in house_types %}
+                            <option value="{{ ht.slug }}" {% if house_type == ht.slug %}selected{% endif %}>{{ ht.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -109,9 +136,12 @@
                             <span class="ftag mt-0" style="background:rgba(168,85,247,.12);color:#c084fc;border-color:rgba(168,85,247,.2)"><i class="fa-solid fa-shield me-1"></i>Verified</span>
                             {% endif %}
                         </div>
-                        {% if item.source == 'admin' and item.contact_phone %}
-                        <div class="mt-3">
-                            <a href="tel:{{ item.contact_phone }}" class="bgrd btn py-1 px-3 w-100" style="font-size:.82rem"><i class="fa-solid fa-phone me-1"></i> Call {{ item.contact_phone }}</a>
+                                                {% if item.source == 'admin' and item.contact_phone %}
+                        <div class="mt-3 d-flex gap-2">
+                            <a href="tel:{{ item.contact_phone }}" class="bgrd btn py-1 px-3 flex-fill" style="font-size:.82rem"><i class="fa-solid fa-phone me-1"></i> {{ item.contact_phone }}</a>
+                            {% if item.latitude and item.longitude %}
+                            <button class="boc btn py-1 px-3" style="font-size:.82rem" onclick="openMap('{{ item.title|escapejs }}', {{ item.latitude }}, {{ item.longitude }})"><i class="fa-solid fa-map-location-dot"></i></button>
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
@@ -130,9 +160,39 @@
         {% endif %}
     </div>
 </section>
+
+<div class="modal fade" id="mapModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background:var(--bg2);border:1px solid var(--bd);border-radius:16px">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-semibold" id="mapModalTitle" style="color:var(--tx)">Location</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="mapModalBody" style="height:400px"></div>
+        </div>
+    </div>
+</div>
 {% endblock %}
+
 {% block scripts %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+function openMap(title, lat, lng){
+    document.getElementById('mapModalTitle').textContent = title;
+    document.getElementById('mapModalBody').innerHTML = '<p style="color:var(--tx3);text-align:center;padding-top:160px">Loading map...</p>';
+    var modal = new bootstrap.Modal(document.getElementById('mapModal'));
+    modal.show();
+    setTimeout(function(){
+        document.getElementById('mapModalBody').innerHTML = '<div id="mapInner" style="width:100%;height:100%"></div>';
+        var m = L.map('mapInner').setView([lat, lng], 15);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a>',
+            maxZoom: 19
+        }).addTo(m);
+        L.marker([lat, lng]).addTo(m).bindPopup(title).openPopup();
+    }, 300);
+}
 $('.si-dot').on('click', function(){
     var idx = $(this).data('idx');
     var wrapper = $(this).closest('.prop-card-img').find('.si-wrapper');

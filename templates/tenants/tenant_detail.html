@@ -12,7 +12,7 @@
             <hr style="border-color:var(--bd);margin:16px 0">
             <div style="text-align:left;font-size:.85rem;color:var(--tx2)">
                 <p class="mb-2"><strong style="color:var(--tx)">Property:</strong> {{ tenancy.unit.property.name }}</p>
-                <p class="mb-2"><strong style="color:var(--tx)">Unit:</strong> {{ tenancy.unit.unit_number }} ({{ tenancy.unit.get_house_type_display }})</p>
+                <p class="mb-2"><strong style="color:var(--tx)">Unit:</strong> {{ tenancy.unit.unit_number }} ({{ tenancy.unit.house_type.name }})</p>
                 <p class="mb-2"><strong style="color:var(--tx)">Rent:</strong> KES {{ tenancy.monthly_rent }}/mo</p>
                 <p class="mb-2"><strong style="color:var(--tx)">Deposit:</strong> KES {{ tenancy.deposit_paid }}</p>
                 <p class="mb-2"><strong style="color:var(--tx)">Started:</strong> {{ tenancy.start_date|date:'M d, Y' }}</p>

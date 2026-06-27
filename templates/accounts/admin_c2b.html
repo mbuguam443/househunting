@@ -1,0 +1,85 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}C2B M-Pesa - PataNyumba Admin{% endblock %}
+{% block admin_title %}C2B M-Pesa{% endblock %}
+{% block admin_content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="gc p-4">
+            <h6 class="fw-semibold mb-3"><i class="fa-solid fa-circle-info me-2"></i>C2B Status</h6>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                <span style="color:var(--tx3)">Registration</span>
+                <span style="padding:2px 10px;border-radius:6px;font-size:.8rem;{% if c2b_registered %}background:rgba(52,211,153,.15);color:#34d399{% else %}background:rgba(248,113,113,.1);color:#f87171{% endif %}">{% if c2b_registered %}Registered{% else %}Not Registered{% endif %}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                <span style="color:var(--tx3)">Confirmation URL</span>
+                <span style="font-size:.78rem;color:var(--tx2);text-align:right;max-width:60%;word-break:break-all">{{ c2b_confirmation_url }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+                <span style="color:var(--tx3)">Validation URL</span>
+                <span style="font-size:.78rem;color:var(--tx2);text-align:right;max-width:60%;word-break:break-all">{{ c2b_validation_url }}</span>
+            </div>
+            <button class="bgrd btn px-4 py-2" onclick="registerC2B(this)"><i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Register URLs with Safaricom</button>
+            <p style="font-size:.75rem;color:var(--tx3);margin-top:10px">Registers the confirmation and validation URLs so M-Pesa sends payment notifications here.</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="gc p-4">
+            <h6 class="fw-semibold mb-3"><i class="fa-regular fa-rectangle-list me-2"></i>How C2B Works</h6>
+            <ol style="font-size:.82rem;color:var(--tx2);padding-left:18px;margin:0">
+                <li class="mb-2">Tenant sends money to your Paybill/Till number</li>
+                <li class="mb-2">M-Pesa sends a payment notification to the Confirmation URL</li>
+                <li class="mb-2">The system logs the transaction and matches by account number</li>
+                <li class="mb-2">Matched payments auto-apply to the tenant's invoice</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+{% if recent_txns %}
+<div class="gc p-4">
+    <h6 class="fw-semibold mb-3"><i class="fa-regular fa-clock me-2"></i>Recent C2B Transactions</h6>
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Trans ID</th><th>Amount</th><th>Phone</th><th>Account No.</th><th>Name</th><th>Date</th></tr></thead>
+            <tbody>
+                {% for tx in recent_txns %}
+                <tr>
+                    <td style="font-family:monospace;font-size:.8rem">{{ tx.trans_id }}</td>
+                    <td style="font-weight:600">KES {{ tx.amount|floatformat:0 }}</td>
+                    <td>{{ tx.phone }}</td>
+                    <td>{{ tx.bill_ref|default:'—' }}</td>
+                    <td>{{ tx.first_name }} {{ tx.last_name }}</td>
+                    <td style="font-size:.8rem">{{ tx.created_at|date:'M d, H:i' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="gc p-4">
+    <p style="color:var(--tx3);text-align:center;padding:20px 0">No C2B transactions yet. They will appear here once tenants send money to your Paybill.</p>
+</div>
+{% endif %}
+
+<script>
+function registerC2B(btn) {
+    if (!confirm('Register C2B confirmation/validation URLs with Safaricom?')) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Registering...';
+    fetch('/mpesa/c2b/register/').then(function(r){ return r.json(); }).then(function(d){
+        if (d.ResponseCode === '0') {
+            location.reload();
+        } else {
+            alert('Failed: ' + JSON.stringify(d));
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Register URLs with Safaricom';
+        }
+    }).catch(function(e){
+        alert('Error: ' + e);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Register URLs with Safaricom';
+    });
+}
+</script>
+{% endblock %}

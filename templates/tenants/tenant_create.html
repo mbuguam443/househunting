@@ -3,7 +3,7 @@
 {% block db_title %}Assign Tenant to Unit{% endblock %}
 {% block dashboard_content %}
 <div class="gc p-4" style="max-width:650px">
-    <p style="color:var(--tx2);font-size:.88rem;margin-bottom:20px">Select a tenant and an available (vacant) unit. The unit will be marked as occupied.</p>
+    <p style="color:var(--tx2);font-size:.88rem;margin-bottom:20px">Select a tenant and an available (vacant) unit. Rent and deposit auto-fill from the unit.</p>
     <form method="POST">
         {% csrf_token %}
         <label class="olbl">Tenant</label>
@@ -20,4 +20,31 @@
         <a href="{% url 'tenants:list' %}" class="boc btn px-4 py-2 mt-2 ms-2">Cancel</a>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+(function() {
+    var unitsData = {{ units_data|safe }};
+    var unitMap = {};
+    unitsData.forEach(function(u) { unitMap[u.id] = u; });
+    var unitSelect = document.getElementById('id_unit');
+    var rentInput = document.getElementById('id_monthly_rent');
+    var depositInput = document.getElementById('id_deposit_paid');
+    if (!unitSelect || !rentInput || !depositInput) return;
+    function updateFields() {
+        var val = unitSelect.value;
+        if (val && unitMap[val]) {
+            rentInput.value = unitMap[val].monthly_rent;
+            depositInput.value = unitMap[val].deposit || 0;
+        } else {
+            rentInput.value = '';
+            depositInput.value = '';
+        }
+    }
+    unitSelect.addEventListener('change', updateFields);
+    updateFields();
+})();
+</script>
 {% endblock %}

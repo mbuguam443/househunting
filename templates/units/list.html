@@ -50,7 +50,7 @@
                         {% endif %}
                     </td>
                     <td>{{ unit.property.name|truncatechars:18 }}</td>
-                    <td>{{ unit.get_house_type_display }}</td>
+                    <td>{{ unit.house_type.name }}</td>
                     <td>{{ unit.bedrooms }}</td>
                     <td>{{ unit.monthly_rent|floatformat:0 }}</td>
                     <td>

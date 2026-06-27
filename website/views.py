@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 from django.contrib import messages
 from units.models import Unit
+from core.models import HouseType
 from .models import Inquiry, Testimonial, Faq, AdminListing
 from .forms import InquiryForm
 
@@ -52,8 +53,8 @@ def browse(request):
             Q(title__icontains=q) | Q(county__icontains=q) | Q(town__icontains=q) | Q(estate__icontains=q)
         )
     if house_type:
-        units = units.filter(house_type=house_type)
-        admin_listings = admin_listings.filter(house_type=house_type)
+        units = units.filter(house_type__slug=house_type)
+        admin_listings = admin_listings.filter(house_type__slug=house_type)
     if bedrooms:
         units = units.filter(bedrooms__gte=bedrooms)
         admin_listings = admin_listings.filter(bedrooms__gte=bedrooms)
@@ -84,7 +85,7 @@ def browse(request):
             'subtitle': f'{u.property.town}, {u.property.county}',
             'description': u.description,
             'rent': u.monthly_rent,
-            'house_type_display': u.get_house_type_display(),
+            'house_type_display': u.house_type.name,
             'bedrooms': u.bedrooms,
             'bathrooms': u.bathrooms,
             'image': u.image,
@@ -103,7 +104,7 @@ def browse(request):
             'subtitle': f'{a.town}, {a.county}' + (f' — {a.estate}' if a.estate else ''),
             'description': a.description,
             'rent': a.rent,
-            'house_type_display': a.get_house_type_display(),
+            'house_type_display': a.house_type.name,
             'bedrooms': a.bedrooms,
             'bathrooms': a.bathrooms,
             'image': a.image if a.image else None,
@@ -112,6 +113,8 @@ def browse(request):
             'url': None,
             'source': 'admin',
             'contact_phone': a.contact_phone,
+            'latitude': str(a.latitude) if a.latitude else '',
+            'longitude': str(a.longitude) if a.longitude else '',
             'created_at': a.created_at,
         })
 
@@ -121,7 +124,7 @@ def browse(request):
     return render(request, 'website/browse.html', {
         'combined': combined,
         'counties': counties,
-        'house_types': Unit.HOUSE_TYPES,
+        'house_types': HouseType.objects.all(),
         'total': total,
         'q': q, 'house_type': house_type, 'bedrooms': bedrooms,
         'min_rent': min_rent, 'max_rent': max_rent, 'county': county, 'town': town,

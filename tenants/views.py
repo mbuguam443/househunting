@@ -12,7 +12,8 @@ from decimal import Decimal
 from .models import Tenancy, RentPayment, MaintenanceRequest, MpesaTransaction, LeaseAgreement
 from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm, LeaseForm
 from .rent_utils import generate_rent_payments, mark_overdue_payments
-from .mpesa_utils import stk_push, process_callback, query_stk_status
+from .mpesa_utils import stk_push, process_callback, query_stk_status, _get_access_token
+from .c2b_utils import process_c2b_confirmation, process_c2b_validation, register_c2b_urls
 from units.models import Unit
 from properties.models import Property
 from accounts.models import require_landlord_sub
@@ -74,10 +75,17 @@ def tenant_create(request):
     ok, resp = require_landlord_sub(request.user)
     if not ok:
         return resp
+    units_data = json.dumps(list(Unit.objects.filter(
+        property__owner=request.user, status='vacant'
+    ).values('id', 'monthly_rent', 'deposit')), default=str)
     if request.method == 'POST':
         form = TenancyForm(request.POST, landlord=request.user)
         if form.is_valid():
-            tenancy = form.save()
+            tenancy = form.save(commit=False)
+            unit = form.cleaned_data['unit']
+            tenancy.monthly_rent = unit.monthly_rent
+            tenancy.deposit_paid = unit.deposit or 0
+            tenancy.save()
             tenancy.unit.status = 'occupied'
             tenancy.unit.save()
             generate_rent_payments(landlord=request.user)
@@ -85,7 +93,9 @@ def tenant_create(request):
             return redirect('tenants:list')
     else:
         form = TenancyForm(landlord=request.user)
-    return render(request, 'tenants/tenant_create.html', {'form': form, 'active_tab': 'tenants'})
+    return render(request, 'tenants/tenant_create.html', {
+        'form': form, 'active_tab': 'tenants', 'units_data': units_data
+    })
 
 @login_required
 def tenant_detail(request, pk):
@@ -365,6 +375,46 @@ def mpesa_callback(request):
     if success:
         return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Success'})
     return JsonResponse({'ResultCode': 1, 'ResultDesc': str(result)})
+
+
+@csrf_exempt
+@require_POST
+def c2b_confirmation(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'}, status=400)
+    result = process_c2b_confirmation(data)
+    return JsonResponse(result)
+
+
+@csrf_exempt
+@require_POST
+def c2b_validation(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'}, status=400)
+    result = process_c2b_validation(data)
+    return JsonResponse(result)
+
+
+@login_required
+def register_c2b_view(request):
+    if request.user.profile.role not in ('admin', 'landlord'):
+        return JsonResponse({'error': 'Access denied'}, status=403)
+    landlord_id = request.POST.get('landlord_id') or request.GET.get('landlord_id') or request.user.id
+    from django.contrib.auth.models import User
+    landlord = get_object_or_404(User, pk=landlord_id)
+
+    if request.method == 'POST':
+        for field in ['mpesa_consumer_key', 'mpesa_consumer_secret', 'mpesa_passkey', 'mpesa_shortcode', 'c2b_shortcode', 'mpesa_callback_url', 'c2b_confirmation_url', 'c2b_validation_url']:
+            val = request.POST.get(field, '').strip()
+            setattr(landlord.profile, field, val)
+        landlord.profile.save()
+
+    result = register_c2b_urls(landlord)
+    return JsonResponse(result)
 
 
 @login_required

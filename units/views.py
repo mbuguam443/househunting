@@ -20,7 +20,7 @@ def unit_list(request):
     )
     q = request.GET.get('q', '').strip()
     if q:
-        qs = qs.filter(unit_number__icontains=q) | qs.filter(property__name__icontains=q) | qs.filter(house_type__icontains=q)
+        qs = qs.filter(unit_number__icontains=q) | qs.filter(property__name__icontains=q) | qs.filter(house_type__name__icontains=q)
     status_f = request.GET.get('status', '').strip()
     if status_f:
         qs = qs.filter(status=status_f)
@@ -89,13 +89,13 @@ def vacancies(request):
     qs = Unit.objects.filter(property__owner=request.user, status='vacant').select_related('property')
     q = request.GET.get('q', '').strip()
     if q:
-        qs = qs.filter(unit_number__icontains=q) | qs.filter(property__name__icontains=q) | qs.filter(house_type__icontains=q)
+        qs = qs.filter(unit_number__icontains=q) | qs.filter(property__name__icontains=q) | qs.filter(house_type__name__icontains=q)
     prop_f = request.GET.get('property', '').strip()
     if prop_f:
         qs = qs.filter(property_id=prop_f)
     type_f = request.GET.get('type', '').strip()
     if type_f:
-        qs = qs.filter(house_type=type_f)
+        qs = qs.filter(house_type__slug=type_f)
     properties = Property.objects.filter(owner=request.user)
     page_obj = paginate(request, qs)
     return render(request, 'units/vacancies.html', {'units': page_obj, 'q': q, 'prop_f': prop_f, 'type_f': type_f, 'properties': properties, 'active_tab': 'vacancies'})

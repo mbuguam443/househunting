@@ -20,15 +20,65 @@
             <input name="mpesa_passkey" class="oinp" style="width:100%" value="{{ landlord.profile.mpesa_passkey }}" placeholder="M-Pesa Passkey">
         </div>
         <div class="mb-3">
-            <label class="olbl">Shortcode / Paybill</label>
+            <label class="olbl">Shortcode / Paybill <span style="font-size:.75rem;color:var(--tx3)">(for STK Push)</span></label>
             <input name="mpesa_shortcode" class="oinp" style="width:100%" value="{{ landlord.profile.mpesa_shortcode }}" placeholder="e.g. 174379">
         </div>
         <div class="mb-3">
             <label class="olbl">Callback URL <span style="font-size:.78rem;color:var(--tx3)">(update when ngrok URL changes)</span></label>
             <input name="mpesa_callback_url" class="oinp" style="width:100%" value="{{ landlord.profile.mpesa_callback_url }}" placeholder="https://your-ngrok-url.ngrok-free.app">
         </div>
+        <hr style="border-color:var(--bd);margin:20px 0">
+        <h6 style="font-size:.9rem;font-weight:600;margin-bottom:12px"><i class="fa-solid fa-arrow-right-arrow-left me-1"></i>C2B (Paybill)</h6>
+        <p style="font-size:.8rem;color:var(--tx3);margin-bottom:12px">The C2B Paybill is the number tenants send money to. URLs are registered with Safaricom when you click Register C2B.</p>
+        <div class="mb-3">
+            <label class="olbl">C2B Paybill <span style="font-size:.75rem;color:var(--tx3)">(tenants send money to this number)</span></label>
+            <input name="c2b_shortcode" class="oinp" style="width:100%" value="{{ landlord.profile.c2b_shortcode }}" placeholder="e.g. 654321">
+        </div>
+        <div class="mb-3">
+            <label class="olbl">C2B Confirmation URL</label>
+            <input name="c2b_confirmation_url" class="oinp" style="width:100%" value="{{ landlord.profile.c2b_confirmation_url }}" placeholder="e.g. https://abc123.ngrok.io/c2b/confirmation/">
+        </div>
+        <div class="mb-3">
+            <label class="olbl">C2B Validation URL</label>
+            <input name="c2b_validation_url" class="oinp" style="width:100%" value="{{ landlord.profile.c2b_validation_url }}" placeholder="e.g. https://abc123.ngrok.io/c2b/validation/">
+        </div>
+        <div style="margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:.8rem;padding:3px 10px;border-radius:6px{% if landlord.profile.c2b_registered %};background:rgba(52,211,153,.15);color:#34d399{% else %};background:rgba(248,113,113,.1);color:#f87171{% endif %}">C2B: {% if landlord.profile.c2b_registered %}Registered{% else %}Not Registered{% endif %}</span>
+            <button type="button" class="boc btn py-1 px-3" style="font-size:.78rem" onclick="registerC2B(this)"><i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Register C2B</button>
+        </div>
+        <div id="c2bError" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;font-size:.82rem;white-space:pre-wrap;word-break:break-all"></div>
         <button class="bgrd btn px-4 py-2">Save Credentials</button>
         <a href="{% url 'accounts:admin_landlords' %}" class="boc btn px-4 py-2 ms-2">Cancel</a>
     </form>
 </div>
+<script>
+function registerC2B(btn) {
+    var errDiv = document.getElementById('c2bError');
+    errDiv.style.display = 'none';
+    if (!confirm('Register C2B confirmation/validation URLs with Safaricom for {{ landlord.username }}?')) return;
+    var orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Registering...';
+    var form = btn.closest('form');
+    var formData = new FormData(form);
+    formData.append('landlord_id', '{{ landlord.id }}');
+    fetch('/mpesa/c2b/register/', {method: 'POST', body: formData}).then(function(r){
+        return r.json();
+    }).then(function(d){
+        if (d.ResponseCode === '0') {
+            location.reload();
+        } else {
+            errDiv.textContent = 'Registration failed:\n' + JSON.stringify(d, null, 2);
+            errDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        }
+    }).catch(function(e){
+        errDiv.textContent = 'Error: ' + e;
+        errDiv.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    });
+}
+</script>
 {% endblock %}

@@ -9,6 +9,47 @@
             <h4 class="fw-bold">{{ user.get_full_name|default:user.username }}</h4>
             <p style="color:var(--tx3)">{{ user.email }}</p>
             <span class="ftag mt-0">{{ user.profile.get_role_display }}</span>
+            {% if sub_status %}
+            <div style="margin-top:14px;padding:10px;border-radius:8px;background:var(--bg3);font-size:.82rem;text-align:left">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                    <span style="color:var(--tx3)">Fee per unit</span>
+                    <span style="color:var(--tx)">KES {{ sub_fee_per_unit|floatformat:0 }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                    <span style="color:var(--tx3)">Your units</span>
+                    <span style="color:var(--tx)">{{ sub_unit_count }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;padding-top:4px;border-top:1px solid var(--bd)">
+                    <span style="color:var(--tx3)">Monthly total</span>
+                    <span style="font-weight:600;color:var(--pur)">KES {{ sub_monthly_total|floatformat:0 }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:6px;padding-top:6px;border-top:1px solid var(--bd)">
+                    <span style="color:var(--tx3)">Subscription</span>
+                    <span>{% if sub_status.status == 'active' %}<span style="color:#34d399">Active</span>{% elif sub_status.status == 'expired' %}<span style="color:#f87171">Expired</span>{% else %}<span style="color:var(--tx3)">{{ sub_status.get_status_display }}</span>{% endif %}</span>
+                </div>
+                {% if sub_status.status == 'active' %}
+                <div style="font-size:.75rem;color:var(--tx3);margin-top:4px">Renews {{ sub_status.end_date|date:'M d, Y' }}</div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div style="margin-top:14px;padding:10px;border-radius:8px;background:var(--bg3);font-size:.82rem;text-align:left">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                    <span style="color:var(--tx3)">Fee per unit</span>
+                    <span style="color:var(--tx)">KES {{ sub_fee_per_unit|floatformat:0 }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                    <span style="color:var(--tx3)">Your units</span>
+                    <span style="color:var(--tx)">{{ sub_unit_count }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;padding-top:4px;border-top:1px solid var(--bd)">
+                    <span style="color:var(--tx3)">Monthly total</span>
+                    <span style="font-weight:600;color:var(--pur)">KES {{ sub_monthly_total|floatformat:0 }}</span>
+                </div>
+                <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--bd)">
+                    <span style="font-size:.75rem;color:var(--tx3)">Contact admin to subscribe</span>
+                </div>
+            </div>
+            {% endif %}
             <div class="mt-3">
                 <a href="{% url 'accounts:change_password' %}" class="boc btn w-100 py-2"><i class="fa-solid fa-lock me-1"></i> Change Password</a>
             </div>
@@ -58,17 +99,76 @@
                         {{ profile_form.mpesa_passkey }}
                     </div>
                     <div class="col-md-6">
-                        <label class="olbl">Shortcode / Paybill</label>
+                        <label class="olbl">Shortcode / Paybill <span style="font-size:.75rem;color:var(--tx3)">(STK Push)</span></label>
                         {{ profile_form.mpesa_shortcode }}
                     </div>
-                    <div class="col-12">
+                    <div class="col-md-6">
                         <label class="olbl">Callback URL <span style="font-size:.78rem;color:var(--tx3)">(update when ngrok URL changes)</span></label>
                         {{ profile_form.mpesa_callback_url }}
                     </div>
+                </div>
+                <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--bd)">
+                    <h6 style="font-size:.88rem;font-weight:600;margin-bottom:8px"><i class="fa-solid fa-arrow-right-arrow-left me-1"></i>C2B (Receive M-Pesa Payments)</h6>
+                    <p style="font-size:.78rem;color:var(--tx3);margin-bottom:8px">Register your Paybill to receive payments directly from M-Pesa. Leave URLs blank to auto-derive from your callback URL.</p>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="olbl">C2B Paybill <span style="font-size:.75rem;color:var(--tx3)">(tenants send money here)</span></label>
+                            {{ profile_form.c2b_shortcode }}
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <label class="olbl">C2B Confirmation URL</label>
+                            {{ profile_form.c2b_confirmation_url }}
+                        </div>
+                        <div class="col-12">
+                            <label class="olbl">C2B Validation URL</label>
+                            {{ profile_form.c2b_validation_url }}
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <span style="font-size:.8rem;padding:3px 10px;border-radius:6px{% if user.profile.c2b_registered %};background:rgba(52,211,153,.15);color:#34d399{% else %};background:rgba(248,113,113,.1);color:#f87171{% endif %}">{% if user.profile.c2b_registered %}Registered{% else %}Not Registered{% endif %}</span>
+                        <button class="boc btn py-1 px-3" style="font-size:.78rem" onclick="registerC2B(this)"><i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Register C2B</button>
+                    </div>
+                    <div id="c2bError" style="display:none;margin-top:10px;padding:10px 14px;border-radius:8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;font-size:.82rem;white-space:pre-wrap;word-break:break-all"></div>
                 </div>
                 <button type="submit" class="bgrd btn px-5 py-2 mt-3">Save Changes <i class="fa-solid fa-check ms-1"></i></button>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+function registerC2B(btn) {
+    var errDiv = document.getElementById('c2bError');
+    errDiv.style.display = 'none';
+    if (!confirm('Register C2B confirmation/validation URLs with Safaricom using your Paybill credentials?')) return;
+    var orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Registering...';
+    var form = btn.closest('form');
+    var formData = new FormData(form);
+    formData.append('landlord_id', '{{ user.id }}');
+    fetch('/mpesa/c2b/register/', {method: 'POST', body: formData}).then(function(r){
+        return r.json();
+    }).then(function(d){
+        if (d.ResponseCode === '0') {
+            location.reload();
+        } else {
+            errDiv.textContent = 'Registration failed:\n' + JSON.stringify(d, null, 2);
+            errDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        }
+    }).catch(function(e){
+        errDiv.textContent = 'Error: ' + e;
+        errDiv.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    });
+}
+</script>
 {% endblock %}

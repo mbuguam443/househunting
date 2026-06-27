@@ -11,11 +11,17 @@ from .models import MpesaTransaction, RentPayment
 def _get_callback_url(landlord=None):
     """Check landlord profile first, then PlatformConfig, then settings."""
     if landlord and hasattr(landlord, 'profile') and landlord.profile.mpesa_callback_url:
-        return landlord.profile.mpesa_callback_url.rstrip('/') + '/mpesa/callback/'
+        base = landlord.profile.mpesa_callback_url.rstrip('/')
+        if not base.endswith('/mpesa/callback'):
+            return base + '/mpesa/callback/'
+        return base + '/'
     from accounts.models import PlatformConfig
     cfg = PlatformConfig.objects.filter(pk=1).first()
     if cfg and cfg.callback_url:
-        return cfg.callback_url.rstrip('/') + '/mpesa/callback/'
+        base = cfg.callback_url.rstrip('/')
+        if not base.endswith('/mpesa/callback'):
+            return base + '/mpesa/callback/'
+        return base + '/'
     return settings.MPESA_CALLBACK_URL
 
 

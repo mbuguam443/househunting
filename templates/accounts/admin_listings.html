@@ -31,7 +31,7 @@
                 <td style="font-weight:500">{{ l.title }}</td>
                 <td>{{ l.county }}/{{ l.town }}{% if l.estate %}, {{ l.estate }}{% endif %}</td>
                 <td>KES {{ l.rent|floatformat:0|intcomma }}</td>
-                <td>{{ l.get_house_type_display }}</td>
+                <td>{{ l.house_type.name }}</td>
                 <td>{{ l.bedrooms }}</td>
                 <td><span class="badge bg-{% if l.status == 'available' %}success{% elif l.status == 'rented' %}secondary{% else %}warning{% endif %}">{{ l.get_status_display }}</span></td>
                 <td style="font-size:.78rem">{{ l.created_at|date:'d M Y' }}</td>

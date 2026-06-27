@@ -19,15 +19,18 @@ class RegistrationForm(UserCreationForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['phone', 'avatar', 'mpesa_consumer_key', 'mpesa_consumer_secret', 'mpesa_passkey', 'mpesa_shortcode', 'mpesa_callback_url']
+        fields = ['phone', 'avatar', 'mpesa_consumer_key', 'mpesa_consumer_secret', 'mpesa_passkey', 'mpesa_shortcode', 'c2b_shortcode', 'mpesa_callback_url', 'c2b_confirmation_url', 'c2b_validation_url']
         widgets = {
             'phone': forms.TextInput(attrs={'class': 'oinp'}),
             'avatar': forms.FileInput(attrs={'class': 'oinp'}),
             'mpesa_consumer_key': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Your Daraja Consumer Key'}),
             'mpesa_consumer_secret': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Your Daraja Consumer Secret'}),
             'mpesa_passkey': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Your M-Pesa Passkey'}),
-            'mpesa_shortcode': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'e.g. 174379'}),
+            'mpesa_shortcode': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'e.g. 174379 (STK Push)'}),
+            'c2b_shortcode': forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'e.g. 654321 (C2B Paybill)'}),
             'mpesa_callback_url': forms.URLInput(attrs={'class': 'oinp', 'placeholder': 'https://your-ngrok-url.ngrok-free.app'}),
+            'c2b_confirmation_url': forms.URLInput(attrs={'class': 'oinp', 'placeholder': 'https://abc123.ngrok.io/c2b/confirmation/'}),
+            'c2b_validation_url': forms.URLInput(attrs={'class': 'oinp', 'placeholder': 'https://abc123.ngrok.io/c2b/validation/'}),
         }
 
 class UserForm(forms.ModelForm):

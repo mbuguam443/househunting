@@ -13,7 +13,7 @@
 <body>
     <div class="db-sidebar" id="dbSidebar">
         <div class="db-logo">
-            <div class="logo-i"><i class="fa-solid fa-compass"></i></div>
+            <div class="logo-i" style="font-weight:800;font-family:'Space Grotesk',sans-serif;font-size:1.05rem;letter-spacing:.5px">PN</div>
             <span>PataNyumba</span>
         </div>
         <div class="db-nav">
@@ -40,7 +40,10 @@
 
     <div class="db-top">
         <button class="hamburger-db" id="dbMenuToggle"><i class="fa-solid fa-bars"></i></button>
-        <div style="font-weight:600">{% block db_title %}Dashboard{% endblock %}</div>
+        <div class="d-flex align-items-center gap-2">
+            <div class="logo-i d-none d-sm-flex" style="font-weight:800;font-family:'Space Grotesk',sans-serif;font-size:1.05rem;letter-spacing:.5px">PN</div>
+            <div style="font-weight:600">{% block db_title %}Dashboard{% endblock %}</div>
+        </div>
         <div class="ms-auto d-flex align-items-center gap-3">
             <div style="position:relative;display:inline-block">
                 <button onclick="toggleDrop('notifDrop')" style="background:none;border:none;color:var(--tx2);font-size:1.15rem;cursor:pointer;padding:6px;display:flex;align-items:center;border-radius:50px;transition:background .2s" onmouseenter="this.style.background='var(--bd)'" onmouseleave="this.style.background='transparent'">

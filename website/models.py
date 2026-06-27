@@ -43,12 +43,6 @@ class Faq(models.Model):
 
 
 class AdminListing(models.Model):
-    HOUSE_TYPES = [
-        ('bedsitter', 'Bedsitter'), ('studio', 'Studio'),
-        ('one_bedroom', 'One Bedroom'), ('two_bedroom', 'Two Bedroom'),
-        ('three_bedroom', 'Three Bedroom'), ('four_bedroom', 'Four Bedroom+'),
-        ('townhouse', 'Townhouse'), ('villa', 'Villa'),
-    ]
     STATUS_CHOICES = [
         ('available', 'Available'), ('rented', 'Rented'), ('withdrawn', 'Withdrawn'),
     ]
@@ -57,13 +51,15 @@ class AdminListing(models.Model):
     county = models.CharField(max_length=100)
     town = models.CharField(max_length=100)
     estate = models.CharField(max_length=200, blank=True)
-    house_type = models.CharField(max_length=30, choices=HOUSE_TYPES, default='one_bedroom')
+    house_type = models.ForeignKey('core.HouseType', on_delete=models.PROTECT, related_name='admin_listings')
     bedrooms = models.PositiveIntegerField(default=1)
     bathrooms = models.PositiveIntegerField(default=1)
     rent = models.DecimalField(max_digits=10, decimal_places=2, help_text='Monthly rent in KES')
     contact_name = models.CharField(max_length=100, blank=True, help_text='Landlord or agent name')
     contact_phone = models.CharField(max_length=20, blank=True)
     image = models.ImageField(upload_to='admin_listings/', blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
     created_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

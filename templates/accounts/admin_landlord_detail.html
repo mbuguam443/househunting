@@ -1,0 +1,54 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}{{ landlord.username }} — Landlord Detail{% endblock %}
+{% block admin_title %}{{ landlord.get_full_name|default:landlord.username }}{% endblock %}
+{% block admin_content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="gc p-4">
+            <div class="db-avatar" style="width:64px;height:64px;font-size:1.5rem;margin:0 auto 12px">{{ landlord.username|first|upper }}</div>
+            <h5 class="text-center fw-semibold mb-1">{{ landlord.get_full_name|default:landlord.username }}</h5>
+            <p class="text-center" style="color:var(--tx3);font-size:.85rem">@{{ landlord.username }}</p>
+            <div style="border-top:1px solid var(--bd);padding-top:16px;margin-top:8px">
+                <p style="font-size:.85rem;margin-bottom:6px"><strong style="color:var(--tx)">Email:</strong> {{ landlord.email|default:'—' }}</p>
+                <p style="font-size:.85rem;margin-bottom:6px"><strong style="color:var(--tx)">Phone:</strong> {{ landlord.profile.phone|default:'—' }}</p>
+                <p style="font-size:.85rem;margin-bottom:6px"><strong style="color:var(--tx)">Units:</strong> {{ unit_count }}</p>
+                <p style="font-size:.85rem;margin-bottom:6px"><strong style="color:var(--tx)">Fee/Unit:</strong> KES {{ fee|floatformat:0 }}</p>
+                <p style="font-size:.85rem;margin-bottom:6px"><strong style="color:var(--tx)">Monthly Fee:</strong> KES {{ monthly_fee|floatformat:0 }}</p>
+                {% if trial_info %}
+                <p style="font-size:.85rem;margin-bottom:6px"><strong style="color:var(--tx)">Trial:</strong> <span style="color:#34d399">{{ trial_info.remaining_days }}d remaining</span></p>
+                {% endif %}
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <a href="{% url 'accounts:admin_assign_sub' landlord.id %}" class="bgrd btn py-1 px-3 flex-fill" style="font-size:.82rem">Subscribe</a>
+                <a href="{% url 'accounts:admin_landlord_mpesa' landlord.id %}" class="boc btn py-1 px-3 flex-fill" style="font-size:.82rem">M-Pesa</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="gc p-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i>Subscription History</h5>
+            {% if subscriptions %}
+            <div class="table-responsive">
+                <table class="db-table">
+                    <thead><tr><th>Plan</th><th>Units</th><th>Amount</th><th>Period</th><th>Status</th><th>Reference</th></tr></thead>
+                    <tbody>
+                        {% for s in subscriptions %}
+                        <tr>
+                            <td style="font-weight:600;color:var(--tx)">{{ s.plan.name|default:'—' }}</td>
+                            <td>{{ s.unit_count }}</td>
+                            <td style="font-weight:600;color:#34d399">KES {{ s.amount|floatformat:0 }}</td>
+                            <td style="font-size:.82rem;color:var(--tx2)">{{ s.start_date|date:'M d, Y' }} — {{ s.end_date|date:'M d, Y' }}</td>
+                            <td>{% if s.status == 'active' %}<span class="badge-vacant">Active</span>{% elif s.status == 'expired' %}<span class="badge-occupied">Expired</span>{% else %}<span class="ftag">{{ s.get_status_display }}</span>{% endif %}</td>
+                            <td style="font-size:.82rem;color:var(--tx3)">{{ s.payment_reference|default:'—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color:var(--tx3);text-align:center;padding:30px 0">No subscriptions yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

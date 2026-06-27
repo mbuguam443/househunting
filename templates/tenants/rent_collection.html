@@ -4,15 +4,43 @@
 {% block db_title %}Rent Collection{% endblock %}
 {% block dashboard_content %}
 <script>
-function requestPayment(name, amount, due, ref) {
-    var msg = '*PataNyumba Rent Reminder*\n\nHi ' + name + ', your rent of KES ' + amount + ' (due ' + due + ') is pending.\n\nPlease pay via M-Pesa and share the confirmation code so I can update the system.\n\nRef: ' + ref;
+function requestPayment(phone, name, amount, due, ref, btn) {
+    var phoneClean = phone.replace(/[^0-9]/g, '');
+    if (!phoneClean.startsWith('254')) { phoneClean = '254' + phoneClean.replace(/^0/, ''); }
+    var payUrl = window.location.origin + '/portal/pay/';
+    var text = '*PataNyumba Rent Reminder*\n\nHi ' + name + ', your rent of KES ' + amount + ' (due ' + due + ') is pending.\n\nPay online here: ' + payUrl + '\n\nOr pay via M-Pesa and share the confirmation code.\n\nRef: ' + ref;
+    if (phoneClean.length >= 12) {
+        window.open('https://wa.me/' + phoneClean + '?text=' + encodeURIComponent(text), '_blank');
+    } else {
+        navigator.clipboard.writeText(text).then(function(){
+            var orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+            btn.style.borderColor = '#34d399';
+            btn.style.color = '#34d399';
+            setTimeout(function(){ btn.innerHTML = orig; btn.style.borderColor = ''; btn.style.color = ''; }, 2000);
+        });
+    }
+}
+function remindAll(btn) {
+    var rows = document.querySelectorAll('#payment-rows tr');
+    var payUrl = window.location.origin + '/portal/pay/';
+    var lines = ['*PataNyumba Rent Reminder (Batch)*', 'Pay online: ' + payUrl, ''];
+    var count = 0;
+    rows.forEach(function(r){
+        if (r.getAttribute('data-status') === 'paid') return;
+        var name = r.getAttribute('data-tenant') || '';
+        var amt = r.getAttribute('data-amount') || '';
+        var due = r.getAttribute('data-due') || '';
+        if (name) { lines.push('• ' + name + ' — KES ' + amt + ' (due ' + due + ')'); count++; }
+    });
+    if (count === 0) { alert('No unpaid payments to remind.'); return; }
+    var msg = lines.join('\n');
     navigator.clipboard.writeText(msg).then(function(){
-        var btn = event.target;
         var orig = btn.innerHTML;
         btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
         btn.style.borderColor = '#34d399';
         btn.style.color = '#34d399';
-        setTimeout(function(){ btn.innerHTML = orig; btn.style.borderColor = ''; btn.style.color = ''; }, 2000);
+        setTimeout(function(){ btn.innerHTML = orig; btn.style.borderColor = ''; btn.style.color = ''; }, 3000);
     });
 }
 </script>
@@ -67,26 +95,29 @@ function requestPayment(name, amount, due, ref) {
 <div class="gc p-4 mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h5 class="fw-semibold mb-0"><i class="fa-solid fa-receipt me-2"></i>All Payments</h5>
-        <form method="GET" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
-            <input name="q" type="text" placeholder="Search tenant/unit..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:150px">
-            <select name="status" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
-                <option value="">All</option>
-                <option value="pending" {% if status_f == 'pending' %}selected{% endif %}>Pending</option>
-                <option value="paid" {% if status_f == 'paid' %}selected{% endif %}>Paid</option>
-                <option value="overdue" {% if status_f == 'overdue' %}selected{% endif %}>Overdue</option>
-                <option value="late" {% if status_f == 'late' %}selected{% endif %}>Late</option>
-            </select>
-            <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-filter"></i></button>
-            {% if q or status_f %}<a href="{% url 'tenants:rent_collection' %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
-        </form>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <form method="GET" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+                <input name="q" type="text" placeholder="Search tenant/unit..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:150px">
+                <select name="status" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+                    <option value="">All</option>
+                    <option value="pending" {% if status_f == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="paid" {% if status_f == 'paid' %}selected{% endif %}>Paid</option>
+                    <option value="overdue" {% if status_f == 'overdue' %}selected{% endif %}>Overdue</option>
+                    <option value="late" {% if status_f == 'late' %}selected{% endif %}>Late</option>
+                </select>
+                <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-filter"></i></button>
+                {% if q or status_f %}<a href="{% url 'tenants:rent_collection' %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+            </form>
+            <button class="boc py-1 px-3" style="font-size:.78rem;border-radius:8px" onclick="remindAll(this)"><i class="fa-brands fa-whatsapp me-1"></i>Remind All</button>
+        </div>
     </div>
     {% if payments %}
     <div class="table-responsive">
         <table class="db-table">
             <thead><tr><th>Tenant</th><th>Amount</th><th>Due</th><th>Paid</th><th>Method</th><th>Status</th><th></th></tr></thead>
-            <tbody>
+            <tbody id="payment-rows">
                 {% for p in payments %}
-                <tr>
+                <tr data-tenant="{{ p.tenancy.tenant.get_full_name|default:p.tenancy.tenant.username }}" data-amount="{{ p.amount|floatformat:0 }}" data-due="{{ p.due_date|date:'M d, Y' }}" data-status="{{ p.status }}"{% if p.status == 'paid' %} style="opacity:.5"{% endif %}>
                     <td style="font-weight:600;color:var(--tx)">{{ p.tenancy.tenant.get_full_name|default:p.tenancy.tenant.username }}</td>
                     <td style="color:{% if p.status == 'paid' %}#34d399{% else %}#f87171{% endif %}">KES {% if p.status == 'paid' %}+{% else %}-{% endif %}{{ p.amount|floatformat:0 }}</td>
                     <td style="font-size:.82rem">{{ p.due_date|date:'M d, Y' }}</td>
@@ -103,9 +134,9 @@ function requestPayment(name, amount, due, ref) {
                         <div class="d-flex gap-1">
                             <a href="{% url 'tenants:mark_paid' p.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem">Mark Paid</a>
                             {% if p.id in stk_queryable %}
-                            <a href="{% url 'tenants:query_stk' p.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem" onclick="return confirm('Query M-Pesa for this STK push?')"><i class="fa-solid fa-magnifying-glass me-1"></i>Query STK</a>
+                            <a href="{% url 'query_stk' p.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem" onclick="return confirm('Query M-Pesa for this STK push?')"><i class="fa-solid fa-magnifying-glass me-1"></i>Query STK</a>
                             {% endif %}
-                            <button class="boc btn py-1 px-2" style="font-size:.72rem" onclick="requestPayment('{{ p.tenancy.tenant.get_full_name|default:p.tenancy.tenant.username|addslashes }}', '{{ p.amount|floatformat:0 }}', '{{ p.due_date|date:'M d, Y' }}', '{{ p.tenancy.tenant.username|upper }}-{{ p.due_date|date:'mY' }}')"><i class="fa-brands fa-whatsapp me-1"></i>Remind</button>
+                            <button class="boc btn py-1 px-2" style="font-size:.72rem" data-remind onclick="requestPayment('{{ p.tenancy.tenant.profile.phone|default:'' }}', '{{ p.tenancy.tenant.get_full_name|default:p.tenancy.tenant.username|addslashes }}', '{{ p.amount|floatformat:0 }}', '{{ p.due_date|date:'M d, Y' }}', '{{ p.tenancy.tenant.username|upper }}-{{ p.due_date|date:'mY' }}', this)"><i class="fa-brands fa-whatsapp me-1"></i>Remind</button>
                         </div>
                         {% endif %}
                     </td>

@@ -1,0 +1,41 @@
+{% if lat and lng %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<div id="map-{{ map_id }}" style="width:100%;height:{{ height|default:'250px' }};border-radius:12px;z-index:1"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    var m = L.map('map-{{ map_id }}').setView([{{ lat }}, {{ lng }}], {{ zoom|default:14 }});
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:'&copy; <a href="https://openstreetmap.org/copyright">OSM</a>',
+        maxZoom:19
+    }).addTo(m);
+    L.marker([{{ lat }}, {{ lng }}]).addTo(m)
+        .bindPopup('{{ label|default:"Listed here"|escapejs }}')
+        .openPopup();
+});
+</script>
+{% elif address %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<div id="map-{{ map_id }}" style="width:100%;height:{{ height|default:'250px' }};border-radius:12px;z-index:1"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    var m = L.map('map-{{ map_id }}').setView([-1.2921, 36.8219], 6);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:'&copy; <a href="https://openstreetmap.org/copyright">OSM</a>',
+        maxZoom:19
+    }).addTo(m);
+    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent('{{ address|escapejs }}') + '&limit=1&countrycodes=ke')
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+            if (data && data.length > 0){
+                var loc = data[0];
+                m.setView([loc.lat, loc.lon], 14);
+                L.marker([loc.lat, loc.lon]).addTo(m)
+                    .bindPopup('{{ label|default:"Listed here"|escapejs }}')
+                    .openPopup();
+            }
+        });
+});
+</script>
+{% endif %}

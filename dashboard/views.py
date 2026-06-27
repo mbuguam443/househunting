@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime, time as dt_time, date as dt_date
 from properties.models import Property
 from units.models import Unit
 from website.models import Inquiry
@@ -72,7 +72,14 @@ def overview(request):
         recent_activity.append({'type': 'tenant', 'text': f'{t.tenant.username} moved into {t.unit.unit_number}', 'time': t.created_at or t.start_date})
     for i in Inquiry.objects.filter(unit__property__owner=request.user).order_by('-created_at')[:2]:
         recent_activity.append({'type': 'inquiry', 'text': f'Inquiry from {i.name} about {i.unit.unit_number}', 'time': i.created_at})
-    recent_activity.sort(key=lambda x: x['time'], reverse=True)
+    def sort_key(item):
+        t = item['time']
+        if isinstance(t, dt_date) and not isinstance(t, datetime):
+            return timezone.make_aware(datetime.combine(t, dt_time.min))
+        if timezone.is_naive(t):
+            return timezone.make_aware(t)
+        return t
+    recent_activity.sort(key=sort_key, reverse=True)
     recent_activity = recent_activity[:8]
 
     # Chart: property occupancy breakdown
@@ -85,12 +92,14 @@ def overview(request):
         chart_prop_occupied.append(p.unit_count - p.vacant_count)
 
     # Chart: unit type distribution
+    from core.models import HouseType
     type_data = Unit.objects.filter(property__owner=request.user).values('house_type').annotate(count=Count('id')).order_by('-count')
+    ht_map = {ht.id: ht.name for ht in HouseType.objects.all()}
     type_labels = []
     type_counts = []
     type_colors = ['#8b5cf6', '#3b82f6', '#34d399', '#f59e0b', '#f87171', '#60a5fa']
     for t in type_data:
-        type_labels.append(dict(Unit.HOUSE_TYPES).get(t['house_type'], t['house_type']))
+        type_labels.append(ht_map.get(t['house_type'], str(t['house_type'])))
         type_counts.append(t['count'])
 
     # Chart: collection trend over last 7 days

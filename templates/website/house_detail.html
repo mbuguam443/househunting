@@ -1,5 +1,39 @@
 {% extends 'base.html' %}
-{% block title %}{{ unit.property.name }} - Unit {{ unit.unit_number }} - PataNyumba{% endblock %}
+{% block title %}{{ unit.property.name }} — {{ unit.house_type.name }} for Rent in {{ unit.property.town }}, {{ unit.property.county }} | PataNyumba{% endblock %}
+{% block meta_description %}{{ unit.property.name }} — {{ unit.bedrooms }} bedroom {{ unit.house_type.name }} for rent in {{ unit.property.town }}, {{ unit.property.county }}. KES {{ unit.monthly_rent }}/month. Contact landlord directly.{% endblock %}
+{% block meta_keywords %}{{ unit.house_type.name }} for rent {{ unit.property.town }}, {{ unit.bedrooms }} bedroom {{ unit.property.town }}, houses in {{ unit.property.county }}, {{ unit.property.estate }} rental{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ unit.property.name }} — {{ unit.house_type.name }} in {{ unit.property.town }}, {{ unit.property.county }}{% endblock %}
+{% block og_description %}KES {{ unit.monthly_rent }}/month — {{ unit.bedrooms }} bedroom, {{ unit.bathrooms }} bathroom. Available for rent in {{ unit.property.town }}, {{ unit.property.county }}.{% endblock %}
+{% block og_image %}{% if unit.image %}{{ request.build_absolute_uri }}{{ unit.image.url }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block twitter_image %}{% if unit.image %}{{ request.build_absolute_uri }}{{ unit.image.url }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block canonical %}{{ request.build_absolute_uri }}{% endblock %}
+{% block json_ld %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "{{ unit.property.name }} — Unit {{ unit.unit_number }}",
+    "description": "{{ unit.description|default:''|escapejs }}",
+    "url": "{{ request.build_absolute_uri }}",
+    "image": "{% if unit.image %}{{ request.build_absolute_uri }}{{ unit.image.url }}{% endif %}",
+    "offers": {
+        "@type": "Offer",
+        "price": "{{ unit.monthly_rent }}",
+        "priceCurrency": "KES",
+        "availability": "https://schema.org/InStock",
+        "url": "{{ request.build_absolute_uri }}"
+    },
+    "category": "{{ unit.house_type.name }}",
+    "numberOfBedrooms": {{ unit.bedrooms }},
+    "numberOfBathrooms": {{ unit.bathrooms }},
+    "floorSize": {
+        "@type": "QuantitativeValue"
+    }
+}
+</script>
+{% endblock %}
 {% block content %}
 <section style="padding-top:calc(var(--nav) + 40px);padding-bottom:60px;">
     <div class="container">
@@ -41,7 +75,7 @@
 
                         <div class="row g-3 mb-4">
                             <div class="col-4 col-sm-2 text-center">
-                                <div style="font-size:1.3rem;font-weight:700" class="gt">{{ unit.get_house_type_display|truncatechars:6 }}</div>
+                                <div style="font-size:1.3rem;font-weight:700" class="gt">{{ unit.house_type.name|truncatechars:6 }}</div>
                                 <div style="font-size:.7rem;color:var(--tx3)">Type</div>
                             </div>
                             <div class="col-4 col-sm-2 text-center">
@@ -110,6 +144,15 @@
                     </div>
                 </div>
 
+                {% with lat=unit.property.latitude|stringformat:'s' lng=unit.property.longitude|stringformat:'s' %}
+                {% if unit.property.latitude and unit.property.longitude %}
+                <div class="gc p-4 mt-3" data-aos="fade-up" data-aos-delay="180">
+                    <h5 class="fw-semibold mb-3"><i class="fa-solid fa-map-location-dot me-2"></i>Location</h5>
+                    {% include '_map.html' with lat=lat lng=lng map_id='prop' label=unit.property.name height='200px' %}
+                </div>
+                {% endif %}
+                {% endwith %}
+
                 <div class="gc p-4 mt-3" data-aos="fade-up" data-aos-delay="200">
                     <h5 class="fw-semibold mb-3"><i class="fa-regular fa-user me-2"></i>Listed by</h5>
                     <div class="d-flex align-items-center gap-2">
@@ -135,7 +178,7 @@
                         <div class="p-3">
                             <h6 class="fw-semibold mb-1" style="color:var(--tx)">Unit {{ u.unit_number }}</h6>
                             <div class="d-flex justify-content-between">
-                                <span style="font-size:.82rem;color:var(--tx3)">{{ u.get_house_type_display }}</span>
+                                <span style="font-size:.82rem;color:var(--tx3)">{{ u.house_type.name }}</span>
                                 <span style="font-size:.82rem;font-weight:600;color:var(--pur)">KES {{ u.monthly_rent|floatformat:0 }}</span>
                             </div>
                         </div>

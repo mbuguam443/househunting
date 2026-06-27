@@ -6,4 +6,5 @@ urlpatterns = [
     path('stk-push/', views.stk_push_view, name='stk_push'),
     path('check-status/', views.check_payment_status, name='check_status'),
     path('query/<int:payment_id>/', views.query_stk_push, name='query_stk'),
+    path('c2b/register/', views.register_c2b_view, name='c2b_register'),
 ]

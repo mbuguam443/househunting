@@ -142,3 +142,21 @@ class MaintenanceRequest(models.Model):
 
     def __str__(self):
         return f'{self.title} - {self.tenant.username}'
+
+
+class C2BTransaction(models.Model):
+    trans_id = models.CharField(max_length=100, unique=True, help_text='Safaricom transaction ID')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    phone = models.CharField(max_length=20, blank=True)
+    bill_ref = models.CharField(max_length=100, blank=True, help_text='Account number customer entered')
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
+    matched_tenant = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    raw_data = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.trans_id} — KES {self.amount}'

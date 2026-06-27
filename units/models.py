@@ -2,21 +2,13 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Unit(models.Model):
-    HOUSE_TYPES = (
-        ('bedsitter', 'Bedsitter'),
-        ('one_bedroom', 'One Bedroom'),
-        ('two_bedroom', 'Two Bedroom'),
-        ('three_bedroom', 'Three Bedroom'),
-        ('four_bedroom', 'Four Bedroom'),
-        ('studio', 'Studio'),
-    )
     STATUS_CHOICES = (
         ('vacant', 'Vacant'),
         ('occupied', 'Occupied'),
     )
     property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='units')
     unit_number = models.CharField(max_length=50)
-    house_type = models.CharField(max_length=20, choices=HOUSE_TYPES)
+    house_type = models.ForeignKey('core.HouseType', on_delete=models.PROTECT, related_name='units')
     bedrooms = models.IntegerField(default=1)
     bathrooms = models.IntegerField(default=1)
     monthly_rent = models.DecimalField(max_digits=10, decimal_places=2)

@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}PataNyumba - Find Your Next Home with Confidence{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}PataNyumba helps you find houses for rent in Kenya. Browse vacant units, connect with landlords, and manage rental properties.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}houses for rent Kenya, rental houses Nairobi, apartments Kenya, PataNyumba, houses to rent, landlords Kenya, tenant portal{% endblock %}">
+    <meta property="og:site_name" content="PataNyumba">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}PataNyumba - Find Your Next Home with Confidence{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}PataNyumba helps you find houses for rent in Kenya. Browse vacant units, connect with landlords, and manage rental properties.{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:image" content="{% block og_image %}{{ request.build_absolute_uri }}/static/icons/icon-512.png{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}PataNyumba - Find Your Next Home with Confidence{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}PataNyumba helps you find houses for rent in Kenya. Browse vacant units, connect with landlords, and manage rental properties.{% endblock %}">
+    <meta name="twitter:image" content="{{ request.build_absolute_uri }}/static/icons/icon-512.png">
+    <link rel="canonical" href="{% block canonical %}{{ request.build_absolute_uri }}{% endblock %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
@@ -16,14 +28,37 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="icon" href="/static/icons/icon-192.png" sizes="192x192">
     {% block extra_head %}{% endblock %}
+    {% block json_ld %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "PataNyumba",
+        "url": "https://patanyumba.co.ke",
+        "logo": "https://patanyumba.co.ke/static/icons/icon-512.png",
+        "description": "Kenya's simplest platform for finding and managing rental properties.",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+254-700-000-000",
+            "email": "hello@patanyumba.co.ke",
+            "contactType": "customer service"
+        },
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Nairobi",
+            "addressCountry": "KE"
+        }
+    }
+    </script>
+    {% endblock %}
 </head>
 <body>
     <nav id="nbar">
         <div class="container">
             <div class="d-flex align-items-center justify-content-between w-100">
                 <a href="{% if user.is_authenticated %}{% if user.profile.role == 'admin' %}{% url 'accounts:admin_dashboard' %}{% elif user.profile.role == 'landlord' %}{% url 'dashboard:overview' %}{% elif user.profile.role == 'tenant' %}{% url 'portal:home' %}{% else %}{% url 'website:home' %}{% endif %}{% else %}{% url 'website:home' %}{% endif %}" class="d-flex align-items-center gap-2" style="font-size:1.2rem;font-weight:700;color:var(--tx)">
-                    <div class="logo-i"><i class="fa-solid fa-compass"></i></div>
-                    <span>PataNyumba</span>
+                <div class="logo-i" style="font-weight:800;font-family:'Space Grotesk',sans-serif;font-size:1.05rem;letter-spacing:.5px">PN</div>
+                <span>PataNyumba</span>
                 </a>
                 <div class="d-none d-lg-flex align-items-center gap-1 mx-auto">
                     <a href="{% url 'website:home' %}" class="nav-link">Home</a>
@@ -114,7 +149,7 @@
             <div class="row g-5 mb-5">
                 <div class="col-lg-4">
                     <a class="d-flex align-items-center gap-2 mb-3" href="{% if user.is_authenticated %}{% if user.profile.role == 'admin' %}{% url 'accounts:admin_dashboard' %}{% elif user.profile.role == 'landlord' %}{% url 'dashboard:overview' %}{% elif user.profile.role == 'tenant' %}{% url 'portal:home' %}{% else %}{% url 'website:home' %}{% endif %}{% else %}{% url 'website:home' %}{% endif %}" style="font-size:1.15rem;font-weight:700;color:var(--tx)">
-                        <div class="logo-i"><i class="fa-solid fa-compass"></i></div> PataNyumba
+                        <div class="logo-i" style="font-weight:800;font-family:'Space Grotesk',sans-serif;font-size:1.05rem;letter-spacing:.5px">PN</div> PataNyumba
                     </a>
                     <p style="font-size:.875rem;color:var(--tx3);line-height:1.65;max-width:280px">Find your next home with confidence. Kenya's simplest platform for finding and managing rental properties.</p>
                 </div>

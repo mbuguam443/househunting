@@ -16,6 +16,7 @@ urlpatterns = [
     path('admin/landlords/<int:landlord_id>/subscription/', views.admin_assign_subscription, name='admin_assign_sub'),
     path('admin/landlords/<int:landlord_id>/set-fee/', views.admin_set_landlord_fee, name='admin_set_fee'),
     path('admin/landlords/<int:landlord_id>/mpesa/', views.admin_landlord_mpesa, name='admin_landlord_mpesa'),
+    path('admin/landlords/<int:landlord_id>/', views.admin_landlord_detail, name='admin_landlord_detail'),
     path('admin/plans/', views.admin_subscription_plans, name='admin_plans'),
     path('admin/plans/create/', views.admin_plan_create, name='admin_plan_create'),
     path('admin/plans/<int:pk>/toggle/', views.admin_plan_toggle, name='admin_plan_toggle'),

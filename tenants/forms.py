@@ -23,8 +23,8 @@ class TenancyForm(forms.ModelForm):
         fields = ['tenant', 'unit', 'start_date', 'monthly_rent', 'deposit_paid']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}),
-            'monthly_rent': forms.NumberInput(attrs={'class': 'oinp', 'placeholder': 'Monthly rent in KES'}),
-            'deposit_paid': forms.NumberInput(attrs={'class': 'oinp', 'placeholder': 'Deposit amount'}),
+            'monthly_rent': forms.NumberInput(attrs={'class': 'oinp', 'readonly': True}),
+            'deposit_paid': forms.NumberInput(attrs={'class': 'oinp', 'readonly': True}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -35,7 +35,9 @@ class TenancyForm(forms.ModelForm):
         self.fields['tenant'].widget.attrs.update({'class': 'oinp'})
         self.fields['unit'].queryset = Unit.objects.filter(property__owner=landlord, status='vacant').select_related('property')
         self.fields['unit'].widget.attrs.update({'class': 'oinp'})
-        self.fields['unit'].label_from_instance = lambda obj: f'{obj.property.name} - {obj.unit_number} ({obj.get_house_type_display()}, KES {obj.monthly_rent})'
+        self.fields['unit'].label_from_instance = lambda obj: f'{obj.property.name} - {obj.unit_number} ({obj.house_type.name}, KES {obj.monthly_rent})'
+        self.fields['monthly_rent'].required = False
+        self.fields['deposit_paid'].required = False
 
 class RentPaymentForm(forms.ModelForm):
     class Meta:

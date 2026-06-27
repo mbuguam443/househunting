@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}PataNyumba - Find Your Next Home with Confidence{% endblock %}
+{% block title %}PataNyumba — Houses for Rent in Kenya | Find Your Next Home{% endblock %}
+{% block meta_description %}Find houses for rent in Kenya. Browse apartments, bedsitters, and houses across Nairobi, Kiambu, Machakos, and more. Connect directly with landlords.{% endblock %}
+{% block meta_keywords %}houses for rent Kenya, rental houses Nairobi, apartments Kenya, bedsitters, houses to rent, rent in Nairobi, property listing Kenya, PataNyumba{% endblock %}
+{% block og_title %}PataNyumba — Houses for Rent in Kenya{% endblock %}
 {% block content %}
 
 <section id="hero">
@@ -67,7 +70,7 @@
                                 <span><i class="fa-regular fa-bed me-1"></i>{{ unit.bedrooms }} Bed</span>
                                 <span><i class="fa-regular fa-shower me-1"></i>{{ unit.bathrooms }} Bath</span>
                                 <span><i class="fa-regular fa-building me-1"></i>Floor {{ unit.floor }}</span>
-                                <span class="ftag" style="background:rgba(52,211,153,0.12);color:#34d399;border-color:rgba(52,211,153,0.2)">{{ unit.get_house_type_display }}</span>
+                                <span class="ftag" style="background:rgba(52,211,153,0.12);color:#34d399;border-color:rgba(52,211,153,0.2)">{{ unit.house_type.name }}</span>
                             </div>
                         </div>
                     </div>

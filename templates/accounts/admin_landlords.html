@@ -37,6 +37,7 @@
                     <td>{% if p.mpesa_set %}<span class="badge-vacant">Set</span>{% else %}<span class="ftag">Not Set</span>{% endif %}</td>
                     <td>
                         <div class="d-flex gap-1">
+                            <a href="{% url 'accounts:admin_landlord_detail' p.user.id %}" class="boc btn py-1 px-2" style="font-size:.72rem">History</a>
                             <a href="{% url 'accounts:admin_assign_sub' p.user.id %}" class="boc btn py-1 px-2" style="font-size:.72rem">Subscribe</a>
                             <a href="{% url 'accounts:admin_landlord_mpesa' p.user.id %}" class="boc btn py-1 px-2" style="font-size:.72rem">M-Pesa</a>
                         </div>

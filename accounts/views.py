@@ -53,10 +53,18 @@ def profile(request):
     else:
         user_form = UserForm(instance=request.user)
         profile_form = ProfileForm(instance=request.user.profile)
+    ctx = {'user_form': user_form, 'profile_form': profile_form, 'active_tab': 'profile'}
+    if request.user.profile.role == 'landlord':
+        from units.models import Unit
+        from accounts.models import LandlordSubscription, get_fee_per_unit
+        unit_count = Unit.objects.filter(property__owner=request.user).count()
+        fee = request.user.profile.fee_per_unit if request.user.profile.fee_per_unit else get_fee_per_unit()
+        ctx['sub_fee_per_unit'] = fee
+        ctx['sub_unit_count'] = unit_count
+        ctx['sub_monthly_total'] = fee * unit_count
+        ctx['sub_status'] = LandlordSubscription.objects.filter(landlord=request.user).order_by('-end_date').first()
     template = 'accounts/dashboard_profile.html' if request.user.profile.role == 'landlord' else 'accounts/profile.html'
-    return render(request, template, {
-        'user_form': user_form, 'profile_form': profile_form, 'active_tab': 'profile'
-    })
+    return render(request, template, ctx)
 
 @login_required
 def change_password(request):
@@ -290,7 +298,7 @@ def admin_landlord_mpesa(request, landlord_id):
         return redirect('website:home')
     landlord = get_object_or_404(User, pk=landlord_id, profile__role='landlord')
     if request.method == 'POST':
-        for field in ['mpesa_consumer_key', 'mpesa_consumer_secret', 'mpesa_passkey', 'mpesa_shortcode', 'mpesa_callback_url']:
+        for field in ['mpesa_consumer_key', 'mpesa_consumer_secret', 'mpesa_passkey', 'mpesa_shortcode', 'c2b_shortcode', 'mpesa_callback_url', 'c2b_confirmation_url', 'c2b_validation_url']:
             val = request.POST.get(field, '').strip()
             setattr(landlord.profile, field, val)
         landlord.profile.save()
@@ -324,12 +332,13 @@ def admin_listing_create(request):
         return redirect('website:home')
     if request.method == 'POST':
         from website.models import AdminListing
+        from core.models import HouseType
         title = request.POST.get('title')
         desc = request.POST.get('description')
         county = request.POST.get('county')
         town = request.POST.get('town')
         estate = request.POST.get('estate', '')
-        house_type = request.POST.get('house_type')
+        house_type_slug = request.POST.get('house_type')
         bedrooms = int(request.POST.get('bedrooms', 1))
         bathrooms = int(request.POST.get('bathrooms', 1))
         rent = request.POST.get('rent')
@@ -338,9 +347,10 @@ def admin_listing_create(request):
         image = request.FILES.get('image')
         extra_images = request.FILES.getlist('extra_images')
         if title and desc and county and town and rent:
+            ht = HouseType.objects.filter(slug=house_type_slug).first()
             listing = AdminListing.objects.create(
                 title=title, description=desc, county=county, town=town, estate=estate,
-                house_type=house_type, bedrooms=bedrooms, bathrooms=bathrooms, rent=rent,
+                house_type=ht, bedrooms=bedrooms, bathrooms=bathrooms, rent=rent,
                 contact_name=contact_name, contact_phone=contact_phone, image=image,
                 created_by=request.user,
             )
@@ -349,7 +359,8 @@ def admin_listing_create(request):
             messages.success(request, 'Listing created and visible on the public site.')
             return redirect('accounts:admin_listings')
         messages.error(request, 'Title, description, county, town, and rent are required.')
-    return render(request, 'accounts/admin_listing_form.html', {'title': 'New Listing'})
+    from core.models import HouseType
+    return render(request, 'accounts/admin_listing_form.html', {'title': 'New Listing', 'house_types': HouseType.objects.all()})
 
 
 @login_required
@@ -359,12 +370,13 @@ def admin_listing_edit(request, pk):
     from website.models import AdminListing
     listing = get_object_or_404(AdminListing, pk=pk)
     if request.method == 'POST':
+        from core.models import HouseType
         listing.title = request.POST.get('title')
         listing.description = request.POST.get('description')
         listing.county = request.POST.get('county')
         listing.town = request.POST.get('town')
         listing.estate = request.POST.get('estate', '')
-        listing.house_type = request.POST.get('house_type')
+        listing.house_type = HouseType.objects.filter(slug=request.POST.get('house_type')).first()
         listing.bedrooms = int(request.POST.get('bedrooms', 1))
         listing.bathrooms = int(request.POST.get('bathrooms', 1))
         listing.rent = request.POST.get('rent')
@@ -381,7 +393,8 @@ def admin_listing_edit(request, pk):
         listing.save()
         messages.success(request, 'Listing updated.')
         return redirect('accounts:admin_listings')
-    return render(request, 'accounts/admin_listing_form.html', {'listing': listing, 'title': 'Edit Listing'})
+    from core.models import HouseType
+    return render(request, 'accounts/admin_listing_form.html', {'listing': listing, 'title': 'Edit Listing', 'house_types': HouseType.objects.all()})
 
 
 @login_required
@@ -393,3 +406,24 @@ def admin_listing_delete(request, pk):
     listing.delete()
     messages.success(request, 'Listing deleted.')
     return redirect('accounts:admin_listings')
+
+
+@login_required
+def admin_landlord_detail(request, landlord_id):
+    if request.user.profile.role != 'admin':
+        messages.error(request, 'Admin access required.')
+        return redirect('website:home')
+    landlord = get_object_or_404(User, pk=landlord_id, profile__role='landlord')
+    subs = LandlordSubscription.objects.filter(landlord=landlord).select_related('plan').order_by('-created_at')
+    unit_count = Unit.objects.filter(property__owner=landlord).count()
+    fee = get_fee_per_unit(landlord)
+    monthly_fee = unit_count * fee
+    trial_info = landlord_trial_info(landlord)
+    return render(request, 'accounts/admin_landlord_detail.html', {
+        'landlord': landlord, 'subscriptions': subs,
+        'unit_count': unit_count, 'fee': fee, 'monthly_fee': monthly_fee,
+        'trial_info': trial_info, 'active_tab': 'landlords',
+    })
+
+
+

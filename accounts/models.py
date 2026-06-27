@@ -8,6 +8,9 @@ class PlatformConfig(models.Model):
         help_text='Monthly platform fee per unit (KES)')
     trial_days = models.PositiveIntegerField(default=14, help_text='Free trial duration in days')
     callback_url = models.CharField(max_length=500, blank=True, help_text='Override M-Pesa callback URL (e.g., ngrok URL). Leave blank to use MPESA_CALLBACK_URL from settings.')
+    c2b_confirmation_url = models.CharField(max_length=500, blank=True, help_text='C2B Confirmation URL (public URL M-Pesa will call). Falls back to domain + /mpesa/c2b/confirmation/')
+    c2b_validation_url = models.CharField(max_length=500, blank=True, help_text='C2B Validation URL (public URL M-Pesa will call). Falls back to domain + /mpesa/c2b/validation/')
+    c2b_registered = models.BooleanField(default=False, help_text='Whether C2B URLs have been registered with Safaricom')
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -33,8 +36,12 @@ class Profile(models.Model):
     mpesa_consumer_key = models.CharField(max_length=200, blank=True, help_text='Your M-Pesa Consumer Key (Daraja API)')
     mpesa_consumer_secret = models.CharField(max_length=200, blank=True, help_text='Your M-Pesa Consumer Secret')
     mpesa_passkey = models.CharField(max_length=200, blank=True, help_text='Your M-Pesa Passkey')
-    mpesa_shortcode = models.CharField(max_length=20, blank=True, help_text='Your M-Pesa Shortcode / Paybill')
+    mpesa_shortcode = models.CharField(max_length=20, blank=True, help_text='Your M-Pesa Shortcode / Paybill (for STK Push)')
+    c2b_shortcode = models.CharField(max_length=20, blank=True, help_text='Your C2B Paybill number (for receiving M-Pesa payments). Different from STK Push shortcode.')
     mpesa_callback_url = models.CharField(max_length=500, blank=True, help_text='Override M-Pesa callback URL (e.g., ngrok URL) for this landlord')
+    c2b_confirmation_url = models.CharField(max_length=500, blank=True, help_text='C2B Confirmation URL (public URL M-Pesa will call). Leave blank to auto-derive.')
+    c2b_validation_url = models.CharField(max_length=500, blank=True, help_text='C2B Validation URL (public URL M-Pesa will call). Leave blank to auto-derive.')
+    c2b_registered = models.BooleanField(default=False, help_text='Whether C2B URLs are registered for this landlord')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -13,7 +13,7 @@
 <body>
     <div class="db-sidebar" id="adminSidebar">
         <a href="{% if user.is_authenticated %}{% if user.profile.role == 'admin' %}{% url 'accounts:admin_dashboard' %}{% elif user.profile.role == 'landlord' %}{% url 'dashboard:overview' %}{% elif user.profile.role == 'tenant' %}{% url 'portal:home' %}{% else %}{% url 'website:home' %}{% endif %}{% else %}{% url 'website:home' %}{% endif %}" class="db-logo" style="text-decoration:none">
-            <div class="logo-i"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="logo-i" style="font-weight:800;font-family:'Space Grotesk',sans-serif;font-size:1.05rem;letter-spacing:.5px">PN</div>
             <span>PataNyumba</span>
         </a>
         <div class="db-nav">

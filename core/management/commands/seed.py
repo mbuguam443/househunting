@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from accounts.models import Profile, SubscriptionPlan, PlatformConfig, LandlordSubscription
+from core.models import HouseType
 from properties.models import Property
 from units.models import Unit, UnitAmenity
 from website.models import Testimonial, Faq
@@ -138,11 +139,12 @@ class Command(BaseCommand):
             (prop3, 'MV3', 'three_bedroom', 3, 2, 35000, 35000, 2, 'Spacious three-bedroom family unit with balcony. Staff quarters included.', {'water': True, 'electricity': True, 'parking': True, 'security': True, 'internet': True, 'furnished': True}),
         ]
 
+        ht_cache = {ht.slug: ht for ht in HouseType.objects.all()}
         for prop, unit_no, htype, beds, baths, rent, dep, floor, desc, amenities in units_data:
             unit, _ = Unit.objects.get_or_create(
                 property=prop, unit_number=unit_no,
                 defaults=dict(
-                    house_type=htype, bedrooms=beds, bathrooms=baths,
+                    house_type=ht_cache[htype], bedrooms=beds, bathrooms=baths,
                     monthly_rent=rent, deposit=dep, floor=floor,
                     description=desc, status='vacant',
                 ),
@@ -253,6 +255,7 @@ class Command(BaseCommand):
             Faq.objects.get_or_create(question=q, defaults=dict(answer=a, order=i, is_active=True))
 
         from website.models import AdminListing
+        ht_cache = {ht.slug: ht for ht in HouseType.objects.all()}
         listing_data = [
             ('Fully Furnished 1BR in Westlands', 'Modern one-bedroom apartment with WiFi, DStv connection, and gym access. Walking distance to Sarit Centre.', 'Nairobi', 'Westlands', 'Rhapta Road', 'one_bedroom', 1, 1, 28000, 'James K.', '+254 722 100 200'),
             ('Executive 2BR in Kilimani', 'Spacious two-bedroom on the 5th floor with panoramic city views. Open-plan living, fitted kitchen, and dedicated parking.', 'Nairobi', 'Kilimani', 'Kirichwa Road', 'two_bedroom', 2, 2, 45000, 'Mary W.', '+254 733 200 300'),
@@ -266,7 +269,7 @@ class Command(BaseCommand):
                 title=title,
                 defaults=dict(
                     description=desc, county=county, town=town, estate=estate,
-                    house_type=htype, bedrooms=beds, bathrooms=baths, rent=rent,
+                    house_type=ht_cache[htype], bedrooms=beds, bathrooms=baths, rent=rent,
                     contact_name=contact_name, contact_phone=contact_phone,
                     status='available', created_by=admin_user,
                 ),
