@@ -1,0 +1,48 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}{% if edit %}Edit Utility Bill{% else %}Add Utility Bill{% endif %} - PataNyumba{% endblock %}
+{% block db_title %}{% if edit %}Edit Utility Bill{% else %}Add Utility Bill{% endif %}{% endblock %}
+{% block dashboard_content %}
+<div class="gc p-4" style="max-width:600px">
+    <form method="POST">
+        {% csrf_token %}
+        {% if edit %}
+        <div style="margin-bottom:16px">
+            <label style="display:block;font-size:.82rem;font-weight:500;color:var(--tx2);margin-bottom:4px">Tenant / Unit</label>
+            <div style="padding:8px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx3);font-size:.85rem">{{ form.instance.tenancy.tenant.username }} @ {{ form.instance.tenancy.unit.unit_number }} ({{ form.instance.tenancy.unit.property.name }})</div>
+        </div>
+        {% endif %}
+        {% for field in form %}
+        {% if edit and field.name in 'tenancy,property,bill_all' %}{% else %}
+        <div style="margin-bottom:16px" id="field-{{ field.name }}">
+            <label style="display:block;font-size:.82rem;font-weight:500;color:var(--tx2);margin-bottom:4px">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+            <div style="font-size:.72rem;color:var(--tx3);margin-top:2px">{{ field.help_text }}</div>
+            {% endif %}
+            {% if field.errors %}
+            <div style="font-size:.75rem;color:#f87171;margin-top:4px">{{ field.errors|striptags }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% endfor %}
+        <button type="submit" class="bgrd btn px-4 py-1"><i class="fa-solid fa-save me-1"></i>{% if edit %}Update{% else %}Save{% endif %} Bill</button>
+        <a href="{% url 'tenants:utility_list' %}" class="boc btn px-3 py-1 ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if not edit %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    var chk = document.getElementById('id_bill_all');
+    if (chk) {
+        chk.addEventListener('change', function(){
+            document.getElementById('field-tenancy').style.display = chk.checked ? 'none' : '';
+            document.getElementById('field-property').style.display = chk.checked ? '' : 'none';
+        });
+        chk.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

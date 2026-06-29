@@ -1,0 +1,70 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Utilities - PataNyumba{% endblock %}
+{% block db_title %}Utilities{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div style="font-weight:600;font-size:.95rem">Utility Bills</div>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <form method="GET" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+            <input name="q" type="text" placeholder="Tenant/unit..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:150px">
+            <select name="type" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+                <option value="">All Types</option>
+                <option value="water" {% if type_f == 'water' %}selected{% endif %}>Water</option>
+                <option value="electricity" {% if type_f == 'electricity' %}selected{% endif %}>Electricity</option>
+                <option value="trash" {% if type_f == 'trash' %}selected{% endif %}>Trash</option>
+            </select>
+            <select name="status" style="padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem">
+                <option value="">All Status</option>
+                <option value="pending" {% if status_f == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="paid" {% if status_f == 'paid' %}selected{% endif %}>Paid</option>
+            </select>
+            <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-filter"></i></button>
+            {% if q or type_f or status_f %}<a href="{% url 'tenants:utility_list' %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+        </form>
+        <a href="{% url 'tenants:utility_add' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem"><i class="fa-solid fa-plus me-1"></i>Add Bill</a>
+    </div>
+</div>
+<div class="gc p-4">
+    {% if bills %}
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Tenant</th><th>Unit</th><th>Type</th><th>Usage</th><th>Rate</th><th>Amount</th><th>Period</th><th>Due</th><th>Paid Date</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for b in bills %}
+                <tr>
+                    <td style="font-weight:600;color:var(--tx)">{{ b.tenancy.tenant.get_full_name|default:b.tenancy.tenant.username }}</td>
+                    <td style="font-size:.82rem">{{ b.tenancy.unit.unit_number }}</td>
+                    <td style="font-size:.82rem">
+                        {% if b.utility_type == 'water' %}<i class="fa-solid fa-droplet" style="color:#3b82f6"></i>
+                        {% elif b.utility_type == 'electricity' %}<i class="fa-solid fa-bolt" style="color:#f59e0b"></i>
+                        {% else %}<i class="fa-solid fa-trash-can" style="color:#6b7280"></i>{% endif %}
+                        {{ b.get_utility_type_display }}
+                    </td>
+                    <td style="font-size:.82rem">{% if b.units_consumed %}{{ b.units_consumed }}<span style="font-size:.7rem;color:var(--tx3)">u</span>{% else %}—{% endif %}</td>
+                    <td style="font-size:.78rem">{% if b.rate_per_unit %}KES {{ b.rate_per_unit|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td style="color:{% if b.status == 'paid' %}#34d399{% else %}#f87171{% endif %}">KES {{ b.amount|floatformat:0 }}</td>
+                    <td style="font-size:.78rem">{{ b.period_start|date:'M d' }} - {{ b.period_end|date:'M d, Y' }}</td>
+                    <td style="font-size:.82rem">{{ b.due_date|date:'M d, Y' }}</td>
+                    <td style="font-size:.8rem">{% if b.status == 'paid' %}{{ b.paid_date|date:'M d, Y H:i' }}{% else %}—{% endif %}</td>
+                    <td>
+                        {% if b.status == 'paid' %}<span class="badge-vacant">Paid</span>
+                        {% else %}<span class="ftag">Pending</span>{% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'tenants:utility_mark_paid' b.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem">{% if b.status == 'paid' %}Unmark{% else %}Mark Paid{% endif %}</a>
+                            <a href="{% url 'tenants:utility_edit' b.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem"><i class="fa-solid fa-pen"></i></a>
+                            <a href="{% url 'tenants:utility_delete' b.pk %}" class="boc btn py-1 px-2" style="font-size:.72rem;color:#f87171" onclick="return confirm('Delete this utility bill?')"><i class="fa-solid fa-trash-can"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page_obj=bills %}
+    {% else %}
+    <p style="color:var(--tx3);text-align:center;padding:20px 0">No utility bills yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}M-Pesa Transactions - PataNyumba{% endblock %}
+{% block db_title %}M-Pesa Transactions{% endblock %}
+{% block dashboard_content %}
+<div class="db-card">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div style="font-weight:600;font-size:.95rem">C2B Payments Received via Paybill</div>
+        <form method="get" class="d-flex gap-2 align-items-center">
+            <input name="q" type="text" placeholder="Search house/ref/phone..." value="{{ q }}" style="padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.82rem;width:200px">
+            <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-filter"></i></button>
+            {% if q %}<a href="{% url 'tenants:c2b_transactions' %}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+        </form>
+    </div>
+    {% if transactions %}
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Trans ID</th><th>Amount</th><th>Phone</th><th>House #</th><th>Tenant Matched</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td style="font-size:.78rem;color:var(--tx2);font-family:monospace">{{ t.trans_id }}</td>
+                    <td style="color:#34d399;font-weight:600">KES {{ t.amount|floatformat:0 }}</td>
+                    <td style="font-size:.82rem">{{ t.phone }}</td>
+                    <td style="font-weight:600;color:var(--tx)">{{ t.bill_ref }}</td>
+                    <td>
+                        {% if t.matched_tenant %}
+                        <span class="badge-vacant">{{ t.matched_tenant.username }}</span>
+                        {% else %}
+                        <span style="color:#f87171;font-size:.78rem">Unmatched</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if t.matched_tenant %}
+                        <span style="color:#34d399;font-size:.78rem"><i class="fa-solid fa-check-circle me-1"></i>Balance reduced</span>
+                        {% else %}
+                        <span style="color:#f87171;font-size:.78rem"><i class="fa-solid fa-exclamation-circle me-1"></i>Not applied</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:.78rem;color:var(--tx3)">{{ t.created_at|date:'M d, Y H:i' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page_obj=transactions %}
+    {% else %}
+    <p style="color:var(--tx3);text-align:center;padding:20px 0">No C2B transactions found for your properties.</p>
+    {% endif %}
+</div>
+{% endblock %}

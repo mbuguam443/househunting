@@ -47,6 +47,26 @@
             <button type="button" class="boc btn py-1 px-3" style="font-size:.78rem" onclick="registerC2B(this)"><i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Register C2B</button>
         </div>
         <div id="c2bError" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;font-size:.82rem;white-space:pre-wrap;word-break:break-all"></div>
+        <hr style="border-color:var(--bd);margin:20px 0">
+        <h6 style="font-size:.9rem;font-weight:600;margin-bottom:12px"><i class="fa-solid fa-arrow-right-to-bracket me-1"></i>B2C (Send Money)</h6>
+        <p style="font-size:.8rem;color:var(--tx3);margin-bottom:12px">B2C initiator credentials for sending commission payments to the platform. Set these up in the paybill portal.</p>
+        <div class="mb-3">
+            <label class="olbl">B2C Shortcode (Party A — Sender)</label>
+            <input name="b2c_shortcode" class="oinp" style="width:100%" value="{{ landlord.profile.b2c_shortcode }}" placeholder="e.g. 600984">
+        </div>
+        <div class="mb-3">
+            <label class="olbl">B2C Initiator Name</label>
+            <input name="b2c_initiator_name" class="oinp" style="width:100%" value="{{ landlord.profile.b2c_initiator_name }}" placeholder="B2C Initiator Username">
+        </div>
+        <div class="mb-3">
+            <label class="olbl">B2C Initiator Password</label>
+            <input name="b2c_initiator_password" type="password" class="oinp" style="width:100%" value="{{ landlord.profile.b2c_initiator_password }}" placeholder="B2C Initiator Password">
+        </div>
+        <div class="mb-3">
+            <label class="olbl">B2C Callback Base URL</label>
+            <input name="b2c_callback_base_url" class="oinp" style="width:100%" value="{{ landlord.profile.b2c_callback_base_url }}" placeholder="e.g. https://yourdomain.com">
+            <div style="font-size:.72rem;color:var(--tx3)">Public URL base for B2C callbacks (QueueTimeOutURL / ResultURL). Leave blank to auto-derive.</div>
+        </div>
         <button class="bgrd btn px-4 py-2">Save Credentials</button>
         <a href="{% url 'accounts:admin_landlords' %}" class="boc btn px-4 py-2 ms-2">Cancel</a>
     </form>

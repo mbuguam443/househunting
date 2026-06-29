@@ -298,7 +298,7 @@ def admin_landlord_mpesa(request, landlord_id):
         return redirect('website:home')
     landlord = get_object_or_404(User, pk=landlord_id, profile__role='landlord')
     if request.method == 'POST':
-        for field in ['mpesa_consumer_key', 'mpesa_consumer_secret', 'mpesa_passkey', 'mpesa_shortcode', 'c2b_shortcode', 'mpesa_callback_url', 'c2b_confirmation_url', 'c2b_validation_url']:
+        for field in ['mpesa_consumer_key', 'mpesa_consumer_secret', 'mpesa_passkey', 'mpesa_shortcode', 'c2b_shortcode', 'mpesa_callback_url', 'c2b_confirmation_url', 'c2b_validation_url', 'b2c_shortcode', 'b2c_initiator_name', 'b2c_initiator_password', 'b2c_callback_base_url']:
             val = request.POST.get(field, '').strip()
             setattr(landlord.profile, field, val)
         landlord.profile.save()

@@ -43,6 +43,21 @@
                 {{ form.image }}
             </div>
         </div>
+        <div class="row g-3 mt-2">
+            <div class="col-12"><hr style="border-color:var(--bd);margin:4px 0"><label style="font-weight:600;font-size:.85rem;color:var(--tx2)">Utility Rates</label></div>
+            <div class="col-md-4">
+                <label class="olbl">Water Rate (per unit)</label>
+                {{ form.water_rate }}
+            </div>
+            <div class="col-md-4">
+                <label class="olbl">Electricity Rate (per unit)</label>
+                {{ form.electricity_rate }}
+            </div>
+            <div class="col-md-4">
+                <label class="olbl">Trash Collection (flat)</label>
+                {{ form.trash_rate }}
+            </div>
+        </div>
         <button type="submit" class="bgrd btn px-5 py-2 mt-3">
             {% if prop %}Update{% else %}Create{% endif %} Property <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i>
         </button>

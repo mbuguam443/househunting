@@ -1,0 +1,91 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Record Payment - PataNyumba{% endblock %}
+{% block db_title %}Record Payment{% endblock %}
+{% block dashboard_content %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+.select2-container--default .select2-selection--single {
+    background: var(--bg3) !important;
+    border: 1px solid var(--bd) !important;
+    border-radius: 8px !important;
+    height: auto !important;
+    padding: 4px 0;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: var(--tx) !important;
+    line-height: 1.5 !important;
+    padding: 4px 12px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: var(--tx3) !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    top: 6px !important;
+    right: 6px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: var(--tx3) transparent transparent !important;
+}
+.select2-dropdown {
+    background: var(--bg2) !important;
+    border: 1px solid var(--bd) !important;
+    border-radius: 8px !important;
+}
+.select2-search--dropdown .select2-search__field {
+    background: var(--bg3) !important;
+    border: 1px solid var(--bd) !important;
+    border-radius: 6px !important;
+    color: var(--tx) !important;
+    padding: 6px !important;
+}
+.select2-results__option {
+    color: var(--tx2) !important;
+    padding: 8px 12px !important;
+    font-size: .85rem !important;
+}
+.select2-results__option--highlighted {
+    background: rgba(106, 76, 219, .2) !important;
+    color: var(--tx) !important;
+}
+.select2-results__option--selected {
+    background: rgba(106, 76, 219, .3) !important;
+}
+.select2-container--default .select2-results>.select2-results__options {
+    max-height: 250px !important;
+}
+</style>
+<div class="gc p-4" style="max-width:550px">
+    <p style="color:var(--tx3);font-size:.85rem;margin-bottom:1rem">Record a cash, bank, or other manual payment against a tenant's account.</p>
+    <form method="POST">
+        {% csrf_token %}
+        <label class="olbl">Tenant / Unit</label>
+        {{ form.tenancy }}
+        <label class="olbl">Amount Paid</label>
+        {{ form.amount }}
+        <label class="olbl">Date Paid</label>
+        {{ form.paid_date }}
+        <label class="olbl">Payment Method</label>
+        {{ form.payment_method }}
+        <label class="olbl">Reference / Receipt No.</label>
+        {{ form.reference }}
+        <label class="olbl">Notes</label>
+        {{ form.notes }}
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="bgrd btn px-5 py-2"><i class="fa-solid fa-check me-1"></i> Record Payment</button>
+            <a href="{% url 'tenants:rent_collection' %}" class="boc btn px-4 py-2">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#{{ form.tenancy.id_for_label }}').select2({
+        width: '100%',
+        placeholder: 'Search tenant or unit...',
+        allowClear: true
+    });
+});
+</script>
+{% endblock %}

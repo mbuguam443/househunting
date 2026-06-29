@@ -1,0 +1,84 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}B2C Settings - PataNyumba{% endblock %}
+{% block db_title %}B2C Settings{% endblock %}
+{% block dashboard_content %}
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="gc p-4" style="max-width:600px">
+            <h5 class="fw-semibold mb-2"><i class="fa-solid fa-arrow-right-to-bracket me-2"></i>M-Pesa B2C Configuration</h5>
+            <p style="font-size:.82rem;color:var(--tx3);margin-bottom:20px">
+                These credentials are used to send commission payments from your paybill to the platform admin.
+                Set them up in your Safaricom paybill portal first, then enter them here.
+            </p>
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="olbl">Initiator Name</label>
+                    <input name="b2c_initiator_name" class="oinp" style="width:100%" value="{{ user.profile.b2c_initiator_name }}" placeholder="e.g. testapi">
+                    <div style="font-size:.72rem;color:var(--tx3);margin-top:2px">The B2C initiator username created in your paybill portal</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="olbl">Initiator Password</label>
+                    <input name="b2c_initiator_password" type="text" class="oinp" style="width:100%" value="{{ user.profile.b2c_initiator_password }}" placeholder="e.g. Safaricom123!!">
+                    <div style="font-size:.72rem;color:var(--tx3);margin-top:2px">The B2C initiator password</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="olbl">Party A — Sender Shortcode</label>
+                    <input name="b2c_shortcode" class="oinp" style="width:100%" value="{{ user.profile.b2c_shortcode }}" placeholder="e.g. 600984">
+                    <div style="font-size:.72rem;color:var(--tx3);margin-top:2px">Your paybill number that sends the commission payment. Can be different from your C2B receiving number.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="olbl">STK Push Shortcode</label>
+                    <input class="oinp" style="width:100%;background:var(--bg3);color:var(--tx3)" value="{{ user.profile.mpesa_shortcode|default:'Not set' }}" readonly>
+                    <div style="font-size:.72rem;color:var(--tx3);margin-top:2px">Set in your <a href="{% url 'accounts:profile' %}" style="color:#6a4cdb">Profile</a> — used for STK Push requests</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="olbl">C2B Paybill (Receiving)</label>
+                    <input class="oinp" style="width:100%;background:var(--bg3);color:var(--tx3)" value="{{ user.profile.c2b_shortcode|default:'Not set' }}" readonly>
+                    <div style="font-size:.72rem;color:var(--tx3);margin-top:2px">The number tenants send rent to. Set in your <a href="{% url 'accounts:profile' %}" style="color:#6a4cdb">Profile</a></div>
+                </div>
+
+                <hr style="border-color:var(--bd);margin:20px 0">
+                <h6 style="font-size:.9rem;font-weight:600;margin-bottom:8px"><i class="fa-solid fa-link me-1"></i>Callback URLs</h6>
+                <p style="font-size:.8rem;color:var(--tx3);margin-bottom:12px">These URLs must be accessible from the internet. Register them in your Safaricom paybill portal for B2C.</p>
+
+                <div class="mb-3">
+                    <label class="olbl">B2C Callback Base URL</label>
+                    <input name="b2c_callback_base_url" class="oinp" style="width:100%" value="{{ user.profile.b2c_callback_base_url }}" placeholder="e.g. https://yourdomain.com">
+                    <div style="font-size:.72rem;color:var(--tx3);margin-top:2px">Your server's public URL. Leave blank to auto-derive from C2B confirmation URL.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="olbl">Result URL</label>
+                    {% with base=user.profile.b2c_callback_base_url|default:'https://YOUR-DOMAIN.com' %}
+                    <input class="oinp" style="width:100%;background:var(--bg3);color:var(--tx3)" value="{{ base }}/dashboard/tenants/b2c/result/" readonly>
+                    {% endwith %}
+                    <div style="font-size:.72rem;color:var(--tx3);margin-top:2px">Safaricom calls this when the B2C transaction completes</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="olbl">Queue Timeout URL</label>
+                    {% with base=user.profile.b2c_callback_base_url|default:'https://YOUR-DOMAIN.com' %}
+                    <input class="oinp" style="width:100%;background:var(--bg3);color:var(--tx3)" value="{{ base }}/dashboard/tenants/b2c/timeout/" readonly>
+                    {% endwith %}
+                    <div style="font-size:.72rem;color:var(--tx3);margin-top:2px">Safaricom calls this if the transaction times out</div>
+                </div>
+
+                <hr style="border-color:var(--bd);margin:20px 0">
+                <div class="mb-3">
+                    <label class="olbl">Re-enter your password to save</label>
+                    <input name="password" type="password" class="oinp" required style="width:100%" placeholder="Your account password">
+                </div>
+
+                <button type="submit" class="bgrd btn px-5 py-2"><i class="fa-solid fa-save me-1"></i>Save B2C Settings</button>
+                <a href="{% url 'tenants:b2c_pay' %}" class="boc btn px-4 py-2 ms-2">Pay Commission</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

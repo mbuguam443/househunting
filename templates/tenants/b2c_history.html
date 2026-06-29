@@ -1,0 +1,59 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Commission Payments - PataNyumba{% endblock %}
+{% block db_title %}Commission Payments{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div style="font-weight:600;font-size:.95rem">Payment History</div>
+    <a href="{% url 'tenants:b2c_pay' %}" class="bgrd btn px-3 py-1" style="font-size:.82rem"><i class="fa-solid fa-plus me-1"></i>Pay Commission</a>
+</div>
+<div class="gc p-4">
+    {% if transactions %}
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Date</th><th>Amount</th><th>Recipient</th><th>Receipt</th><th>Charges</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td style="font-size:.82rem">{{ t.created_at|date:'M d, Y H:i' }}</td>
+                    <td style="color:{% if t.status == 'completed' %}#34d399{% else %}#f87171{% endif %}">KES {{ t.amount|floatformat:0 }}</td>
+                    <td style="font-size:.82rem">{{ t.recipient_name|default:t.recipient_phone }}</td>
+                    <td style="font-size:.78rem;font-family:monospace">{{ t.transaction_receipt|default:t.transaction_id|default:'—' }}</td>
+                    <td style="font-size:.82rem">{% if t.b2c_charges %}KES {{ t.b2c_charges|floatformat:0 }}{% else %}—{% endif %}</td>
+                    <td>
+                        {% if t.status == 'completed' %}<span class="badge-vacant">Completed</span>
+                        {% elif t.status == 'failed' %}<span class="badge-occupied">Failed</span>
+                        {% else %}<span class="ftag">Pending</span>{% endif %}
+                    </td>
+                    <td><a href="#" onclick="toggleDetails('b2c-{{ t.id }}');return false" style="color:#6a4cdb;font-size:.78rem">Details</a></td>
+                </tr>
+                <tr id="b2c-{{ t.id }}" style="display:none">
+                    <td colspan="7" style="padding:8px 16px;background:var(--bg2)">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:.78rem">
+                            <div><strong>Conversation ID:</strong> {{ t.conversation_id|default:'—' }}</div>
+                            <div><strong>Originator Conv ID:</strong> {{ t.originator_conversation_id|default:'—' }}</div>
+                            <div><strong>Transaction ID:</strong> {{ t.transaction_id|default:'—' }}</div>
+                            <div><strong>Receipt:</strong> {{ t.transaction_receipt|default:'—' }}</div>
+                            <div><strong>Recipient:</strong> {{ t.receiver_public_name|default:t.recipient_phone }}</div>
+                            <div><strong>Result Code:</strong> {{ t.result_code|default:'—' }}</div>
+                            <div><strong>Charges:</strong> {% if t.b2c_charges %}KES {{ t.b2c_charges|floatformat:0 }}{% else %}—{% endif %}</div>
+                            <div><strong>Completed At:</strong> {{ t.completed_at|default:'—' }}</div>
+                            <div style="grid-column:1/-1"><strong>Description:</strong> {{ t.response_description|default:'—' }}</div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page_obj=transactions %}
+    {% else %}
+    <p style="color:var(--tx3);text-align:center;padding:20px 0">No commission payments yet.</p>
+    {% endif %}
+</div>
+<script>
+function toggleDetails(id) {
+    var row = document.getElementById(id);
+    if (row) row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+}
+</script>
+{% endblock %}

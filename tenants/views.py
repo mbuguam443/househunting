@@ -2,6 +2,7 @@ import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db.models import Count, Q, Sum
@@ -9,8 +10,9 @@ from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from datetime import timedelta
 from decimal import Decimal
-from .models import Tenancy, RentPayment, MaintenanceRequest, MpesaTransaction, LeaseAgreement
-from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm, LeaseForm
+from .models import Tenancy, RentPayment, MaintenanceRequest, MpesaTransaction, LeaseAgreement, C2BTransaction, UtilityBill, B2CTransaction
+from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm, LeaseForm, UtilityBillForm
+from .b2c_utils import initiate_b2c
 from .rent_utils import generate_rent_payments, mark_overdue_payments
 from .mpesa_utils import stk_push, process_callback, query_stk_status, _get_access_token
 from .c2b_utils import process_c2b_confirmation, process_c2b_validation, register_c2b_urls
@@ -311,7 +313,8 @@ def portal_payments(request):
     if request.user.profile.role != 'tenant':
         messages.error(request, 'Access denied.')
         return redirect('website:home')
-    payments = RentPayment.objects.filter(tenancy__tenant=request.user).select_related('tenancy__unit')
+    qs = RentPayment.objects.filter(tenancy__tenant=request.user).select_related('tenancy__unit').order_by('-created_at')
+    payments = paginate(request, qs, per_page=15)
     tenancy = Tenancy.objects.filter(tenant=request.user, status='active').first()
     total_balance = RentPayment.objects.filter(tenancy__tenant=request.user).exclude(status='paid').exclude(notes='stk_intermediary').aggregate(s=Sum('amount'))['s'] or 0
     return render(request, 'tenants/portal_payments.html', {'payments': payments, 'tenancy': tenancy, 'total_balance': total_balance, 'active_tab': 'payments'})
@@ -384,19 +387,35 @@ def c2b_confirmation(request):
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'}, status=400)
-    result = process_c2b_confirmation(data)
-    return JsonResponse(result)
+    try:
+        result = process_c2b_confirmation(data)
+        return JsonResponse(result)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.exception('C2B confirmation error')
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': str(e)}, status=500)
 
 
 @csrf_exempt
-@require_POST
 def c2b_validation(request):
+    if request.method == 'GET':
+        return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Success'})
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'}, status=400)
-    result = process_c2b_validation(data)
-    return JsonResponse(result)
+        try:
+            data = request.POST.dict()
+        except Exception:
+            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid payload'}, status=400)
+    try:
+        result = process_c2b_validation(data)
+        return JsonResponse(result)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.exception('C2B validation error')
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': str(e)}, status=500)
 
 
 @login_required
@@ -614,6 +633,496 @@ def lease_terminate(request, pk):
         return redirect('tenants:lease_detail', pk=lease.pk)
     return render(request, 'tenants/lease_terminate.html', {'lease': lease})
 
+
+@login_required
+def record_payment(request):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+
+    from .forms import RecordPaymentForm
+    if request.method == 'POST':
+        form = RecordPaymentForm(request.POST, landlord=request.user)
+        if form.is_valid():
+            tenancy = form.cleaned_data['tenancy']
+            amount = form.cleaned_data['amount']
+            paid_date = form.cleaned_data['paid_date']
+            method = form.cleaned_data['payment_method']
+            ref = form.cleaned_data['reference']
+            notes = form.cleaned_data['notes']
+
+            paid_amount = Decimal(str(amount))
+
+            pmt = RentPayment.objects.create(
+                tenancy=tenancy,
+                amount=paid_amount,
+                due_date=paid_date,
+                paid_date=paid_date,
+                status='paid',
+                payment_method=method,
+                reference=ref or '',
+                notes=notes or f'Manual payment recorded by {request.user.username}',
+            )
+
+            invoices = RentPayment.objects.filter(tenancy=tenancy).exclude(status='paid').exclude(pk=pmt.pk).order_by('due_date', 'id')
+            remaining = paid_amount
+            for inv in invoices:
+                if remaining <= 0:
+                    break
+                if inv.amount <= remaining:
+                    inv.status = 'paid'
+                    inv.paid_date = paid_date
+                    inv.payment_method = method
+                    inv.reference = ref or ''
+                    if notes:
+                        inv.notes = notes
+                    inv.save()
+                    remaining -= inv.amount
+                else:
+                    inv.amount -= remaining
+                    inv.save()
+                    remaining = Decimal('0')
+
+            messages.success(request, f'Payment of KES {amount} recorded for {tenancy.tenant.username} @ {tenancy.unit.unit_number}.')
+            return redirect('tenants:reports')
+    else:
+        form = RecordPaymentForm(landlord=request.user, initial={'paid_date': timezone.now().date()})
+
+    return render(request, 'tenants/record_payment.html', {'form': form, 'active_tab': 'record_payment'})
+
+
+@login_required
+def c2b_transactions(request):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+
+    qs = C2BTransaction.objects.all().order_by('-created_at')
+
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(
+            Q(bill_ref__icontains=q) |
+            Q(trans_id__icontains=q) |
+            Q(phone__icontains=q) |
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q) |
+            Q(matched_tenant__username__icontains=q)
+        )
+
+    page_obj = paginate(request, qs)
+    return render(request, 'tenants/c2b_transactions.html', {
+        'transactions': page_obj,
+        'q': q,
+        'active_tab': 'c2b',
+    })
+
+
+@login_required
+def reports(request):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+
+    tab = request.GET.get('tab', 'transactions')
+    date_from = request.GET.get('from', '')
+    date_to = request.GET.get('to', '')
+    tenant_q = request.GET.get('tenant', '')
+
+    base_qs = RentPayment.objects.filter(tenancy__unit__property__owner=request.user).select_related('tenancy__tenant', 'tenancy__unit')
+
+    if date_from:
+        base_qs = base_qs.filter(due_date__gte=date_from)
+    if date_to:
+        base_qs = base_qs.filter(due_date__lte=date_to)
+    if tenant_q:
+        base_qs = base_qs.filter(
+            Q(tenancy__tenant__username__icontains=tenant_q) |
+            Q(tenancy__unit__unit_number__icontains=tenant_q)
+        )
+
+    if tab == 'transactions':
+        qs = base_qs.filter(status='paid').order_by('-paid_date', '-created_at')
+        total = qs.aggregate(s=Sum('amount'))['s'] or 0
+    else:
+        qs = base_qs.exclude(status='paid').order_by('-created_at')
+        total = qs.aggregate(s=Sum('amount'))['s'] or 0
+
+    page_obj = paginate(request, qs, per_page=20)
+    properties = Property.objects.filter(owner=request.user)
+
+    return render(request, 'tenants/reports.html', {
+        'records': page_obj,
+        'tab': tab,
+        'total': total,
+        'date_from': date_from,
+        'date_to': date_to,
+        'tenant_q': tenant_q,
+        'properties': properties,
+        'active_tab': 'reports',
+    })
+
+
+# ---- Utility Bill Views ----
+
+@login_required
+def utility_list(request):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+    qs = UtilityBill.objects.filter(tenancy__unit__property__owner=request.user).select_related('tenancy__tenant', 'tenancy__unit').order_by('-created_at')
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(Q(tenancy__tenant__username__icontains=q) | Q(tenancy__unit__unit_number__icontains=q))
+    type_f = request.GET.get('type', '').strip()
+    if type_f:
+        qs = qs.filter(utility_type=type_f)
+    status_f = request.GET.get('status', '').strip()
+    if status_f:
+        qs = qs.filter(status=status_f)
+    page_obj = paginate(request, qs, per_page=20)
+    return render(request, 'tenants/utility_list.html', {
+        'bills': page_obj, 'q': q, 'type_f': type_f, 'status_f': status_f, 'active_tab': 'utilities',
+    })
+
+@login_required
+def utility_add(request):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+    if request.method == 'POST':
+        form = UtilityBillForm(request.user, request.POST)
+        if form.is_valid():
+            tenancy = form.cleaned_data.get('tenancy')
+            bill_all = form.cleaned_data.get('bill_all')
+            prop = form.cleaned_data.get('property')
+
+            if bill_all and prop:
+                tenancies = Tenancy.objects.filter(unit__property=prop, status='active')
+                if not tenancies.exists():
+                    messages.error(request, 'No active tenancies in this property.')
+                    props = Property.objects.filter(owner=request.user).values('id', 'name', 'water_rate', 'electricity_rate', 'trash_rate')
+                    property_rates = json.dumps({str(p['id']): {'name': p['name'], 'water_rate': float(p['water_rate']), 'electricity_rate': float(p['electricity_rate']), 'trash_rate': float(p['trash_rate'])} for p in props})
+                    return render(request, 'tenants/utility_add.html', {'form': form, 'edit': False, 'property_rates': property_rates, 'active_tab': 'utilities'})
+                count = 0
+                for t in tenancies:
+                    ub = form.save(commit=False)
+                    ub.tenancy = t
+                    ub.save()
+                    RentPayment.objects.create(
+                        tenancy=t,
+                        amount=ub.amount,
+                        due_date=ub.due_date,
+                        status='pending',
+                        payment_method='utility',
+                        reference=f'{ub.get_utility_type_display()}-{ub.pk}',
+                        notes=f'Utility bill: {ub.get_utility_type_display()} ({ub.period_start} - {ub.period_end})',
+                        utility_bill=ub,
+                    )
+                    count += 1
+                messages.success(request, f'Utility bills added for {count} tenant(s) in {prop.name}.')
+            elif tenancy:
+                ub = form.save(commit=False)
+                ub.tenancy = tenancy
+                ub.save()
+                RentPayment.objects.create(
+                    tenancy=tenancy,
+                    amount=ub.amount,
+                    due_date=ub.due_date,
+                    status='pending',
+                    payment_method='utility',
+                    reference=f'{ub.get_utility_type_display()}-{ub.pk}',
+                    notes=f'Utility bill: {ub.get_utility_type_display()} ({ub.period_start} - {ub.period_end})',
+                    utility_bill=ub,
+                )
+                messages.success(request, 'Utility bill added successfully.')
+            return redirect('tenants:utility_list')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = UtilityBillForm(request.user)
+    props = Property.objects.filter(owner=request.user).values('id', 'name', 'water_rate', 'electricity_rate', 'trash_rate')
+    property_rates = json.dumps({str(p['id']): {'name': p['name'], 'water_rate': float(p['water_rate']), 'electricity_rate': float(p['electricity_rate']), 'trash_rate': float(p['trash_rate'])} for p in props})
+    return render(request, 'tenants/utility_add.html', {'form': form, 'edit': False, 'property_rates': property_rates, 'active_tab': 'utilities'})
+
+@login_required
+def utility_mark_paid(request, pk):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+    ub = get_object_or_404(UtilityBill, pk=pk, tenancy__unit__property__owner=request.user)
+    rp = ub.rent_payment if hasattr(ub, 'rent_payment') else None
+    if ub.status == 'paid':
+        ub.status = 'pending'
+        ub.paid_date = None
+        ub.payment_method = ''
+        ub.reference = ''
+        if rp:
+            rp.status = 'pending'
+            rp.paid_date = None
+            rp.save()
+    else:
+        ub.status = 'paid'
+        ub.paid_date = timezone.now()
+        if rp:
+            rp.status = 'paid'
+            rp.paid_date = timezone.now().date()
+            rp.save()
+    ub.save()
+    return redirect('tenants:utility_list')
+
+@login_required
+def utility_edit(request, pk):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+    ub = get_object_or_404(UtilityBill, pk=pk, tenancy__unit__property__owner=request.user)
+    if request.method == 'POST':
+        form = UtilityBillForm(request.user, request.POST, instance=ub)
+        if form.is_valid():
+            form.save()
+            rp = ub.rent_payment if hasattr(ub, 'rent_payment') else None
+            if rp:
+                rp.amount = ub.amount
+                rp.due_date = ub.due_date
+                rp.save()
+            messages.success(request, 'Utility bill updated.')
+            return redirect('tenants:utility_list')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = UtilityBillForm(request.user, instance=ub)
+    return render(request, 'tenants/utility_add.html', {'form': form, 'edit': True, 'active_tab': 'utilities'})
+
+@login_required
+def utility_delete(request, pk):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+    ub = get_object_or_404(UtilityBill, pk=pk, tenancy__unit__property__owner=request.user)
+    rp = ub.rent_payment if hasattr(ub, 'rent_payment') else None
+    if rp:
+        rp.delete()
+    ub.delete()
+    messages.success(request, 'Utility bill deleted.')
+    return redirect('tenants:utility_list')
+
+# ---- B2C Commission Payment Views ----
+
+@login_required
+def b2c_pay(request):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+
+    # Get admin's phone for recipient
+    from django.contrib.auth.models import User
+    admin = User.objects.filter(profile__role='admin').first()
+    admin_phone = admin.profile.phone if admin and admin.profile.phone else ''
+
+    if request.method == 'POST':
+        password = request.POST.get('password', '')
+        amount = request.POST.get('amount', '')
+
+        if not request.user.check_password(password):
+            messages.error(request, 'Incorrect password. Transaction cancelled.')
+            return redirect('tenants:b2c_pay')
+
+        if not amount:
+            messages.error(request, 'Enter an amount.')
+            return redirect('tenants:b2c_pay')
+
+        try:
+            amount = Decimal(amount)
+            if amount <= 0:
+                raise ValueError
+        except:
+            messages.error(request, 'Invalid amount.')
+            return redirect('tenants:b2c_pay')
+
+        if not (request.user.profile.b2c_shortcode or request.user.profile.c2b_shortcode):
+            messages.error(request, 'No B2C paybill configured. Set it up in B2C Settings first.')
+            return redirect('tenants:b2c_pay')
+
+        if not request.user.profile.b2c_initiator_name or not request.user.profile.b2c_initiator_password:
+            messages.error(request, 'B2C initiator credentials not configured. Set them up in your profile first.')
+            return redirect('tenants:b2c_pay')
+
+        if not admin_phone:
+            messages.error(request, 'Admin has no phone number configured. Contact support.')
+            return redirect('tenants:b2c_pay')
+
+        tx, error = initiate_b2c(request.user, amount, admin_phone, admin.username if admin else 'Admin')
+        if error:
+            messages.error(request, f'B2C failed: {error}')
+        else:
+            messages.success(request, f'KES {amount} sent successfully! Reference: {tx.transaction_id or tx.conversation_id}')
+        return redirect('tenants:b2c_history')
+
+    # Calculate suggested amount from fee_per_unit
+    from accounts.models import get_fee_per_unit
+    unit_count = Tenancy.objects.filter(unit__property__owner=request.user, status='active').count()
+    fee = get_fee_per_unit(request.user)
+    suggested = unit_count * fee
+
+    return render(request, 'tenants/b2c_pay.html', {
+        'suggested': suggested,
+        'admin_phone': admin_phone,
+        'admin_name': admin.username if admin else 'Admin',
+        'active_tab': 'b2c',
+    })
+
+
+@csrf_exempt
+def b2c_result(request):
+    """Callback from Safaricom for B2C transaction result."""
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+    try:
+        data = json.loads(request.body)
+        # Safaricom wraps result in a "Result" object
+        result = data.get('Result', data)
+        conv_id = result.get('ConversationID', data.get('ConversationID', ''))
+        if conv_id:
+            tx = B2CTransaction.objects.filter(conversation_id=conv_id).first()
+            if not tx:
+                tx = B2CTransaction.objects.filter(originator_conversation_id=result.get('OriginatorConversationID', '')).first()
+            if tx:
+                tx.raw_response = data
+                tx.result_code = result.get('ResultCode')
+                tx.response_description = result.get('ResultDesc', result.get('ResponseDescription', ''))
+                tx.transaction_id = tx.transaction_id or result.get('TransactionID', '')
+
+                # Parse ResultParameters array
+                params = result.get('ResultParameters', {})
+                param_list = params.get('ResultParameter', []) if isinstance(params, dict) else []
+                for p in param_list:
+                    key = p.get('Key', '')
+                    val = p.get('Value', '')
+                    if key == 'TransactionReceipt':
+                        tx.transaction_receipt = str(val)
+                    elif key == 'ReceiverPartyPublicName':
+                        tx.receiver_public_name = str(val)
+                    elif key == 'TransactionCompletedDateTime':
+                        tx.completed_at = str(val)
+                    elif key == 'B2CChargesPaidAccountAvailableFunds':
+                        try:
+                            tx.b2c_charges = Decimal(str(val))
+                        except Exception:
+                            pass
+
+                if tx.result_code == 0:
+                    tx.status = 'completed'
+                else:
+                    tx.status = 'failed'
+                tx.save()
+    except Exception:
+        pass
+    return HttpResponse(status=200)
+
+
+@csrf_exempt
+def b2c_timeout(request):
+    """Callback from Safaricom for B2C transaction timeout."""
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+    try:
+        data = json.loads(request.body)
+        result = data.get('Result', data)
+        conv_id = result.get('ConversationID', data.get('ConversationID', ''))
+        if conv_id:
+            tx = B2CTransaction.objects.filter(conversation_id=conv_id).first()
+            if tx:
+                tx.raw_response = data
+                tx.result_code = result.get('ResultCode')
+                tx.response_description = result.get('ResultDesc', 'B2C request timed out')
+                tx.status = 'failed'
+                tx.save()
+    except Exception:
+        pass
+    return HttpResponse(status=200)
+
+
+@login_required
+def b2c_history(request):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+    qs = B2CTransaction.objects.filter(landlord=request.user).order_by('-created_at')
+    page_obj = paginate(request, qs, per_page=20)
+    return render(request, 'tenants/b2c_history.html', {
+        'transactions': page_obj, 'active_tab': 'b2c',
+    })
+
+
+@login_required
+def b2c_settings(request):
+    if request.user.profile.role != 'landlord':
+        messages.error(request, 'Landlord access required.')
+        return redirect('website:home')
+    ok, resp = require_landlord_sub(request.user)
+    if not ok:
+        return resp
+
+    if request.method == 'POST':
+        pwd = request.POST.get('password', '')
+        if not request.user.check_password(pwd):
+            messages.error(request, 'Incorrect password.')
+            return redirect('tenants:b2c_settings')
+
+        for field in ['b2c_shortcode', 'b2c_initiator_name', 'b2c_initiator_password', 'b2c_callback_base_url']:
+            val = request.POST.get(field, '').strip()
+            setattr(request.user.profile, field, val)
+        request.user.profile.save()
+        messages.success(request, 'B2C settings saved.')
+        return redirect('tenants:b2c_settings')
+
+    return render(request, 'tenants/b2c_settings.html', {
+        'active_tab': 'b2c',
+    })
+
+
+# ---- Tenant Portal Utility Views ----
+
+@login_required
+def portal_utilities(request):
+    if request.user.profile.role != 'tenant':
+        return redirect('website:home')
+    tenancy = Tenancy.objects.filter(tenant=request.user, status='active').first()
+    bills = UtilityBill.objects.filter(tenancy=tenancy).order_by('-created_at') if tenancy else []
+    return render(request, 'tenants/portal_utilities.html', {
+        'bills': bills, 'tenancy': tenancy, 'active_tab': 'utilities',
+    })
 
 # ---- Tenant Portal Lease Views ----
 

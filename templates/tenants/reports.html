@@ -1,0 +1,69 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Reports - PataNyumba{% endblock %}
+{% block db_title %}Reports{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex gap-2 mb-3 flex-wrap">
+    <a href="?tab=transactions{% if date_from %}&from={{ date_from }}{% endif %}{% if date_to %}&to={{ date_to }}{% endif %}{% if tenant_q %}&tenant={{ tenant_q }}{% endif %}" class="boc btn py-1 px-3"{% if tab == 'transactions' %} style="background:var(--grad);color:#fff;border:none"{% endif %}><i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Transactions</a>
+    <a href="?tab=invoices{% if date_from %}&from={{ date_from }}{% endif %}{% if date_to %}&to={{ date_to }}{% endif %}{% if tenant_q %}&tenant={{ tenant_q }}{% endif %}" class="boc btn py-1 px-3"{% if tab == 'invoices' %} style="background:var(--grad);color:#fff;border:none"{% endif %}><i class="fa-solid fa-file-invoice me-1"></i> Invoices</a>
+</div>
+
+<div class="db-card">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div style="font-weight:600;font-size:.95rem">
+            {% if tab == 'transactions' %}Payment Transactions{% else %}Rent Invoices{% endif %}
+            <span style="font-weight:400;color:var(--tx3);font-size:.82rem"> — Total: KES {{ total|floatformat:0 }}</span>
+        </div>
+        <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+            <input type="hidden" name="tab" value="{{ tab }}">
+            <input name="from" type="date" value="{{ date_from }}" style="padding:5px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.78rem">
+            <input name="to" type="date" value="{{ date_to }}" style="padding:5px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.78rem">
+            <input name="tenant" type="text" placeholder="Tenant or unit..." value="{{ tenant_q }}" style="padding:5px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.78rem;width:150px">
+            <button class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px"><i class="fa-solid fa-filter"></i></button>
+            {% if date_from or date_to or tenant_q %}<a href="{% url 'tenants:reports' %}?tab={{ tab }}" class="boc py-1 px-2" style="font-size:.78rem;border-radius:8px;text-decoration:none">Clear</a>{% endif %}
+        </form>
+    </div>
+    {% if records %}
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th>Tenant</th>
+                    <th>Unit</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Due Date</th>
+                    {% if tab == 'transactions' %}<th>Paid Date</th><th>Method</th>{% endif %}
+                    <th>Reference</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in records %}
+                <tr>
+                    <td style="font-weight:600;color:var(--tx)">{{ r.tenancy.tenant.username }}</td>
+                    <td style="font-size:.82rem">{{ r.tenancy.unit.unit_number }}</td>
+                    <td style="color:{% if r.status == 'paid' %}#34d399{% else %}#f87171{% endif %}">KES {{ r.amount|floatformat:0 }}</td>
+                    <td style="font-size:.78rem">{% if r.status == 'paid' %}<span style="color:#34d399">Payment</span>{% else %}<span style="color:var(--tx3)">Invoice</span>{% endif %}</td>
+                    <td style="font-size:.82rem">{{ r.due_date|date:'M d, Y' }}</td>
+                    {% if tab == 'transactions' %}
+                    <td style="font-size:.8rem">{{ r.created_at|date:'M d, Y H:i' }}</td>
+                    <td style="font-size:.78rem">{{ r.get_payment_method_display|default:'—' }}</td>
+                    {% endif %}
+                    <td style="font-size:.78rem;font-family:monospace">{{ r.reference|default:'—' }}</td>
+                    <td>
+                        {% if r.status == 'paid' %}<span class="badge-vacant">Paid</span>
+                        {% elif r.status == 'overdue' %}<span class="badge-occupied">Overdue</span>
+                        {% elif r.status == 'late' %}<span class="ftag-warning">Late</span>
+                        {% else %}<span class="ftag">Pending</span>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page_obj=records %}
+    {% else %}
+    <p style="color:var(--tx3);text-align:center;padding:20px 0">No records found.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Tenancy, RentPayment, MaintenanceRequest, LeaseAgreement
+from .models import Tenancy, RentPayment, MaintenanceRequest, LeaseAgreement, UtilityBill
 from units.models import Unit
+from properties.models import Property
 
 
 class TenantRegistrationForm(forms.ModelForm):
@@ -58,6 +59,84 @@ class MarkPaidForm(forms.Form):
     payment_method = forms.ChoiceField(choices=RentPayment.METHOD_CHOICES, widget=forms.Select(attrs={'class': 'oinp'}))
     reference = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Transaction ref or receipt no.'}))
     notes = forms.CharField(max_length=500, required=False, widget=forms.Textarea(attrs={'class': 'oinp', 'rows': 2}))
+
+class RecordPaymentForm(forms.Form):
+    tenancy = forms.ModelChoiceField(
+        queryset=Tenancy.objects.none(),
+        widget=forms.Select(attrs={'class': 'oinp'}),
+        label='Tenant / Unit',
+    )
+    amount = forms.DecimalField(max_digits=10, decimal_places=2, widget=forms.NumberInput(attrs={'class': 'oinp', 'step': '0.01', 'placeholder': 'Amount paid'}))
+    paid_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}))
+    payment_method = forms.ChoiceField(choices=RentPayment.METHOD_CHOICES, widget=forms.Select(attrs={'class': 'oinp'}))
+    reference = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'Receipt or ref number'}))
+    notes = forms.CharField(max_length=500, required=False, widget=forms.Textarea(attrs={'class': 'oinp', 'rows': 2, 'placeholder': 'Optional notes'}))
+
+    def __init__(self, *args, landlord=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if landlord:
+            self.fields['tenancy'].queryset = Tenancy.objects.filter(
+                unit__property__owner=landlord, status='active'
+            ).select_related('tenant', 'unit').order_by('tenant__username')
+            self.fields['tenancy'].label_from_instance = lambda obj: f'{obj.tenant.username} @ {obj.unit.unit_number} ({obj.unit.property.name}) - KES {obj.monthly_rent}/mo'
+
+class UtilityBillForm(forms.ModelForm):
+    tenancy = forms.ModelChoiceField(
+        queryset=Tenancy.objects.none(),
+        widget=forms.Select(attrs={'class': 'oinp', 'style': 'max-width:400px'}),
+        label='Tenant / Unit',
+        required=False,
+    )
+    property = forms.ModelChoiceField(
+        queryset=Property.objects.none(),
+        widget=forms.Select(attrs={'class': 'oinp', 'style': 'max-width:400px'}),
+        label='Property (for billing all tenants)',
+        required=False,
+    )
+    bill_all = forms.BooleanField(
+        widget=forms.CheckboxInput(attrs={'class': 'oinp', 'style': 'width:18px;height:18px;accent-color:#6a4cdb'}),
+        label='Apply to all active tenants in this property',
+        required=False,
+    )
+
+    class Meta:
+        model = UtilityBill
+        fields = ['utility_type', 'amount', 'period_start', 'period_end', 'due_date', 'units_consumed', 'rate_per_unit', 'notes']
+        widgets = {
+            'utility_type': forms.Select(attrs={'class': 'oinp'}),
+            'amount': forms.NumberInput(attrs={'class': 'oinp', 'step': '0.01', 'placeholder': 'Total bill amount'}),
+            'period_start': forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}),
+            'period_end': forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}),
+            'due_date': forms.DateInput(attrs={'type': 'date', 'class': 'oinp'}),
+            'units_consumed': forms.NumberInput(attrs={'class': 'oinp', 'step': '0.01', 'placeholder': 'Optional — for tenant reference'}),
+            'rate_per_unit': forms.NumberInput(attrs={'class': 'oinp', 'step': '0.01', 'placeholder': 'Optional — for tenant reference'}),
+            'notes': forms.Textarea(attrs={'class': 'oinp', 'rows': 3, 'placeholder': 'Optional notes'}),
+        }
+
+    def __init__(self, *args, landlord=None, **kwargs):
+        if 'landlord' not in kwargs and len(args) >= 1:
+            landlord = args[0]
+            args = args[1:]
+        super().__init__(*args, **kwargs)
+        self.fields['units_consumed'].required = False
+        self.fields['rate_per_unit'].required = False
+        if landlord:
+            self.fields['tenancy'].queryset = Tenancy.objects.filter(
+                unit__property__owner=landlord, status='active'
+            ).select_related('tenant', 'unit').order_by('tenant__username')
+            self.fields['tenancy'].label_from_instance = lambda obj: f'{obj.tenant.username} @ {obj.unit.unit_number} ({obj.unit.property.name}) - KES {obj.monthly_rent}/mo'
+            self.fields['property'].queryset = Property.objects.filter(owner=landlord).order_by('name')
+
+    def clean(self):
+        cleaned = super().clean()
+        tenancy = cleaned.get('tenancy')
+        bill_all = cleaned.get('bill_all')
+        prop = cleaned.get('property')
+        if not tenancy and not (bill_all and prop):
+            raise forms.ValidationError('Select a tenant/unit or check "Apply to all" and select a property.')
+        if not cleaned.get('amount'):
+            raise forms.ValidationError('Enter the bill amount.')
+        return cleaned
 
 class MaintenanceForm(forms.ModelForm):
     class Meta:

@@ -1,0 +1,40 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Pay Commission - PataNyumba{% endblock %}
+{% block db_title %}Pay Commission{% endblock %}
+{% block dashboard_content %}
+<div class="row g-3 mb-4">
+    <div class="col-sm-6">
+        <div class="db-stat-card">
+            <div class="db-stat-val gt">KES {{ suggested|floatformat:0 }}</div>
+            <div class="db-stat-lbl">Suggested Commission Due</div>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="db-stat-card">
+            <div class="db-stat-val" style="color:#3b82f6">{{ admin_phone|default:'Not set' }}</div>
+            <div class="db-stat-lbl">Admin M-Pesa Number</div>
+        </div>
+    </div>
+</div>
+
+<div class="gc p-4" style="max-width:500px">
+    <h5 class="fw-semibold mb-3"><i class="fa-solid fa-lock me-2"></i>Authorize Payment</h5>
+    <p style="font-size:.85rem;color:var(--tx3);margin-bottom:16px">
+        This will send money from your shortcode <strong>{{ user.profile.b2c_shortcode|default:user.profile.c2b_shortcode|default:'—' }}</strong>
+        to <strong>{{ admin_name }}</strong> ({{ admin_phone }}). Enter your account password to authorize.
+    </p>
+    <form method="POST">
+        {% csrf_token %}
+        <div style="margin-bottom:16px">
+            <label style="display:block;font-size:.82rem;font-weight:500;color:var(--tx2);margin-bottom:4px">Amount (KES)</label>
+            <input name="amount" type="number" step="0.01" class="oinp" value="{{ suggested|floatformat:0 }}" placeholder="Enter amount" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.9rem">
+        </div>
+        <div style="margin-bottom:20px">
+            <label style="display:block;font-size:.82rem;font-weight:500;color:var(--tx2);margin-bottom:4px">Your Password</label>
+            <input name="password" type="password" class="oinp" required placeholder="Re-enter your password to authorize" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--bg3);color:var(--tx);font-size:.9rem">
+        </div>
+        <button type="submit" class="bgrd btn px-5 py-2" onclick="return confirm('Send KES ' + document.querySelector(\'[name=amount]\').value + ' from your paybill?')"><i class="fa-solid fa-paper-plane me-1"></i>Send Payment</button>
+        <a href="{% url 'tenants:b2c_history' %}" class="boc btn px-4 py-2 ms-2">History</a>
+    </form>
+</div>
+{% endblock %}

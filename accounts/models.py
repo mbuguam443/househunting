@@ -42,6 +42,10 @@ class Profile(models.Model):
     c2b_confirmation_url = models.CharField(max_length=500, blank=True, help_text='C2B Confirmation URL (public URL M-Pesa will call). Leave blank to auto-derive.')
     c2b_validation_url = models.CharField(max_length=500, blank=True, help_text='C2B Validation URL (public URL M-Pesa will call). Leave blank to auto-derive.')
     c2b_registered = models.BooleanField(default=False, help_text='Whether C2B URLs are registered for this landlord')
+    b2c_initiator_name = models.CharField(max_length=100, blank=True, help_text='B2C API initiator username (set up in your paybill)')
+    b2c_initiator_password = models.CharField(max_length=200, blank=True, help_text='B2C API initiator password')
+    b2c_shortcode = models.CharField(max_length=20, blank=True, help_text='B2C Party A — your paybill that sends commission payments')
+    b2c_callback_base_url = models.CharField(max_length=500, blank=True, help_text='Public URL base for B2C callbacks (e.g. https://yourdomain.com). Leave blank to use C2B confirmation URL.')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

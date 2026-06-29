@@ -33,13 +33,14 @@
     {% if payments %}
     <div class="table-responsive">
         <table class="db-table">
-            <thead><tr><th>Due Date</th><th>Amount</th><th>Paid Date</th><th>Reference</th><th>Status</th></tr></thead>
+            <thead><tr><th>Due Date</th><th>Amount</th><th>Type</th><th>Paid Date</th><th>Reference</th><th>Status</th></tr></thead>
             <tbody>
                 {% for p in payments %}
                 <tr>
                     <td>{{ p.due_date|date:'M d, Y' }}</td>
-                    <td style="color:{% if p.status == 'paid' %}#34d399{% else %}#f87171{% endif %}">KES {% if p.status == 'paid' %}+{% else %}-{% endif %}{{ p.amount|floatformat:0 }}</td>
-                    <td>{% if p.paid_date %}{{ p.paid_date|date:'M d, Y' }}{% else %}—{% endif %}</td>
+                    <td style="color:{% if p.status == 'paid' %}#34d399{% else %}#f87171{% endif %}">KES {{ p.amount|floatformat:0 }}</td>
+                    <td style="font-size:.78rem">{% if p.status == 'paid' %}<span style="color:#34d399">Payment</span>{% else %}<span style="color:var(--tx3)">Invoice</span>{% endif %}</td>
+                    <td style="font-size:.8rem">{% if p.status == 'paid' %}{{ p.created_at|date:'M d, Y H:i' }}{% else %}—{% endif %}</td>
                     <td style="font-size:.8rem">{{ p.reference|default:'—' }}</td>
                     <td>
                         {% if p.status == 'paid' %}<span class="badge-vacant">Paid</span>
@@ -52,6 +53,7 @@
             </tbody>
         </table>
     </div>
+    {% include 'pagination.html' with page_obj=payments %}
     {% else %}
     <p style="color:var(--tx3);text-align:center;padding:20px 0">No payment records yet.</p>
     {% endif %}

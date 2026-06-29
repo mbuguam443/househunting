@@ -26,9 +26,15 @@
             <a href="{% url 'tenants:list' %}" class="db-nl {% if active_tab == 'tenants' %}active{% endif %}"><i class="fa-regular fa-user"></i> Tenants</a>
             <a href="{% url 'tenants:register' %}" class="db-nl"><i class="fa-solid fa-user-plus"></i> Register Tenant</a>
             <a href="{% url 'tenants:rent_collection' %}" class="db-nl {% if active_tab == 'rent' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> Rent Collection</a>
+            <a href="{% url 'tenants:record_payment' %}" class="db-nl {% if active_tab == 'record_payment' %}active{% endif %}"><i class="fa-solid fa-money-bill-wave"></i> Record Payment</a>
             <a href="{% url 'tenants:maintenance_list' %}" class="db-nl {% if active_tab == 'maintenance' %}active{% endif %}"><i class="fa-solid fa-wrench"></i> Maintenance</a>
+            <a href="{% url 'tenants:c2b_transactions' %}" class="db-nl {% if active_tab == 'c2b' %}active{% endif %}"><i class="fa-solid fa-mobile-screen"></i> M-Pesa Transactions</a>
+            <a href="{% url 'tenants:reports' %}" class="db-nl {% if active_tab == 'reports' %}active{% endif %}"><i class="fa-solid fa-chart-bar"></i> Reports</a>
+            <a href="{% url 'tenants:utility_list' %}" class="db-nl {% if active_tab == 'utilities' %}active{% endif %}"><i class="fa-solid fa-bolt"></i> Utilities</a>
             <div class="db-nav-section">Management</div>
             <a href="{% url 'dashboard:inquiries' %}" class="db-nl {% if active_tab == 'inquiries' %}active{% endif %}"><i class="fa-regular fa-message"></i> Inquiries {% if unread_count %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;background:#ef4444;color:#fff;font-size:.65rem;font-weight:700;padding:0 5px;margin-left:6px;line-height:1">{{ unread_count }}</span>{% endif %}</a>
+            <a href="{% url 'tenants:b2c_pay' %}" class="db-nl {% if active_tab == 'b2c' %}active{% endif %}"><i class="fa-solid fa-arrow-right-to-bracket"></i> Pay Commission</a>
+            <a href="{% url 'tenants:b2c_settings' %}" class="db-nl" style="font-size:.82rem;padding-left:42px"><i class="fa-solid fa-gear"></i> B2C Settings</a>
             <a href="{% url 'dashboard:overview' %}" class="db-nl"><i class="fa-solid fa-chart-simple"></i> Analytics</a>
             <a href="{% url 'accounts:profile' %}" class="db-nl {% if active_tab == 'profile' %}active{% endif %}"><i class="fa-regular fa-user"></i> Profile</a>
             <a href="{% url 'accounts:change_password' %}" class="db-nl"><i class="fa-solid fa-lock"></i> Change Password</a>

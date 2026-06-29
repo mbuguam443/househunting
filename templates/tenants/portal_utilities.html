@@ -1,0 +1,43 @@
+{% extends 'tenants/portal_base.html' %}
+{% block title %}Utilities - PataNyumba{% endblock %}
+{% block portal_title %}Utility Bills{% endblock %}
+{% block portal_content %}
+{% if tenancy %}
+<div class="gc p-4">
+    <h5 class="fw-semibold mb-3"><i class="fa-solid fa-bolt me-2"></i>My Utility Bills</h5>
+    {% if bills %}
+    <div class="table-responsive">
+        <table class="db-table">
+            <thead><tr><th>Type</th><th>Usage</th><th>Rate</th><th>Amount</th><th>Period</th><th>Due Date</th><th>Paid On</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for b in bills %}
+                <tr>
+                    <td>
+                        {% if b.utility_type == 'water' %}<i class="fa-solid fa-droplet" style="color:#3b82f6"></i>
+                        {% elif b.utility_type == 'electricity' %}<i class="fa-solid fa-bolt" style="color:#f59e0b"></i>
+                        {% else %}<i class="fa-solid fa-trash-can" style="color:#6b7280"></i>{% endif %}
+                        {{ b.get_utility_type_display }}
+                    </td>
+                    <td style="font-size:.82rem">{% if b.units_consumed %}{{ b.units_consumed }} unit{% if b.units_consumed != 1 %}s{% endif %}{% else %}—{% endif %}</td>
+                    <td style="font-size:.82rem">{% if b.rate_per_unit %}KES {{ b.rate_per_unit|floatformat:2 }}/unit{% else %}—{% endif %}</td>
+                    <td style="color:{% if b.status == 'paid' %}#34d399{% else %}#f87171{% endif %}">KES {{ b.amount|floatformat:0 }}</td>
+                    <td style="font-size:.78rem">{{ b.period_start|date:'M d' }} - {{ b.period_end|date:'M d, Y' }}</td>
+                    <td style="font-size:.82rem">{{ b.due_date|date:'M d, Y' }}</td>
+                    <td style="font-size:.8rem">{% if b.status == 'paid' %}{{ b.paid_date|date:'M d, Y H:i' }}{% else %}—{% endif %}</td>
+                    <td>
+                        {% if b.status == 'paid' %}<span class="badge-vacant">Paid</span>
+                        {% else %}<span class="ftag">Pending</span>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--tx3);text-align:center;padding:20px 0">No utility bills yet.</p>
+    {% endif %}
+</div>
+{% else %}
+<p style="color:var(--tx3);text-align:center;padding:40px 0">No active tenancy found.</p>
+{% endif %}
+{% endblock %}

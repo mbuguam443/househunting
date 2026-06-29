@@ -36,6 +36,7 @@ class RentPayment(models.Model):
         ('mpesa', 'M-Pesa'),
         ('cash', 'Cash'),
         ('bank', 'Bank Transfer'),
+        ('utility', 'Utility'),
         ('other', 'Other'),
     ]
     tenancy = models.ForeignKey(Tenancy, on_delete=models.CASCADE, related_name='payments')
@@ -46,6 +47,7 @@ class RentPayment(models.Model):
     payment_method = models.CharField(max_length=10, choices=METHOD_CHOICES, default='mpesa')
     reference = models.CharField(max_length=100, blank=True, help_text='Transaction reference (M-Pesa code or receipt)')
     notes = models.TextField(blank=True)
+    utility_bill = models.OneToOneField('UtilityBill', null=True, blank=True, on_delete=models.SET_NULL, related_name='rent_payment')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -160,3 +162,65 @@ class C2BTransaction(models.Model):
 
     def __str__(self):
         return f'{self.trans_id} — KES {self.amount}'
+
+
+class B2CTransaction(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    landlord = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='b2c_transactions')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    recipient_phone = models.CharField(max_length=20, blank=True)
+    recipient_name = models.CharField(max_length=100, blank=True)
+    transaction_id = models.CharField(max_length=100, blank=True, help_text='Safaricom B2C transaction ID (from request response)')
+    transaction_receipt = models.CharField(max_length=100, blank=True, help_text='M-Pesa receipt number (from callback result)')
+    receiver_public_name = models.CharField(max_length=200, blank=True, help_text='Recipient name from callback')
+    b2c_charges = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='B2C charges paid')
+    completed_at = models.CharField(max_length=50, blank=True, help_text='Transaction completed date/time from callback')
+    conversation_id = models.CharField(max_length=100, blank=True)
+    originator_conversation_id = models.CharField(max_length=100, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    response_description = models.CharField(max_length=255, blank=True)
+    result_code = models.IntegerField(null=True, blank=True, help_text='Safaricom result code (0 = success)')
+    raw_response = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'B2C {self.landlord.username} — KES {self.amount} ({self.get_status_display()})'
+
+
+class UtilityBill(models.Model):
+    UTILITY_TYPES = [
+        ('water', 'Water'),
+        ('electricity', 'Electricity'),
+        ('trash', 'Trash Collection'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+    ]
+    tenancy = models.ForeignKey(Tenancy, on_delete=models.CASCADE, related_name='utility_bills')
+    utility_type = models.CharField(max_length=20, choices=UTILITY_TYPES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    period_start = models.DateField(help_text='Billing period start')
+    period_end = models.DateField(help_text='Billing period end')
+    due_date = models.DateField()
+    units_consumed = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    rate_per_unit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Rate per unit for this bill')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    paid_date = models.DateTimeField(null=True, blank=True)
+    payment_method = models.CharField(max_length=10, blank=True)
+    reference = models.CharField(max_length=100, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.get_utility_type_display()} - {self.tenancy.tenant.username} - KES {self.amount}'

@@ -114,14 +114,15 @@ function remindAll(btn) {
     {% if payments %}
     <div class="table-responsive">
         <table class="db-table">
-            <thead><tr><th>Tenant</th><th>Amount</th><th>Due</th><th>Paid</th><th>Method</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Tenant</th><th>Amount</th><th>Type</th><th>Due</th><th>Paid</th><th>Method</th><th>Status</th><th></th></tr></thead>
             <tbody id="payment-rows">
                 {% for p in payments %}
                 <tr data-tenant="{{ p.tenancy.tenant.get_full_name|default:p.tenancy.tenant.username }}" data-amount="{{ p.amount|floatformat:0 }}" data-due="{{ p.due_date|date:'M d, Y' }}" data-status="{{ p.status }}"{% if p.status == 'paid' %} style="opacity:.5"{% endif %}>
                     <td style="font-weight:600;color:var(--tx)">{{ p.tenancy.tenant.get_full_name|default:p.tenancy.tenant.username }}</td>
-                    <td style="color:{% if p.status == 'paid' %}#34d399{% else %}#f87171{% endif %}">KES {% if p.status == 'paid' %}+{% else %}-{% endif %}{{ p.amount|floatformat:0 }}</td>
+                    <td style="color:{% if p.status == 'paid' %}#34d399{% else %}#f87171{% endif %}">KES {{ p.amount|floatformat:0 }}</td>
+                    <td style="font-size:.78rem">{% if p.status == 'paid' %}<span style="color:#34d399">Payment</span>{% else %}<span style="color:var(--tx3)">Invoice</span>{% endif %}</td>
                     <td style="font-size:.82rem">{{ p.due_date|date:'M d, Y' }}</td>
-                    <td style="font-size:.82rem">{% if p.paid_date %}{{ p.paid_date|date:'M d, Y' }}{% else %}—{% endif %}</td>
+                    <td style="font-size:.8rem">{% if p.status == 'paid' %}{{ p.created_at|date:'M d, Y H:i' }}{% else %}—{% endif %}</td>
                     <td style="font-size:.78rem">{% if p.payment_method %}{{ p.get_payment_method_display }}{% else %}—{% endif %}</td>
                     <td>
                         {% if p.status == 'paid' %}<span class="badge-vacant">Paid</span>
