@@ -30,3 +30,6 @@ Thumbs.db
 nexusai-1.0.0.zip
 static/img/
 staticfiles/
+static_assets/
+media/
+.env

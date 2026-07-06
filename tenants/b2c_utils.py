@@ -10,6 +10,9 @@ from cryptography.hazmat.backends import default_backend
 from .models import B2CTransaction
 
 
+_SANDBOX_CERT_PATH = os.path.join(os.path.dirname(__file__), 'sandbox_cert.cer')
+
+
 def _is_production():
     return settings.MPESA_ENV == 'production'
 
@@ -71,40 +74,10 @@ def _fetch_and_encrypt(initiator_name, initiator_pw, token=None):
 
 def _encrypt_with_bundled_cert(initiator_pw):
     """Use bundled sandbox certificate to encrypt the initiator password."""
-    cert_pem = """-----BEGIN CERTIFICATE-----
-MIIGgDCCBWigAwIBAgIKMvrulAAAAARG5DANBgkqhkiG9w0BAQsFADBbMRMwEQYK
-CZImiZPyLGQBGRYDbmV0MRkwFwYKCZImiZPyLGQBGRYJc2FmYXJpY29tMSkwJwYD
-VQQDEyBTYWZhcmljb20gSW50ZXJuYWwgSXNzdWluZyBDQSAwMjAeFw0xNDExMTIw
-NzEyNDVaFw0xNjExMTEwNzEyNDVaMHsxCzAJBgNVBAYTAktFMRAwDgYDVQQIEwdO
-YWlyb2JpMRAwDgYDVQQHEwdOYWlyb2JpMRAwDgYDVQQKEwdOYWlyb2JpMRMwEQYD
-VQQLEwpUZWNobm9sb2d5MSEwHwYDVQQDExhhcGljcnlwdC5zYWZhcmljb20uY28u
-a2UwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCotwV1VxXsd0Q6i2w0
-ugw+EPvgJfV6PNyB826Ik3L2lPJLFuzNEEJbGaiTdSe6Xitf/PJUP/q8Nv2dupHL
-BkiBHjpQ6f61He8Zdc9fqKDGBLoNhNpBXxbznzI4Yu6hjBGLnF5Al9zMAxTij6wL
-GUFswKpizifNbzV+LyIXY4RR2t8lxtqaFKeSx2B8P+eiZbL0wRIDPVC5+s4GdpFf
-Y3QIqyLxI2bOyCGl8/XlUuIhVXxhc8Uq132xjfsWljbw4oaMobnB2KN79vMUvyoR
-w8OGpga5VoaSFfVuQjSIf5RwW1hitm/8XJvmNEdeY0uKriYwbR8wfwQ3E0AIW1Fl
-MMghAgMBAAGjggMkMIIDIDAdBgNVHQ4EFgQUwUfE+NgGndWDN3DyVp+CAiF1Zkgw
-HwYDVR0jBBgwFoAU6zLUT35gmjqYIGO6DV6+6HlO1SQwggE7BgNVHR8EggEyMIIB
-LjCCASqgggEmoIIBIoaB1mxkYXA6Ly8vQ049U2FmYXJpY29tJTIwSW50ZXJuYWwl
-MjBJc3N1aW5nJTIwQ0ElMjAwMixDTj1hcnVzLENOPUNQLENOPVB1YmxpYyUyMEtl
-eSUyMFNlcnZpY2VzLENOPVNlcnZpY2VzLENOPUNvbmZpZ3VyYXRpb24sREM9c2Fm
-YXJpY29tLERDPW5ldD9jZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0P2Jhc2U/b2Jq
-ZWN0Q2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGNWh0dHA6Ly9hcnVzLnNhZmFy
-aWNvbS5uZXQvQ2VydEVucm9sbC9TYWZhcmljb21Jc3N1aW5nMDEuY3JshjRodHRw
-Oi8vYXJ1cy5zYWZhcmljb20ubmV0L0NlcnRFbnJvbGwvU2FmYXJpY29tSXNzdWlu
-ZzAyLmNybDCCAcQGA1UdEgSCAbswggG3oAsGCSsGAQQBgjc9AaEGBW6hAwIBgakC
-AwYBA6QaBAQ0MDAwMDCkOQQ3NjI1MDCkOQQ3OTkxM6kJBgNghv8AAQABoIHCBgMq
-CQAAMYIBMjCCAS4CAQEwUTBbMRMwEQYKCZImiZPyLGQBGRYDbmV0MRkwFwYKCZIm
-iZPyLGQBGRYJc2FmYXJpY29tMSkwJwYDVQQDEyBTYWZhcmljb20gSW50ZXJuYWwg
-SXNzdWluZyBDQSAwMgIKMvrulAAAAARG5DANBgkqhkiG9w0BAQsFAASCAQAU0qM7
-A8S5MgjFWwqJJsCBB2tqGGbFrV4WBSV6WltPqP9+ZSl7OqY5DwLTw3CQRT2s7zwh
-K6AXFG6qY4G0Emk42Y8R64FH+X0r5FoKUj6FVJY3zNdfksSXyN7LmGufLGl/jNtC
-WF6YVXyq7BKHz5znwCqVMQAFqW5x7MrgR6G3rHRqUk8dC/O7vXsKkq1v0ASn2fpp
-PvHk5eWzNHzbSlub6nQ9B3vOZhLWzQHf5w0K5a8YT7eQ6E5/FGxBB7+4yMz/pG5I
-N4xPBqXQIXYbxA5WsQ7wFPPgF2R2AR9q5ICNqK4uT5aGMjSlQ+qDPYsZx8GFe7pH
-jENn6UZxiN5gx7sYqJ0k
------END CERTIFICATE-----"""
+    if not os.path.exists(_SANDBOX_CERT_PATH):
+        raise ValueError('Sandbox certificate not found at ' + _SANDBOX_CERT_PATH)
+    with open(_SANDBOX_CERT_PATH) as f:
+        cert_pem = f.read()
     return _encrypt_with_pem(cert_pem, initiator_pw)
 
 

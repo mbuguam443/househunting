@@ -5,6 +5,11 @@ from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load .env if present
+if os.path.exists(BASE_DIR / '.env'):
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env')
+
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', get_random_secret_key())
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
@@ -67,17 +72,40 @@ DATABASES = {
     }
 }
 
-db_url = os.environ.get('DATABASE_URL')
-if db_url and db_url.startswith('postgres'):
-    parsed = urlparse(db_url)
+db_name = os.environ.get('DB_NAME')
+if db_name:
     DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': parsed.path.lstrip('/'),
-        'USER': parsed.username,
-        'PASSWORD': parsed.password,
-        'HOST': parsed.hostname,
-        'PORT': parsed.port or 5432,
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': db_name,
+        'USER': os.environ.get('DB_USER', ''),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
+        'OPTIONS': {'charset': 'utf8mb4'},
     }
+
+db_url = os.environ.get('DATABASE_URL')
+if db_url:
+    parsed = urlparse(db_url)
+    if db_url.startswith('postgres'):
+        DATABASES['default'] = {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': parsed.path.lstrip('/'),
+            'USER': parsed.username,
+            'PASSWORD': parsed.password,
+            'HOST': parsed.hostname,
+            'PORT': parsed.port or 5432,
+        }
+    elif db_url.startswith('mysql'):
+        DATABASES['default'] = {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': parsed.path.lstrip('/'),
+            'USER': parsed.username,
+            'PASSWORD': parsed.password,
+            'HOST': parsed.hostname or 'localhost',
+            'PORT': parsed.port or 3306,
+            'OPTIONS': {'charset': 'utf8mb4'},
+        }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -93,7 +121,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / 'static_assets'
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
@@ -123,7 +151,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    origins = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '')
+    origins = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS') or os.environ.get('CSRF_TRUSTED_ORIGINS', '')
     CSRF_TRUSTED_ORIGINS = [o.strip() for o in origins.split(',') if o.strip()]
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
