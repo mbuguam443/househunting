@@ -1,11 +1,10 @@
-"""cPanel Passenger WSGI entry point — failsafe version."""
+"""cPanel Passenger WSGI entry point."""
 import os
 import sys
 import traceback
 
 _app_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _app_root)
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
 # Load .env before Django
@@ -17,10 +16,6 @@ if os.path.exists(_env_path):
     except ImportError:
         pass
 
-application = None
-_startup_error = None
-
-# Try to load Django app
 try:
     import django
     django.setup()
@@ -34,21 +29,12 @@ try:
             open(_setup_flag, 'w').close()
         except Exception:
             pass
-    from config.wsgi import application as _app
-    application = _app
-except Exception as e:
+    from config.wsgi import application
+except Exception:
     _startup_error = traceback.format_exc()
-
-# Fallback WSGI app
-def application(environ, start_response):
-    if _startup_error:
-        body = (
-            b'<h1>Startup Error</h1>'
-            b'<pre>' + _startup_error.encode() + b'</pre>'
-        )
-    else:
-        body = b'<h1>App loaded (no errors)</h1>'
-    status = '200 OK'
-    headers = [('Content-type', 'text/html')]
-    start_response(status, headers)
-    return [body]
+    def application(environ, start_response):
+        body = '<h1>Startup Error</h1><pre>{}</pre>'.format(
+            _startup_error.replace('&', '&amp;').replace('<', '&lt;')
+        ).encode()
+        start_response('200 OK', [('Content-type', 'text/html')])
+        return [body]
