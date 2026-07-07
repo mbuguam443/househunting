@@ -50,27 +50,14 @@ with zipfile.ZipFile(zip_path, 'r') as zf:
                 shutil.copyfileobj(src, dst)
 
 os.unlink(zip_path)
-print('Extracted (skipped .env, .htaccess, media, static_assets, tmp, db.sqlite3).')
-
-# Install any new dependencies
-print('Installing requirements...')
-subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', str(BASE_DIR / 'requirements.txt')])
+print('Extracted (skipped .env, db.sqlite3, media, static_assets, tmp).')
 
 # Run deploy steps
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-import django
-django.setup()
-from django.core.management import call_command
-
-print('Running migrations...')
-call_command('migrate', '--noinput')
-
-print('Collecting static files...')
-call_command('collectstatic', '--noinput')
-
-restart_file = BASE_DIR / 'tmp' / 'restart.txt'
-restart_file.parent.mkdir(parents=True, exist_ok=True)
-restart_file.touch()
-print(f'Restart file: {restart_file}')
+deploy_script = BASE_DIR / 'deploy.py'
+if deploy_script.exists():
+    print('Running deploy.py...')
+    subprocess.check_call([sys.executable, str(deploy_script)])
+else:
+    print('deploy.py not found — run python deploy.py manually.')
 
 print('Update complete.')
