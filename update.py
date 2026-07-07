@@ -10,8 +10,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 # ── CONFIG ──────────────────────────────────────────────
-GITHUB_REPO = 'your-username/your-repo'       # <-- CHANGE THIS
-GITHUB_BRANCH = 'main'
+GITHUB_REPO = 'mbuguam443/househunting'
+GITHUB_BRANCH = 'master'
 ZIP_URL = f'https://github.com/{GITHUB_REPO}/archive/refs/heads/{GITHUB_BRANCH}.zip'
 
 # Files/dirs to never overwrite
