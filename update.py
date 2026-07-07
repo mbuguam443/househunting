@@ -52,12 +52,12 @@ with zipfile.ZipFile(zip_path, 'r') as zf:
 os.unlink(zip_path)
 print('Extracted (skipped .env, db.sqlite3, media, static_assets, tmp).')
 
-# Run deploy steps
-deploy_script = BASE_DIR / 'deploy.py'
-if deploy_script.exists():
-    print('Running deploy.py...')
-    subprocess.check_call([sys.executable, str(deploy_script)])
+# Run database setup (pip install, migrate, collectstatic, restart)
+setup_script = BASE_DIR / 'setup_db.py'
+if setup_script.exists():
+    print('Running setup_db.py...')
+    subprocess.check_call([sys.executable, str(setup_script)])
 else:
-    print('deploy.py not found — run python deploy.py manually.')
+    print('setup_db.py not found — run python setup_db.py manually.')
 
 print('Update complete.')
