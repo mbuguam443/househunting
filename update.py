@@ -15,7 +15,7 @@ GITHUB_BRANCH = 'master'
 ZIP_URL = f'https://github.com/{GITHUB_REPO}/archive/refs/heads/{GITHUB_BRANCH}.zip'
 
 # Files/dirs to never overwrite
-SKIP_NAMES = {'.env', '.htaccess', 'db.sqlite3', 'media', 'static_assets', 'tmp'}
+SKIP_NAMES = {'.env', 'db.sqlite3', 'media', 'static_assets', 'tmp'}
 # ────────────────────────────────────────────────────────
 
 import requests
