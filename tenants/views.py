@@ -43,6 +43,7 @@ def register_tenant(request):
             user.save()
             user.profile.role = 'tenant'
             user.profile.phone = form.cleaned_data['phone']
+            user.profile.id_number = form.cleaned_data['id_number']
             user.profile.save()
             messages.success(request, f'Tenant "{user.username}" registered. Password: <strong>{DEFAULT_TENANT_PASSWORD}</strong>. Now assign them to a unit.')
             return redirect('tenants:create')

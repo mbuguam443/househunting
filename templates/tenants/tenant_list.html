@@ -34,6 +34,7 @@
                     <div>
                         <h5 class="fw-semibold mb-0" style="color:var(--tx)">{{ t.tenant.get_full_name|default:t.tenant.username }}</h5>
                         <span style="font-size:.78rem;color:var(--tx3)">{{ t.tenant.email }}</span>
+                        {% if t.tenant.profile.id_number %}<span style="display:block;font-size:.75rem;color:var(--tx3)">ID: {{ t.tenant.profile.id_number }}</span>{% endif %}
                     </div>
                 </div>
                 <span class="{% if t.status == 'active' %}badge-vacant{% else %}badge-occupied{% endif %}">{{ t.get_status_display }}</span>
