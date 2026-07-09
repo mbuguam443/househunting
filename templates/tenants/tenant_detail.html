@@ -17,6 +17,8 @@
                 <p class="mb-2"><strong style="color:var(--tx)">Deposit:</strong> KES {{ tenancy.deposit_paid }}</p>
                 <p class="mb-2"><strong style="color:var(--tx)">Started:</strong> {{ tenancy.start_date|date:'M d, Y' }}</p>
                 {% if tenancy.end_date %}<p class="mb-0"><strong style="color:var(--tx)">Ended:</strong> {{ tenancy.end_date|date:'M d, Y' }}</p>{% endif %}
+                {% if tenancy.tenant.profile.phone %}<p class="mb-2"><strong style="color:var(--tx)">Phone:</strong> {{ tenancy.tenant.profile.phone }}</p>{% endif %}
+                {% if tenancy.tenant.profile.id_number %}<p class="mb-2"><strong style="color:var(--tx)">ID No:</strong> {{ tenancy.tenant.profile.id_number }}</p>{% endif %}
             </div>
             {% if tenancy.status == 'active' %}
             <a href="{% url 'tenants:vacate' tenancy.pk %}" class="boc btn w-100 py-2 mt-2" style="color:#f87171"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Vacate Tenant</a>
@@ -24,6 +26,22 @@
             {% if tenancy.status == 'active' %}
             <a href="{% url 'tenants:lease_create' tenancy.pk %}" class="bgrd btn w-100 py-2 mt-2"><i class="fa-solid fa-file-signature me-1"></i> {% if tenancy.lease %}View Lease{% else %}Create Lease{% endif %}</a>
             {% endif %}
+        </div>
+        <div class="gc p-4 mt-4">
+            <h5 class="fw-semibold mb-3"><i class="fa-solid fa-pen me-2"></i>Edit Details</h5>
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div style="margin-bottom:12px">
+                    <label class="olbl">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                    <p style="color:#f87171;font-size:.82rem;margin-top:2px;margin-bottom:0">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="bgrd btn w-100 py-2 mt-1"><i class="fa-solid fa-save me-1"></i> Save Changes</button>
+            </form>
         </div>
     </div>
     <div class="col-lg-8">

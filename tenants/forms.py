@@ -180,3 +180,27 @@ class LeaseForm(forms.ModelForm):
             'notice_period_days': forms.NumberInput(attrs={'class': 'oinp'}),
             'terms': forms.Textarea(attrs={'class': 'oinp', 'rows': 6, 'placeholder': 'General terms and conditions of the lease agreement...'}),
         }
+
+
+class TenantEditForm(forms.ModelForm):
+    phone = forms.CharField(max_length=20, required=False, label='Phone Number',
+        widget=forms.TextInput(attrs={'class': 'oinp'}))
+    id_number = forms.CharField(max_length=20, required=False, label='ID Number',
+        widget=forms.TextInput(attrs={'class': 'oinp'}))
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.setdefault('class', 'oinp')
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        if commit:
+            user.profile.phone = self.cleaned_data.get('phone', '')
+            user.profile.id_number = self.cleaned_data.get('id_number', '')
+            user.profile.save()
+        return user

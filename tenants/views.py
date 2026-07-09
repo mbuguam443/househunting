@@ -11,7 +11,7 @@ from django.http import JsonResponse, HttpResponse
 from datetime import timedelta
 from decimal import Decimal
 from .models import Tenancy, RentPayment, MaintenanceRequest, MpesaTransaction, LeaseAgreement, C2BTransaction, UtilityBill, B2CTransaction
-from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm, LeaseForm, UtilityBillForm
+from .forms import TenantRegistrationForm, TenancyForm, RentPaymentForm, MarkPaidForm, MaintenanceForm, MaintenanceStatusForm, LeaseForm, UtilityBillForm, TenantEditForm
 from .b2c_utils import initiate_b2c
 from .rent_utils import generate_rent_payments, mark_overdue_payments
 from .mpesa_utils import stk_push, process_callback, query_stk_status, _get_access_token
@@ -112,6 +112,18 @@ def tenant_detail(request, pk):
     if tenancy.unit.property.owner != request.user:
         messages.error(request, 'Access denied.')
         return redirect('tenants:list')
+    tenant_user = tenancy.tenant
+    if request.method == 'POST':
+        form = TenantEditForm(request.POST, instance=tenant_user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'{tenant_user.username} details updated.')
+            return redirect('tenants:detail', pk=tenancy.pk)
+    else:
+        form = TenantEditForm(instance=tenant_user, initial={
+            'phone': tenant_user.profile.phone,
+            'id_number': tenant_user.profile.id_number,
+        })
     payments = tenancy.payments.all()
     balance = payments.exclude(status='paid').exclude(notes='stk_intermediary').aggregate(s=Sum('amount'))['s'] or 0
     q = request.GET.get('q', '').strip()
@@ -121,7 +133,7 @@ def tenant_detail(request, pk):
     if status_f:
         payments = payments.filter(status=status_f)
     page_obj = paginate(request, payments)
-    return render(request, 'tenants/tenant_detail.html', {'tenancy': tenancy, 'payments': page_obj, 'balance': balance, 'q': q, 'status_f': status_f, 'active_tab': 'tenants'})
+    return render(request, 'tenants/tenant_detail.html', {'tenancy': tenancy, 'payments': page_obj, 'balance': balance, 'q': q, 'status_f': status_f, 'active_tab': 'tenants', 'form': form})
 
 @login_required
 def tenant_vacate(request, pk):
