@@ -1,0 +1,51 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}Tenants - PataNyumba{% endblock %}
+{% block admin_title %}Tenants{% endblock %}
+{% block admin_content %}
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <form method="get" style="display:flex;gap:8px;flex:1;max-width:400px">
+        <input type="text" name="q" value="{{ q }}" placeholder="Search tenants..." style="flex:1;padding:8px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:.88rem">
+        <button type="submit" style="padding:8px 18px;border:none;border-radius:8px;background:var(--pur);color:#fff;font-weight:500;font-size:.88rem"><i class="fa-solid fa-search"></i></button>
+    </form>
+    <a href="{% url 'accounts:admin_tenant_create' %}" style="padding:8px 18px;border:none;border-radius:8px;background:var(--pur);color:#fff;font-weight:500;font-size:.88rem;text-decoration:none"><i class="fa-solid fa-plus"></i> Add Tenant</a>
+</div>
+
+<div class="tbl-c">
+    <table class="tbl">
+        <thead>
+            <tr>
+                <th>Tenant</th>
+                <th>Phone</th>
+                <th>Landlord</th>
+                <th>Property</th>
+                <th>Unit</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in tenants %}
+            <tr>
+                <td>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <div class="db-avatar" style="width:34px;height:34px;font-size:.78rem;flex-shrink:0">{{ p.user.first_name|first|default:p.user.username|first|upper }}{{ p.user.last_name|first|upper }}</div>
+                        <div>
+                            <div style="font-weight:600;font-size:.88rem">{{ p.user.get_full_name|default:p.user.username }}</div>
+                            <div style="font-size:.78rem;color:var(--tx3)">@{{ p.user.username }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="font-size:.85rem">{{ p.phone|default:'—' }}</td>
+                <td style="font-size:.85rem">{{ p.landlord_name|default:'—' }}</td>
+                <td style="font-size:.85rem">{{ p.property_name|default:'—' }}</td>
+                <td style="font-size:.85rem">{{ p.unit_number|default:'—' }}</td>
+                <td style="font-size:.82rem;color:var(--tx3)">{{ p.user.date_joined|date:'d M Y' }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center;padding:40px 0;color:var(--tx3)">No tenants found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'pagination.html' with page_obj=tenants %}
+{% endblock %}

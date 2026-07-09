@@ -1,0 +1,49 @@
+{% extends 'accounts/admin_base.html' %}
+{% block title %}Add Tenant - PataNyumba{% endblock %}
+{% block admin_title %}Add Tenant{% endblock %}
+{% block admin_content %}
+<form method="post" style="max-width:500px">
+    {% csrf_token %}
+    <div style="background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:24px;margin-bottom:20px">
+        <div style="font-weight:600;margin-bottom:16px;font-size:.95rem">Account Details</div>
+        <div style="margin-bottom:14px">
+            <label style="display:block;font-size:.85rem;color:var(--tx3);margin-bottom:4px">Username</label>
+            <input type="text" name="username" required style="width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:.88rem">
+        </div>
+        <div style="margin-bottom:14px">
+            <label style="display:block;font-size:.85rem;color:var(--tx3);margin-bottom:4px">Password</label>
+            <input type="text" name="password1" required style="width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:.88rem">
+        </div>
+        <div style="margin-bottom:14px">
+            <label style="display:block;font-size:.85rem;color:var(--tx3);margin-bottom:4px">Confirm Password</label>
+            <input type="text" name="password2" required style="width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:.88rem">
+        </div>
+        <div style="margin-bottom:14px">
+            <label style="display:block;font-size:.85rem;color:var(--tx3);margin-bottom:4px">Phone</label>
+            <input type="text" name="phone" placeholder="+254 7XX XXX XXX" style="width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:.88rem">
+        </div>
+    </div>
+
+    <div style="background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:24px;margin-bottom:20px">
+        <div style="font-weight:600;margin-bottom:16px;font-size:.95rem">Assign to Unit (optional)</div>
+        <div style="margin-bottom:14px">
+            <label style="display:block;font-size:.85rem;color:var(--tx3);margin-bottom:4px">Vacant Unit</label>
+            <select name="unit" style="width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:.88rem">
+                <option value="">— Don't assign yet —</option>
+                {% for u in vacant_units %}
+                <option value="{{ u.pk }}">{{ u.property.name }} — {{ u.unit_number }} ({{ u.property.owner.username }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="margin-bottom:14px">
+            <label style="display:block;font-size:.85rem;color:var(--tx3);margin-bottom:4px">Deposit Paid (KES)</label>
+            <input type="number" name="deposit" value="0" step="0.01" min="0" style="width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:.88rem">
+        </div>
+    </div>
+
+    <div style="display:flex;gap:10px">
+        <button type="submit" style="padding:10px 24px;border:none;border-radius:8px;background:var(--pur);color:#fff;font-weight:600;font-size:.9rem;cursor:pointer">Create Tenant</button>
+        <a href="{% url 'accounts:admin_tenants' %}" style="padding:10px 24px;border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-weight:500;font-size:.9rem;text-decoration:none">Cancel</a>
+    </div>
+</form>
+{% endblock %}
