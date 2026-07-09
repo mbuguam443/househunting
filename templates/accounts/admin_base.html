@@ -20,7 +20,6 @@
             <div class="db-nav-section">Admin</div>
             <a href="{% url 'accounts:admin_dashboard' %}" class="db-nl {% if active_tab == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
             <a href="{% url 'accounts:admin_landlords' %}" class="db-nl {% if active_tab == 'landlords' %}active{% endif %}"><i class="fa-solid fa-building"></i> Landlords</a>
-            <a href="{% url 'accounts:admin_tenants' %}" class="db-nl {% if active_tab == 'tenants' %}active{% endif %}"><i class="fa-solid fa-users"></i> Tenants</a>
             <a href="{% url 'accounts:admin_plans' %}" class="db-nl {% if active_tab == 'plans' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> Subscription Plans</a>
             <a href="{% url 'accounts:admin_revenue' %}" class="db-nl {% if active_tab == 'revenue' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> Revenue</a>
             <a href="{% url 'accounts:admin_listings' %}" class="db-nl {% if active_tab == 'listings' %}active{% endif %}"><i class="fa-solid fa-magnifying-glass"></i> Admin Listings</a>

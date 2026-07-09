@@ -26,6 +26,4 @@ urlpatterns = [
     path('admin/listings/create/', views.admin_listing_create, name='admin_listing_create'),
     path('admin/listings/<int:pk>/edit/', views.admin_listing_edit, name='admin_listing_edit'),
     path('admin/listings/<int:pk>/delete/', views.admin_listing_delete, name='admin_listing_delete'),
-    path('admin/tenants/', views.admin_tenants, name='admin_tenants'),
-    path('admin/tenants/create/', views.admin_tenant_create, name='admin_tenant_create'),
 ]

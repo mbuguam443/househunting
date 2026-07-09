@@ -426,66 +426,7 @@ def admin_landlord_detail(request, landlord_id):
     })
 
 
-# ==================== ADMIN TENANT MANAGEMENT ====================
 
-@login_required
-def admin_tenants(request):
-    if request.user.profile.role != 'admin':
-        messages.error(request, 'Admin access required.')
-        return redirect('website:home')
-    qs = Profile.objects.filter(role='tenant').select_related('user')
-    q = request.GET.get('q', '').strip()
-    if q:
-        qs = qs.filter(user__username__icontains=q) | qs.filter(user__first_name__icontains=q) | qs.filter(user__last_name__icontains=q) | qs.filter(phone__icontains=q)
-        qs = qs.distinct()
-    for p in qs:
-        tenancy = Tenancy.objects.filter(tenant=p.user, status='active').select_related('unit__property__owner').first()
-        p.active_tenancy = tenancy
-        if tenancy:
-            p.landlord_name = tenancy.unit.property.owner.username
-            p.property_name = tenancy.unit.property.name
-            p.unit_number = tenancy.unit.unit_number
-        else:
-            p.landlord_name = p.property_name = p.unit_number = None
-    page_obj = paginate(request, qs)
-    return render(request, 'accounts/admin_tenants.html', {'tenants': page_obj, 'q': q})
-
-
-@login_required
-def admin_tenant_create(request):
-    if request.user.profile.role != 'admin':
-        messages.error(request, 'Admin access required.')
-        return redirect('website:home')
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            user.profile.role = 'tenant'
-            user.profile.phone = request.POST.get('phone', '')
-            user.profile.save()
-            unit_id = request.POST.get('unit')
-            if unit_id:
-                unit = get_object_or_404(Unit, pk=unit_id)
-                if unit.status != 'vacant':
-                    messages.warning(request, f'Tenant created but unit {unit.unit_number} is not vacant.')
-                else:
-                    Tenancy.objects.create(
-                        tenant=user, unit=unit,
-                        start_date=date.today(),
-                        monthly_rent=unit.monthly_rent,
-                        deposit_paid=request.POST.get('deposit', 0),
-                        status='active',
-                    )
-                    unit.status = 'occupied'
-                    unit.save()
-                    messages.success(request, f'Tenant "{user.username}" created and assigned to {unit.unit_number}.')
-                    return redirect('accounts:admin_tenants')
-            messages.success(request, f'Tenant "{user.username}" created.')
-            return redirect('accounts:admin_tenants')
-    else:
-        form = UserCreationForm()
-    vacant_units = Unit.objects.filter(status='vacant').select_related('property__owner')
-    return render(request, 'accounts/admin_tenant_form.html', {'form': form, 'vacant_units': vacant_units})
 
 
 

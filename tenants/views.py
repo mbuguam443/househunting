@@ -38,8 +38,11 @@ def register_tenant(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(DEFAULT_TENANT_PASSWORD)
+            user.first_name = form.cleaned_data['first_name']
+            user.last_name = form.cleaned_data['last_name']
             user.save()
             user.profile.role = 'tenant'
+            user.profile.phone = form.cleaned_data['phone']
             user.profile.save()
             messages.success(request, f'Tenant "{user.username}" registered. Password: <strong>{DEFAULT_TENANT_PASSWORD}</strong>. Now assign them to a unit.')
             return redirect('tenants:create')

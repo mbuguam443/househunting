@@ -6,6 +6,13 @@ from properties.models import Property
 
 
 class TenantRegistrationForm(forms.ModelForm):
+    phone = forms.CharField(max_length=20, required=True, label='Phone Number',
+        widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': '+254 7XX XXX XXX'}))
+    first_name = forms.CharField(max_length=150, required=True, label='First Name',
+        widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'e.g. John'}))
+    last_name = forms.CharField(max_length=150, required=True, label='Last Name',
+        widget=forms.TextInput(attrs={'class': 'oinp', 'placeholder': 'e.g. Doe'}))
+
     class Meta:
         model = User
         fields = ['username', 'email']
