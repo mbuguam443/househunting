@@ -29,7 +29,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='landlord')
     phone = models.CharField(max_length=20, blank=True)
-    id_number = models.CharField(max_length=20, blank=True, unique=True, null=True,
+    id_number = models.CharField(max_length=20, blank=True,
         help_text='National ID number — used as unique identifier for M-Pesa payments')
     avatar = models.ImageField(upload_to='avatars/', blank=True)
     fee_per_unit = models.DecimalField(max_digits=8, decimal_places=2, default=50.00,
