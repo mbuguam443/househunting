@@ -615,13 +615,13 @@ def lease_accept(request, pk):
         return redirect('portal:home')
     if lease.tenant_accepted:
         messages.info(request, 'You have already accepted this lease.')
-        return redirect('tenants:lease_detail', pk=lease.pk)
+        return redirect('portal:lease')
     if request.method == 'POST':
         lease.tenant_accepted = True
         lease.tenant_accepted_at = timezone.now()
         lease.save()
         messages.success(request, 'Lease accepted successfully.')
-        return redirect('tenants:lease_detail', pk=lease.pk)
+        return redirect('portal:lease')
     return render(request, 'tenants/lease_accept.html', {'lease': lease})
 
 

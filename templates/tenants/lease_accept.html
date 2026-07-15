@@ -13,7 +13,7 @@
                 {% csrf_token %}
                 <div class="d-flex gap-2 justify-content-center">
                     <button type="submit" class="bgrd btn px-5 py-2"><i class="fa-solid fa-check me-1"></i> I Accept</button>
-                    <a href="{% url 'tenants:lease_detail' lease.pk %}" class="boc btn px-4 py-2">Cancel</a>
+                    <a href="{% url 'portal:lease' %}" class="boc btn px-4 py-2">Cancel</a>
                 </div>
             </form>
         </div>
