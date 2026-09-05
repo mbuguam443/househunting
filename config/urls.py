@@ -31,6 +31,7 @@ def debug_db(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),
     path('accounts/', include('accounts.urls')),
     path('properties/', include('properties.urls')),
     path('units/', include('units.urls')),

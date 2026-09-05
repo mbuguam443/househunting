@@ -1,0 +1,51 @@
+from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
+from . import views
+
+urlpatterns = [
+    path('auth/login/', views.LoginView.as_view(), name='api_login'),
+    path('auth/refresh/', TokenRefreshView.as_view(), name='api_token_refresh'),
+    path('auth/profile/', views.ProfileView.as_view(), name='api_profile'),
+    path('house-types/', views.HouseTypeListView.as_view(), name='api_house_types'),
+
+    path('tenant/dashboard/', views.TenantDashboardView.as_view(), name='api_tenant_dashboard'),
+    path('tenant/payments/', views.TenantPaymentsView.as_view(), name='api_tenant_payments'),
+    path('tenant/pay/', views.TenantPayView.as_view(), name='api_tenant_pay'),
+    path('tenant/pay/stk/', views.TenantStkPushView.as_view(), name='api_tenant_pay_stk'),
+    path('tenant/pay/status/', views.TenantStkStatusView.as_view(), name='api_tenant_pay_status'),
+    path('tenant/maintenance/', views.TenantMaintenanceListCreateView.as_view(), name='api_tenant_maintenance'),
+    path('tenant/lease/', views.TenantLeaseView.as_view(), name='api_tenant_lease'),
+    path('tenant/utilities/', views.TenantUtilitiesView.as_view(), name='api_tenant_utilities'),
+
+    path('landlord/dashboard/', views.LandlordDashboardView.as_view(), name='api_landlord_dashboard'),
+    path('landlord/profile/', views.LandlordProfileUpdateView.as_view(), name='api_landlord_profile'),
+    path('landlord/properties/', views.LandlordPropertyListCreateView.as_view(), name='api_landlord_properties'),
+    path('landlord/properties/<int:pk>/', views.LandlordPropertyDetailView.as_view(), name='api_landlord_property_detail'),
+    path('landlord/units/', views.LandlordUnitListCreateView.as_view(), name='api_landlord_units'),
+    path('landlord/units/<int:pk>/', views.LandlordUnitDetailView.as_view(), name='api_landlord_unit_detail'),
+    path('landlord/tenants/', views.LandlordTenantListView.as_view(), name='api_landlord_tenants'),
+    path('landlord/tenancies/', views.LandlordTenancyListView.as_view(), name='api_landlord_tenancies'),
+    path('landlord/tenancies/<int:pk>/', views.LandlordTenancyDetailView.as_view(), name='api_landlord_tenancy_detail'),
+    path('landlord/tenancies/create/', views.LandlordCreateTenancyView.as_view(), name='api_landlord_tenancy_create'),
+    path('landlord/tenancies/<int:pk>/end/', views.LandlordEndTenancyView.as_view(), name='api_landlord_tenancy_end'),
+    path('landlord/payments/', views.LandlordRentPaymentsView.as_view(), name='api_landlord_payments'),
+    path('landlord/payments/<int:payment_id>/stk/', views.LandlordInitiateStkPushView.as_view(), name='api_landlord_payment_stk'),
+    path('landlord/utilities/', views.LandlordUtilitiesView.as_view(), name='api_landlord_utilities'),
+    path('landlord/maintenance/', views.LandlordMaintenanceListView.as_view(), name='api_landlord_maintenance'),
+    path('landlord/maintenance/<int:pk>/', views.LandlordMaintenanceUpdateView.as_view(), name='api_landlord_maintenance_update'),
+
+    path('admin/dashboard/', views.AdminDashboardView.as_view(), name='api_admin_dashboard'),
+    path('admin/landlords/', views.AdminLandlordListView.as_view(), name='api_admin_landlords'),
+    path('admin/landlords/create/', views.AdminLandlordCreateView.as_view(), name='api_admin_landlord_create'),
+    path('admin/landlords/<int:landlord_id>/', views.AdminLandlordDetailView.as_view(), name='api_admin_landlord_detail'),
+    path('admin/landlords/<int:landlord_id>/subscription/', views.AdminAssignSubscriptionView.as_view(), name='api_admin_assign_sub'),
+    path('admin/landlords/<int:landlord_id>/fee/', views.AdminSetLandlordFeeView.as_view(), name='api_admin_set_fee'),
+    path('admin/landlords/<int:landlord_id>/mpesa/', views.AdminSetLandlordMpesaView.as_view(), name='api_admin_landlord_mpesa'),
+    path('admin/plans/', views.AdminSubscriptionPlansView.as_view(), name='api_admin_plans'),
+    path('admin/plans/<int:pk>/toggle/', views.AdminPlanToggleView.as_view(), name='api_admin_plan_toggle'),
+    path('admin/revenue/', views.AdminRevenueView.as_view(), name='api_admin_revenue'),
+    path('admin/update-fee/', views.AdminUpdateFeeView.as_view(), name='api_admin_update_fee'),
+    path('admin/listings/', views.AdminListingsView.as_view(), name='api_admin_listings'),
+    path('admin/listings/<int:pk>/', views.AdminListingDetailView.as_view(), name='api_admin_listing_detail'),
+    path('admin/inquiries/', views.AdminInquiriesView.as_view(), name='api_admin_inquiries'),
+]
