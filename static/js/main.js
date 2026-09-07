@@ -27,23 +27,36 @@ function toggleTheme() {
     // Update charts
     updateChartColors();
 }
-document.getElementById('thbtn').addEventListener('click', toggleTheme);
+const thBtn = document.getElementById('thbtn');
+if (thBtn) thBtn.addEventListener('click', toggleTheme);
 
 /*  NAVBAR  */
-window.addEventListener('scroll', () => document.getElementById('nbar').classList.toggle('scr', scrollY > 40));
-let mbOpen = false;
-document.getElementById('mbtog').addEventListener('click', () => {
-    mbOpen = !mbOpen;
-    document.getElementById('mbmenu').classList.toggle('open', mbOpen);
-    document.getElementById('barIcon').style.display = mbOpen ? 'none' : 'inline';
-    document.getElementById('xIcon').style.display = mbOpen ? 'inline' : 'none';
+window.addEventListener('scroll', () => {
+    const nbar = document.getElementById('nbar');
+    if (nbar) nbar.classList.toggle('scr', scrollY > 40);
 });
+let mbOpen = false;
+const mbTog = document.getElementById('mbtog');
+if (mbTog) {
+    mbTog.addEventListener('click', () => {
+        mbOpen = !mbOpen;
+        const mbMenu = document.getElementById('mbmenu');
+        const barIcon = document.getElementById('barIcon');
+        const xIcon = document.getElementById('xIcon');
+        if (mbMenu) mbMenu.classList.toggle('open', mbOpen);
+        if (barIcon) barIcon.style.display = mbOpen ? 'none' : 'inline';
+        if (xIcon) xIcon.style.display = mbOpen ? 'inline' : 'none';
+    });
+}
 document.querySelectorAll('#mbmenu a, #mbmenu button').forEach(el =>
     el.addEventListener('click', () => {
         mbOpen = false;
-        document.getElementById('mbmenu').classList.remove('open');
-        document.getElementById('barIcon').style.display = 'inline';
-        document.getElementById('xIcon').style.display = 'none';
+        const mbMenu = document.getElementById('mbmenu');
+        const barIcon = document.getElementById('barIcon');
+        const xIcon = document.getElementById('xIcon');
+        if (mbMenu) mbMenu.classList.remove('open');
+        if (barIcon) barIcon.style.display = 'inline';
+        if (xIcon) xIcon.style.display = 'none';
     })
 );
 
@@ -75,14 +88,18 @@ $('.vidpop').magnificPopup({
 });
 
 /*  PRICING TOGGLE  */
-document.getElementById('ptog').addEventListener('change', function() {
-    const y = this.checked;
-    document.getElementById('ptogThumb').style.transform = y ? 'translateX(24px)' : 'translateX(0)';
-    document.querySelectorAll('.pv').forEach(el => el.textContent = y ? el.dataset.y : el.dataset.m);
-    document.querySelectorAll('.pper').forEach((el, i) => {
-        if (i < 2) el.textContent = y ? 'per month, billed yearly' : 'per month, billed monthly';
+const ptog = document.getElementById('ptog');
+if (ptog) {
+    ptog.addEventListener('change', function() {
+        const y = this.checked;
+        const ptogThumb = document.getElementById('ptogThumb');
+        if (ptogThumb) ptogThumb.style.transform = y ? 'translateX(24px)' : 'translateX(0)';
+        document.querySelectorAll('.pv').forEach(el => el.textContent = y ? el.dataset.y : el.dataset.m);
+        document.querySelectorAll('.pper').forEach((el, i) => {
+            if (i < 2) el.textContent = y ? 'per month, billed yearly' : 'per month, billed monthly';
+        });
     });
-});
+}
 
 /*  AUTH FUNCTIONS  */
 function swTab(t) {

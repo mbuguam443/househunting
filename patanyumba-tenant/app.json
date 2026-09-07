@@ -16,8 +16,7 @@
     ],
     "plugins": [
       "expo-splash-screen",
-      "expo-secure-store",
-      "expo-font"
+      "expo-secure-store"
     ],
     "ios": {
       "supportsTablet": true,

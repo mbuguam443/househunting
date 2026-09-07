@@ -59,6 +59,9 @@ class ProfileView(generics.RetrieveAPIView):
     serializer_class = ProfileSerializer
 
     def get_object(self):
+        if not hasattr(self.request.user, 'profile'):
+            from rest_framework.exceptions import NotFound
+            raise NotFound('No profile found')
         return self.request.user.profile
 
 
