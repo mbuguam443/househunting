@@ -26,6 +26,9 @@ local_settings.py
 .DS_Store
 Thumbs.db
 
+# Node modules
+node_modules/
+
 # Project specific
 nexusai-1.0.0.zip
 static/img/

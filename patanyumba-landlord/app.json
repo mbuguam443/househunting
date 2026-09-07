@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "PataNyumba Landlord",
+    "slug": "patanyumba-landlord",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E65100"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "plugins": [
+      "expo-splash-screen",
+      "expo-secure-store",
+      "expo-font"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.patanyumba.landlord"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#E65100"
+      },
+      "package": "com.patanyumba.landlord"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7a046248-db51-4ec6-91ea-5e88409f78a5"
+      }
+    },
+    "owner": "mbuguam443"
+  }
+}
